@@ -28,12 +28,11 @@ cox_ui <- function(id, label, choices) {
       
       conditionalPanel(
         
-        condition = " output.proj_length_cox > '1' ",    
-        ns=ns,                                           
-        radioButtons(inputId = ns ("choose_cox"), "Select multi-cancer analysis approach:",
-                     selected = "Include cancer type as covariate",
-                     c("Include cancer type as covariate",
-                       "Aggregate cancer types")),
+        condition = " output.proj_lenght_cox > '1' ",   ## Conditions does not working with direct ractive values from selectdata which is Xproj$b, conditions are working with 
+        ns=ns,                                           ## input or output result, that is wht I created an output that takes information form selecdata Xproj$b reavtive in server(Cagatay)
+        radioButtons(inputId = ns ("choose_cox"), "Distribution type:",
+                     selected = character(0),
+                     c("All", "Separate")),                           ##We need to change All, separate names and make it more informative(Cagatay)
         
         
         
@@ -47,7 +46,7 @@ cox_ui <- function(id, label, choices) {
         ns=ns,  
         
         textInput(inputId = ns("cox_int_feat"), 
-                  "Enter feature interactions with asterisks (exact names are needed and capitalization matters). Multiple comma-separated interactions can be provided", 
+                  "Enter feature interactions with asterisks (exact names and capitalization are required). Multiple comma-separated interactions can be provided", 
                   placeholder = "eg. FEAT1*FEAT2, FEAT1*FEAT3")
       ),
       actionBttn(inputId = ns("cox_run"), 
@@ -84,7 +83,7 @@ cox_server <- function(id,Xproj) {
     
     COX_steps <- reactive({
       
-      if(Xproj$cancer_length() ==1) {
+      if(Xproj$cancer_lenght() ==1) {
         
         return(
           
@@ -93,27 +92,27 @@ cox_server <- function(id,Xproj) {
             element = paste0("#", session$ns(c(NA, "cox_samptyp + .selectize-control", "cox_feat + .selectize-control", "cox_interaction"))),
             
             intro = paste(c(
-              "This is  Cox Proportional Hazards (CoxPH) survival analysis module. The CoxPH is used examine whether a feature has an impact on the differential survival outcome. Features can be numeric (eg. expression of a gene) or categorical (eg. mutation subtype), and multiple features can be simultaneously modeled. In CoxPH analysis, hazard ratio (HR) >1 is associated with an increased risk, while HR<1 is associated with reduced risk. Continue tutorial to understand how the module works.",
-              "You can select the sample types (eg. primary and/or metastatic samples) in order to target specific data subsets in the analysis.",
-              "You can select one or more features you would like to analyze (eg. genes or clinical metadata). If a single feature is selected, univariate CoxPH analysis is performed. When two or more features are selected, multivariate CoxPH analysis is performed where the effects of individual features are reported along with the overall effects.",
-              "You can also model interactions between features (optional). This more complex modelling allows examining whether covariates have an impact on each other's effect. The user can, for instance, investigate whether Gene_A has a different survival impact in males and females by specifying Gene_A*meta.gender. Interaction terms must match exactly to the selected features and capitalization matters here."
+              "This is  Cox Proportional-Hazards Model app. The Cox proportional-hazards model,is essentially a regression model frequently used in medical research to examine the relationship between patient survival time and one or more predictor variables.Press the buttons to learn features of the app.",
+              "You can select the sample types (primary solid tumors etc.) in order to target the data subsets.",
+              "You can select the features (thousands of genes, miRNAs and clinical metadata).",
+              "When there are several factors that have the potential to interact, multivariate analysis utilizing the method of Cox regression is used. For examplei if you choose A and B genes from select the features part, when you click the Model interactions? button, you can analyze A, B and A and B(A:B). Please write the exact names of the genes with asterisks."
             ))
             
           )
           
         )
-      } else if (Xproj$cancer_length() > 1){
+      } else if (Xproj$cancer_lenght() > 1){
         return(
           data.frame(
             
             element = paste0("#", session$ns(c(NA, "cox_samptyp + .selectize-control", "cox_feat + .selectize-control","choose_cox", "cox_interaction"))),
             
             intro = paste(c(
-              "This is  Cox Proportional Hazards (CoxPH) survival analysis module. The CoxPH is used examine whether a feature has an impact on the differential survival outcome. Features can be numeric (eg. expression of a gene) or categorical (eg. mutation subtype), and multiple features can be simultaneously modeled. In CoxPH analysis, hazard ratio (HR) >1 is associated with an increased risk, while HR<1 is associated with reduced risk. Continue tutorial to understand how the module works.",
-              "You can select the sample types (eg. primary and/or metastatic samples) in order to target specific data subsets in the analysis.",
-              "You can select one or more features you would like to analyze (eg. genes or clinical metadata). If a single feature is selected, univariate CoxPH analysis is performed. When two or more features are selected, multivariate CoxPH analysis is performed where the effects of individual features are reported along with the overall effects.",
-              "If you selected more than one TCGA dataset, you have the option to include 'cancer type' as a covariate in survival modeling (default behavior). Alternatively, you can perform analysis agnostic to the cancer type by selecting 'Aggregate'. In this case, cancer type will not be included in the model as a covariate. The latter can be beneficial for examining closely related cancers with similar life expectancies.",
-              "You can also model interactions between features (optional). This more complex modelling allows examining whether covariates have an impact on each other's effect. The user can, for instance, investigate whether Gene_A has a different survival impact in males and females by specifying Gene_A*meta.gender. Interaction terms must match exactly to the selected features and capitalization matters here."
+              "This is  Cox Proportional-Hazards Model app. The Cox proportional-hazards model,is essentially a regression model frequently used in medical research to examine the relationship between patient survival time and one or more predictor variables.Press the buttons to learn features of the app.",
+              "You can select the sample types (primary solid tumors etc.) in order to target the data subsets.",
+              "You can select the features (thousands of genes, miRNAs and clinical metadata).",
+              "In the case of several cancers, when ou select the 'All' option, calculations will be done without separating the data of different cancers. However, with the 'Separate' option, calculations will be done separately for the spesific cancers.",
+              "When there are several factors that have the potential to interact, multivariate analysis utilizing the method of Cox regression is used. For examplei if you choose A and B genes from select the features part, when you click the Model interactions? button, you can analyze A, B and A and B(A:B). Please write the exact names of the genes with asterisks."
             ))
           )
         )
@@ -140,15 +139,15 @@ cox_server <- function(id,Xproj) {
                                   "cox_feat", selected="",
                                   choices = colnames(Xproj$a()), 
                                   server = T)})
-    output$proj_length_cox <- reactive({                                      
+    output$proj_lenght_cox <- reactive({                                      
       
       
       
-      Xproj$cancer_length()                          ## this is a reactive that takes information form selecdata module's Xproj$b() 
+      Xproj$cancer_lenght()                          ## this is a reactive that takes information form selecdata module's Xproj$b() 
       
     })
     
-    outputOptions(output, "proj_length_cox", suspendWhenHidden = FALSE)  
+    outputOptions(output, "proj_lenght_cox", suspendWhenHidden = FALSE)  
     
     cox_dat <- eventReactive(input$cox_run,{
       
@@ -184,20 +183,20 @@ cox_server <- function(id,Xproj) {
       
       validate(need(cox_dat(), ""))
       
-      if(Xproj$cancer_length() ==1) {                     ## in order to avoid zero length warning when there is only one cancer
+      if(Xproj$cancer_lenght() ==1) {                     ## in order to avoid zero lenght warning when there is omly one cancer
         
         predvars <- paste(input$cox_feat, collapse="+") 
         
-      } else if (Xproj$cancer_length() > 1) {
+      } else if (Xproj$cancer_lenght() > 1) {
         
         validate(
-          need(input$choose_cox, "Select 'Include cancer type as covariate' or 'Aggregate cancer types'"))
+          need(input$choose_cox, "Select All or separate"))
       
-      if( input$choose_cox == "Aggregate cancer types") {      ### If user chooses all, there will be no project type covariate
+      if( input$choose_cox == "All") {      ###İf user chooces all, there will be no project type addition
         
         predvars <- paste(input$cox_feat, collapse="+")
         
-      } else if (input$choose_cox == "Include cancer type as covariate")  {   
+      } else if (input$choose_cox == "Separate")  {   
         
         project_type <- "meta.project_id"
         predvars_sep <- paste(input$cox_feat, collapse="+")

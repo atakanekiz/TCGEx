@@ -61,11 +61,11 @@ km_ui <- function(id, label, choices) {
         
         conditionalPanel(
           
-          condition = " output.proj_length_KM > '1' ",   ## Conditions of conditional panel does not working with the reactives from other modules, so I created Xproj$b as reactive shows the length of cancers, Since conditions needs an input or output result, I made a output that takes info from selectdata Xproj$b reactive(Cagatay)
+          condition = " output.proj_lenght_KM > '1' ",   ## Conditions of conditional panel does not working with the reactives from other modules, so I created Xproj$b as reactive shows the lenght of cancers, Since conditions needs an input or output result, I made a output that takes info from selectdata Xproj$b reactive(Cagatay)
           ns=ns,
-          radioButtons(inputId = ns ("choose_KM"), "Categorization rule",
-                       selected = "Aggregated",
-                       c("Aggregated", "Per cancer type")),
+          radioButtons(inputId = ns ("choose_KM"), "Distribution type:",
+                       selected = character(0),
+                       c("All", "Separate")),
           
           
           
@@ -209,7 +209,7 @@ km_server <- function(id,Xproj) {
     
     KM_steps <- reactive({
       
-      if(Xproj$cancer_length() ==1 & input$km_feat != "") {
+      if(Xproj$cancer_lenght() ==1 & input$km_feat != "") {
         
         return(
       
@@ -218,29 +218,26 @@ km_server <- function(id,Xproj) {
         element = paste0("#", session$ns(c(NA, "km_samptyp + .selectize-control", "km_feat + .selectize-control","lo_cutoff", "hi_cutoff", "keep_mid", "km_covar + .selectize-control", "km_risk", "km_pval", "km_confint", "km_medline + .selectize-control", "km_pal + .selectize-control", "km_xlim", "km_breaktime"))),
         
         intro = paste(c(
-          "This is Kaplan-meier (KM) survival analysis module. Here, you can examine how different data subsets differ in terms of survival. You can define data subsets by categorizing gene expression at desired cutoffs and/or use metadata features that are already categorical. The log-rank test p-value is reported on the graph and the survival model fit is shown to provide further details about the analysis. Continue tutorial to learn how to use the module.",
-          "You can select the sample types (eg. primary and/or metastatic) to tailor the analysis to your needs.",
-          "KM analysis is performed between groups of data. You can select genes, miRNAs, or clinical meta data features here. If your selection is a categorical data type (eg. patient gender, tumor subtype), you will be asked to select which subsets to be included in the analysis. If your selection is a numerical data type (eg. gene expression), you will be asked to define quantile cutoffs to categorize gene expression as 'high' and 'low'",
-          
-          "Define the quantile cutoff for the low expression group. 50 (default) means that the samples expressing the gene of interest at lower levels than the median value will be categorized as 'low'. Setting this value to 25, for instance, will categorize the bottom 25% of the data as the low group.",
-          
-          "Define the quantile cutoff for the high expression group. 50 (default) means that the samples expressing the gene of interest at the median value or higher will be categorized as 'high'. Setting this value to 25, for instance, will categorize the top 25% of the data as the high group.",
-          
-          "If your numeric categorization results in three groups (ie low, middle, high), you can hide (default) or show the middle group in the graph",
-          "You can add a covariate into the analysis and define data subsets as described before",
-          "You can show the risk table by clicking this box. A table will be added below the KM curves showing the number of surviving patients at different timepoints. <i>(This option will be visible after plotting the graph.)</i>",
-          "You can show the logrank p-value on the graph by clicking this box. If there are more than two groups in the analysis, the p-value is calculated by testing the null hypothesis that all the samples come from populations with identical survival. You can select two specific data subsets to show pair-wise p-values. <i>This option will be visible after plotting the graph.)</i>",
-          "Confidence interval bands can be added to the graph by clicking this box. <i>This option will be visible after plotting the graph.)</i>",
-          "You can plot dashed lines to highlight median survival in data subsets. <i>This option will be visible after plotting the graph.)</i> ",
-          "You can change the color palette of the graph here. <i>This option will be visible after plotting the graph.)</i>",
-          "You can manually change the plotted time interval here. This does not affect the results of survival analysis. <i>This option will be visible after plotting the graph.)</i>",
-          "The breaks on the x-axis can be changed here. <i>This option will be visible after plotting the graph.)</i>"
+          "This is Kaplan-meier (KM) Survival Analysis app.Press the buttons to learn features of the app.",
+          "You can select the sample types (primary solid tumors etc.) in order to target the data subsets.",
+          "You can select the features (thousands of genes, miRNAs and clinical metadata). Numerical values such as gene expression values will be shown as low/high and the mean will be calculated eith the selected low/high percentages. Categorical choices will be shown as levels.",
+          "A probability distribution or sorted data can be divided into equal pieces using quantile values. A q-quantile divides sorted data into q components in general.",
+          "A probability distribution or sorted data can be divided into equal pieces using quantile values. A q-quantile divides sorted data into q components in general.",
+          "Normally, samples in the middle are removed from the data. However if you check the box, they will be kept.",
+          "You can select a covariate group in order to compare it with first feature.",
+          "Risk table shows the samples that had not yet experience the event of interest, in that case, death. You can see the values both for high/low options.",
+          "The likelihood that your data would have occurred under the null hypothesis of your statistical test is expressed as a number known as a p-value, or probability value. This button shows the p value of the analysis on the graph.",
+          "The confidence interval is the range of values that, if you repeated your experiment or resampled the population in the same manner, you would anticipate your estimate to fall within a specific proportion of the time. You can observe the confidence interval for both high-low stratas.",
+          "With the mark median survival option, you can select the way of median mark on the graph, vertical, horizontal, both or none.",
+          "With the select colors option you can select the colors you desire. Color palettes for journals etc.",
+          "With the Define endpoint (days), you can select the endpoint from 10 to 10.000 days.",
+          "With the breaktime intervals (days), you can select the breaktime intervals, for example, if you select 500, it makes the breaktime intervals as 500-1000-..."
         ))
         
       )
       
     )
-      } else if (Xproj$cancer_length() > 1 & input$km_feat != "") {
+      } else if (Xproj$cancer_lenght() > 1 & input$km_feat != "") {
         return(
           
           data.frame(
@@ -248,24 +245,21 @@ km_server <- function(id,Xproj) {
             element = paste0("#", session$ns(c(NA, "km_samptyp + .selectize-control", "km_feat + .selectize-control", "choose_KM", "lo_cutoff", "hi_cutoff", "keep_mid", "km_covar + .selectize-control", "km_risk", "km_pval", "km_confint", "km_medline + .selectize-control", "km_pal + .selectize-control", "km_xlim", "km_breaktime"))),
             
             intro = paste(c(
-              "This is Kaplan-meier (KM) survival analysis module. Here, you can examine how different data subsets differ in terms of survival. You can define data subsets by categorizing gene expression at desired cutoffs and/or use metadata features that are already categorical. The log-rank test p-value is reported on the graph and the survival model fit is shown to provide further details about the analysis. Continue tutorial to learn how to use the module.",
-              "You can select the sample types (eg. primary and/or metastatic) to tailor the analysis to your needs.",
-              "When analyzing multiple cancer types together, you can categorize gene expression across the aggregated dataset as a whole or separately for each cancer types.",
-              "KM analysis is performed between groups of data. You can select genes, miRNAs, or clinical meta data features here. If your selection is a categorical data type (eg. patient gender, tumor subtype), you will be asked to select which subsets to be included in the analysis. If your selection is a numerical data type (eg. gene expression), you will be asked to define quantile cutoffs to categorize gene expression as 'high' and 'low'",
-              
-              "Define the quantile cutoff for the low expression group. 50 (default) means that the samples expressing the gene of interest at lower levels than the median value will be categorized as 'low'. Setting this value to 25, for instance, will categorize the bottom 25% of the data as the low group.",
-              
-              "Define the quantile cutoff for the high expression group. 50 (default) means that the samples expressing the gene of interest at the median value or higher will be categorized as 'high'. Setting this value to 25, for instance, will categorize the top 25% of the data as the high group.",
-              
-              "If your numeric categorization results in three groups (ie low, middle, high), you can hide (default) or show the middle group in the graph",
-              "You can add a covariate into the analysis and define data subsets as described before",
-              "You can show the risk table by clicking this box. A table will be added below the KM curves showing the number of surviving patients at different timepoints. <i>(This option will be visible after plotting the graph.)</i>",
-              "You can show the logrank p-value on the graph by clicking this box. If there are more than two groups in the analysis, the p-value is calculated by testing the null hypothesis that all the samples come from populations with identical survival. You can select two specific data subsets to show pair-wise p-values. <i>This option will be visible after plotting the graph.)</i>",
-              "Confidence interval bands can be added to the graph by clicking this box. <i>This option will be visible after plotting the graph.)</i>",
-              "You can plot dashed lines to highlight median survival in data subsets. <i>This option will be visible after plotting the graph.)</i> ",
-              "You can change the color palette of the graph here. <i>This option will be visible after plotting the graph.)</i>",
-              "You can manually change the plotted time interval here. This does not affect the results of survival analysis. <i>This option will be visible after plotting the graph.)</i>",
-              "The breaks on the x-axis can be changed here. <i>This option will be visible after plotting the graph.)</i>"
+              "This is Kaplan-meier (KM) Survival Analysis app.Press the buttons to learn features of the app.",
+              "You can select the sample types (primary solid tumors etc.) in order to target the data subsets.",
+              "You can select the features (thousands of genes, miRNAs and clinical metadata). Numerical values such as gene expression values will be shown as low/high and the mean will be calculated eith the selected low/high percentages. Categorical choices will be shown as levels.",
+              "In the case of several cancer types, if you select the 'All' calculations of high/low separation will be performed without separating the patients with their cancer types. However, if you select the 'Separate', calculations will be performed cancer type specific. For example, there will be different values for high/low separations for different cancers. ", 
+              "A probability distribution or sorted data can be divided into equal pieces using quantile values. A q-quantile divides sorted data into q components in general. Bottom percentile will be analyzed here.",
+              "Top percentile will be performed here for the high.",
+              "Normally, samples in the middle are removed from the data. However if you check the box, they will be kept.",
+              "You can select a covariate group in order to compare it with first feature.",
+              "Risk table shows the samples that had not yet experience the event of interest, in that case, death. You can see the values both for high/low options.",
+              "The likelihood that your data would have occurred under the null hypothesis of your statistical test is expressed as a number known as a p-value, or probability value. This button shows the p value of the analysis on the graph.",
+              "The confidence interval is the range of values that, if you repeated your experiment or resampled the population in the same manner, you would anticipate your estimate to fall within a specific proportion of the time. You can observe the confidence interval for both high-low stratas.",
+              "With the mark median survival option, you can select the way of median mark on the graph, vertical, horizontal, both or none.",
+              "With the select colors option you can select the colors you desire. Color palettes for journals etc.",
+              "With the Define endpoint (days), you can select the endpoint from 10 to 10.000 days.",
+              "With the breaktime intervals (days), you can select the breaktime intervals, for example, if you select 500, it makes the breaktime intervals as 500-1000-..."
             ))
             
           )
@@ -292,39 +286,11 @@ km_server <- function(id,Xproj) {
         })
     
     
-    
-
     observeEvent(input$KM_help, {
       
       introjs(session, options = list(steps = KM_steps()) )
       
     })
-    
-    
-    
-    # shiny invalidate
-    observe(req(input$km_feat))
-    
-    panel_iv <- InputValidator$new()
-    
-    numeric_iv <- InputValidator$new()
-    
-    # Does not work in conditional panel
-    numeric_iv_covar <- InputValidator$new()
-    
-    numeric_iv$add_rule("hi_cutoff", ~ if (input$hi_cutoff + input$lo_cutoff > 100 & !anyNA(input$lo_cutoff) & !anyNA(input$hi_cutoff)) "For proper categorization, high and low cutoffs can't exceed 100 when added together")
-    numeric_iv$add_rule("lo_cutoff", ~ if (input$hi_cutoff + input$lo_cutoff > 100 & !anyNA(input$lo_cutoff) & !anyNA(input$hi_cutoff)) "For proper categorization, high and low cutoffs can't exceed 100 when added together")
-    numeric_iv_covar$add_rule("hi_cutoff_covar", ~ if (input$hi_cutoff_covar + input$lo_cutoff_covar > 100 & !anyNA(input$lo_cutoff_covar) & !anyNA(input$hi_cutoff_covar)) "For proper categorization, high and low cutoffs can't exceed 100 when added together")
-    numeric_iv_covar$add_rule("lo_cutoff_covar", ~ if (input$hi_cutoff_covar + input$lo_cutoff_covar > 100 & !anyNA(input$lo_cutoff_covar) & !anyNA(input$hi_cutoff_covar)) "For proper categorization, high and low cutoffs can't exceed 100 when added together")
-    
-    
-    iv <- InputValidator$new()
-    iv$add_validator(panel_iv)
-    iv$add_validator(numeric_iv)
-    iv$add_validator(numeric_iv_covar)
-    iv$enable()
-    
-    
     
     
     
@@ -402,14 +368,14 @@ km_server <- function(id,Xproj) {
     
     outputOptions(output, "km_covar_status2", suspendWhenHidden = FALSE)
 
-    output$proj_length_KM <- reactive({      #an output takes info form selectdatas Xproj$b() reactive
+    output$proj_lenght_KM <- reactive({      #an output takes info form selectdatas Xproj$b() reactive
       
       
-      Xproj$cancer_length()
+      Xproj$cancer_lenght()
       
     })
     
-    outputOptions(output, "proj_length_KM", suspendWhenHidden = FALSE)  ##not so sure about this part
+    outputOptions(output, "proj_lenght_KM", suspendWhenHidden = FALSE)  ##not so sure about this part
     
     
     
@@ -426,7 +392,7 @@ km_server <- function(id,Xproj) {
             need(input$sel_covar_meta_groups, "Select at least one covariate group")}} 
       )
       
-      if(Xproj$cancer_length() ==1) {
+      if(Xproj$cancer_lenght() ==1) {
         
         sel_cols <- c(input$km_feat, "meta.vital_status", "meta.days_to_event", "meta.definition", "meta.patient")
         
@@ -447,7 +413,7 @@ km_server <- function(id,Xproj) {
           
           mid_value_feat <- ifelse(input$keep_mid, "mid", NA)
           
-          dat[, (input$km_feat) := ifelse(dat[[input$km_feat]] >= quantile(dat[[input$km_feat]], (100-input$hi_cutoff)/100, na.rm = T), "high", ifelse(dat[[input$km_feat]] < quantile(dat[[input$km_feat]], input$lo_cutoff/100, na.rm = T), "low", mid_value_feat))]
+          dat[, (input$km_feat) := ifelse(dat[[input$km_feat]] >= quantile(dat[[input$km_feat]], (100-input$hi_cutoff)/100, na.rm = T), "high", ifelse(dat[[input$km_feat]] <= quantile(dat[[input$km_feat]], input$lo_cutoff/100, na.rm = T), "low", mid_value_feat))]
           
         } else if(is.character(dat[[input$km_feat]]) | is.factor(dat[[input$km_feat]])){
           
@@ -458,12 +424,12 @@ km_server <- function(id,Xproj) {
       }
       
       
-      else if (Xproj$cancer_length() > 1) {
+      else if (Xproj$cancer_lenght() > 1) {
         
         validate(
-          need(input$choose_KM, "Please select categorization rule"))
+          need(input$choose_KM, "Select All or separate"))
       
-      if(input$choose_KM == "Aggregated") {
+      if(input$choose_KM == "All") {
         
         sel_cols <- c(input$km_feat, "meta.vital_status", "meta.days_to_event", "meta.definition", "meta.patient")
         
@@ -484,7 +450,7 @@ km_server <- function(id,Xproj) {
           
           mid_value_feat <- ifelse(input$keep_mid, "mid", NA)
           
-          dat[, (input$km_feat) := ifelse(dat[[input$km_feat]] >= quantile(dat[[input$km_feat]], (100-input$hi_cutoff)/100, na.rm = T), "high", ifelse(dat[[input$km_feat]] < quantile(dat[[input$km_feat]], input$lo_cutoff/100, na.rm = T), "low", mid_value_feat))]
+          dat[, (input$km_feat) := ifelse(dat[[input$km_feat]] >= quantile(dat[[input$km_feat]], (100-input$hi_cutoff)/100, na.rm = T), "high", ifelse(dat[[input$km_feat]] <= quantile(dat[[input$km_feat]], input$lo_cutoff/100, na.rm = T), "low", mid_value_feat))]
           
         } else if(is.character(dat[[input$km_feat]]) | is.factor(dat[[input$km_feat]])){
           
@@ -492,7 +458,7 @@ km_server <- function(id,Xproj) {
           dat <- dat[get(input$km_feat) %in% input$sel_feat_meta_groups, ]
           
         }
-      } else if (input$choose_KM == "Per cancer type") {
+      } else if (input$choose_KM == "Separate") {
         
         sel_cols_sep <- c(input$km_feat, "meta.vital_status", "meta.days_to_event", "meta.definition", "meta.patient", "meta.project_id")
         
@@ -515,7 +481,7 @@ km_server <- function(id,Xproj) {
           
           dat[, high_sep := quantile(get(input$km_feat), (100-input$hi_cutoff)/100, na.rm = T), by=c("meta.project_id")]  ##GET  ##CHANGE THE PLACE TO THE MIDDLE
           dat[, low_sep := quantile(get(input$km_feat), (input$lo_cutoff)/100, na.rm = T), by=c("meta.project_id")]
-          dat[, (input$km_feat) := ifelse(dat[[input$km_feat]] >= high_sep, "high", ifelse(dat[[input$km_feat]] < low_sep, "low", mid_value_feat))]
+          dat[, (input$km_feat) := ifelse(dat[[input$km_feat]] >= high_sep, "high", ifelse(dat[[input$km_feat]] <= low_sep, "low", mid_value_feat))]
           
         } else if(is.character(dat[[input$km_feat]]) | is.factor(dat[[input$km_feat]])){
           
@@ -546,7 +512,7 @@ km_server <- function(id,Xproj) {
           
           mid_value_covar <- ifelse(input$keep_mid_covar, "mid", NA)
           
-          dat[, (input$km_covar) := ifelse(dat[[input$km_covar]] >= quantile(dat[[input$km_covar]], (100-input$hi_cutoff_covar)/100, na.rm = T), "high", ifelse(dat[[input$km_covar]] < quantile(dat[[input$km_covar]], input$lo_cutoff_covar/100, na.rm = T), "low", mid_value_covar))]
+          dat[, (input$km_covar) := ifelse(dat[[input$km_covar]] >= quantile(dat[[input$km_covar]], (100-input$hi_cutoff_covar)/100, na.rm = T), "high", ifelse(dat[[input$km_covar]] <= quantile(dat[[input$km_covar]], input$lo_cutoff_covar/100, na.rm = T), "low", mid_value_covar))]
           
         } else if(is.character(dat[[input$km_covar]]) | is.factor(dat[[input$km_covar]])){
           

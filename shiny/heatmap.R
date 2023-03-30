@@ -4,7 +4,7 @@ library(shiny)
 library(RColorBrewer)
 library(data.table)
 library(msigdbr)
-library(ComplexHeatmap)
+library(heatmaply)
 library(dplyr)
 library(shinyWidgets)
 library(rintrojs)
@@ -81,16 +81,6 @@ heatmap_ui <- function(id, label, choices) {
                      multiple = TRUE,
                      options=list(placeholder = "eg. TSPAN6, TNMD etc.")),
       p("Click 'Create Heatmap' button in the bottom of the page each time after a parameter is changed."),
-      materialSwitch(inputId = ns("cluster_rows"),
-                     label = "Cluster the rows",
-                     status = "success",
-                     inline = TRUE,
-                     value = TRUE),
-      materialSwitch(inputId = ns("cluster_columns"), 
-                     label = "Cluster the columns",
-                     status = "success",
-                     inline = TRUE,
-                     value = TRUE),
       selectizeInput(inputId = ns("clustering_distance_rows"), 
                      multiple=F,
                      label = "choose the distance method for rows",
@@ -126,7 +116,7 @@ heatmap_ui <- function(id, label, choices) {
     ),
     
     mainPanel(
-      plotOutput(outputId = ns("heatmap_plot"))
+      plotlyOutput(outputId = ns("heatmap_plot"), width = "950px", height = "900px")
     )
   )
   
@@ -291,7 +281,7 @@ heatmap_server <- function(id,Xproj) {
           
           daf <- as.data.frame(pre_data())
           
-          rownames(daf) <- daf$meta.sample
+          rownames(daf) <- daf$meta.barcode
           
           same_hallmarks_names = intersect(final_gene_sets$gene_symbol, colnames(daf))
           
@@ -305,7 +295,7 @@ heatmap_server <- function(id,Xproj) {
           
           daf <- as.data.frame(pre_data())
           
-          rownames(daf) <- daf$meta.sample
+          rownames(daf) <- daf$meta.barcode
           
           selected_cols <- c(input$genes)
           
@@ -317,7 +307,7 @@ heatmap_server <- function(id,Xproj) {
           
           daf <- as.data.frame(pre_data())
           
-          rownames(daf) <- daf$meta.sample
+          rownames(daf) <- daf$meta.barcode
           
           uploaded_heatmap_csv <- input$heatmap_csv
 
@@ -368,7 +358,7 @@ heatmap_server <- function(id,Xproj) {
             
             daf <- as.data.frame(pre_data())
             
-            rownames(daf) <- daf$meta.sample
+            rownames(daf) <- daf$meta.barcode
             
             hm_categorized_gene <- c(input$hm_categorized_gene)
             
@@ -403,7 +393,7 @@ heatmap_server <- function(id,Xproj) {
               
               daf <- as.data.frame(pre_data())
               
-              rownames(daf) <- daf$meta.sample
+              rownames(daf) <- daf$meta.barcode
               
               chosen_meta <- c(input$annotation)
               
@@ -421,7 +411,7 @@ heatmap_server <- function(id,Xproj) {
               
               daf <- as.data.frame(pre_data())
               
-              rownames(daf) <- daf$meta.sample
+              rownames(daf) <- daf$meta.barcode
               
               hm_categorized_gene <- c(input$hm_categorized_gene)
               
@@ -487,18 +477,24 @@ heatmap_server <- function(id,Xproj) {
           
           
           return({
-            heatmap_obj <- Heatmap(mat(),
-                                   name = "mat",
-                                   cluster_rows = input$cluster_rows,
-                                   cluster_columns = input$cluster_columns,
-                                   clustering_distance_rows = input$clustering_distance_rows,
-                                   clustering_distance_columns = input$clustering_distance_columns,
-                                   clustering_method_rows = input$clustering_method_rows,
-                                   clustering_method_columns = input$clustering_method_columns,
-                                   show_column_names = FALSE)
+            distfun_row = function(x) stats::dist(x, method = input$clustering_distance_rows)
+            distfun_col =  function(x) stats::dist(x, method = input$clustering_distance_columns)
             
-            heatmap_obj <- draw(heatmap_obj)
-            heatmap_obj 
+            hclustfun_row = function(x) stats::hclust(x, method = input$clustering_method_rows)
+            hclustfun_col = function(x) stats::hclust(x, method = input$clustering_method_columns)
+            
+            
+            heatmap_obj <- heatmaply(mat(), 
+                                  fontsize_row = 9 , 
+                                  colors = rev(brewer.pal(n= 10, "RdBu")) , 
+                                  showticklabels = c(FALSE, TRUE) ,
+                                  distfun_row = distfun_row,
+                                  distfun_col = distfun_col,
+                                  hclustfun_row = hclustfun_row,
+                                  hclustfun_col = hclustfun_col,
+                                  plot_method = "plotly") 
+            
+            heatmap_obj
           })
         } else {
           
@@ -514,26 +510,29 @@ heatmap_server <- function(id,Xproj) {
           }
           validate(need(input$heatmap_run, "Please click the create heatmap button"))
           
+          distfun_row = function(x) stats::dist(x, method = input$clustering_distance_rows)
+          distfun_col =  function(x) stats::dist(x, method = input$clustering_distance_columns)
           
-          column_ha <- HeatmapAnnotation(df = meta())
+          hclustfun_row = function(x) stats::hclust(x, method = input$clustering_method_rows)
+          hclustfun_col = function(x) stats::hclust(x, method = input$clustering_method_columns)
           
-          heatmap_obj <- Heatmap(mat(),
-                                 name = "mat",
-                                 cluster_rows = input$cluster_rows,
-                                 cluster_columns = input$cluster_columns,
-                                 clustering_distance_rows = input$clustering_distance_rows,
-                                 clustering_distance_columns = input$clustering_distance_columns,
-                                 clustering_method_rows = input$clustering_method_rows,
-                                 clustering_method_columns = input$clustering_method_columns,
-                                 top_annotation = column_ha,
-                                 show_column_names = FALSE)
           
-          heatmap_obj <- draw(heatmap_obj)
-          heatmap_obj 
+          heatmap_obj <- heatmaply(mat(), 
+                                   fontsize_row = 9 , 
+                                   col_side_colors = meta(),
+                                   colors = rev(brewer.pal(n= 10, "RdBu")) , 
+                                   showticklabels = c(FALSE, TRUE) ,
+                                   distfun_row = distfun_row,
+                                   distfun_col = distfun_col,
+                                   hclustfun_row = hclustfun_row,
+                                   hclustfun_col = hclustfun_col,
+                                   plot_method = "plotly") 
+          
+          heatmap_obj
         }
       })
       
-      output$heatmap_plot <- renderPlot({
+      output$heatmap_plot <- renderPlotly({
         
         # Output for the heatmap plot
         

@@ -19,13 +19,13 @@ library(openxlsx)
 #Load Sources
 
 source("functions/gene_ranker.R")
-# source("functions/df_extractor.R")
-# source("functions/gene_grapher.R")
+source("functions/df_extractor.R")
+source("functions/gene_grapher.R")
 source("functions/gsea_replot.R")
 source("functions/plotGseaTable2.R")
 source("functions/top_plotter.R")
-# source("functions/data_importer.R")
-# source("functions/data_transformer.R")
+source("functions/data_importer.R")
+source("functions/data_transformer.R")
 
 ##GSEA ANALYSIS
 
@@ -86,23 +86,23 @@ gsea_ui <- function(id, label, choices) {
         
         hr(),
         
-        radioButtons(ns("gsea_gene_sets"), "Choose gene set collection", choices = c("MSigDB", "Custom Gene Set")),
+        radioButtons(ns("gsea_gene_sets"), "Choose gene set collection", choices = c("MSigDB", "Created Gene Set")),
       
         conditionalPanel(
           
           condition = "input.gsea_gene_sets == 'MSigDB'",
           ns=ns,
           
-          selectizeInput(ns("gsea_cat"), "Please select one of the following MSigDB collections", 
+          selectizeInput(ns("gsea_cat"), "Please select a Human MSigDB Collection", 
                          choices = NULL, 
                          options=list(placeholder = "eg. Hallmark")
           ),
           
-          radioButtons(ns("individual"), "Show", choices = c("Top Pathways", "Specific Pathway")),
+          radioButtons(ns("individual"), "Show", choices = c("Top Pathways", "Certain Pathway")),
           
           conditionalPanel(
             
-            condition = 'input.individual == "Specific Pathway"',
+            condition = 'input.individual == "Certain Pathway"',
             ns=ns,
             
             
@@ -119,18 +119,18 @@ gsea_ui <- function(id, label, choices) {
         
         conditionalPanel(
          
-          condition = "input.gsea_gene_sets == 'Custom Gene Set'",
+          condition = "input.gsea_gene_sets == 'Created Gene Set'",
           ns=ns,
           
           fileInput(inputId = ns("gset_up"),
                     label = "Upload your gene set as .csv file",
                     accept = c("text/csv", "text/comma-separated-values,text/plain",
                                ".csv")),  
-          radioButtons(ns("individual_2"), "Show", choices = c("Top Pathways", "Specific Pathway")),
+          radioButtons(ns("individual_2"), "Show", choices = c("Top Pathways", "Certain Pathway")),
           
           conditionalPanel(
             
-            condition = 'input.individual_2 == "Specific Pathway"',
+            condition = 'input.individual_2 == "Certain Pathway"',
             ns=ns,
             
             
@@ -193,18 +193,18 @@ gsea_server <- function(id,Xproj) {
       
       
       
-      if(input$gsea_gene_sets == 'Custom Gene Set') {
+      if(input$gsea_gene_sets == 'Created Gene Set') {
         
         data.frame(
           
           element = paste0("#", session$ns(c(NA, "gsea_samptyp + .selectize-control", "gsea_feat + .selectize-control ", "gsea_gene_sets", "individual_2"))),
           
           intro = paste(c(
-            "This is the gene set enrichment analysis (GSEA) module. Here, you can categorize samples based on a custom criteria and examine whether previously defined or user-provided gene sets are enriched in either of the data subset. <b>NOTE:</b> This module can take some time depending on the data set. Continue with the tutorial to learn more about this module.",
-            "You can select which sample types should be included in the analysis (eg. primary and/or metastatic).",
-            "GSEA is performed between two groups of data. If you would like to perform GSEA for a categorical clinical feature, you are expected to select two data subsets and define one of them as the 'sample' for the analysis (the other one will become reference). If you would like to perform GSEA for a numerical feature such as gene expression, then you can categorize samples based on gene expression values as 'high' and 'low' through user-defined quantiles. Setting high and low cutoff to 50, will categorize gene expression at the median value. You can set this numbers to 25 to compare the top 25% expressors to bottom 25% expressors.", 
-            "You can perform GSEA using previously defined gene sets from the <a href='https://www.gsea-msigdb.org/gsea/msigdb/'>Molecular Signatures Database (MSigDB)</a> or provide your own gene sets",
-            "If you select the 'Top Pathways' option, pathways with the highest and lowest enrichments are shown </i>(they may not always be significant!)</i>. If you choose 'Specific Pathway', the enrichment plot is prepared only for the pathway you select."
+            "This is the GSE Analysis app, press the buttons to learn features of the app.",
+            "You can choose single tissue type or more than one tissue types to filter patients who have that tissue type.",
+            "GSEA is performed between selected two variables. If you choose a clinical feature, you are expected to choose the two variables as the sample ID and the reference ID. If you choose a gene, the gene expressions are divided into two groups as high and low. With high cutoff percent and low cutoff percent, you select percentage of patients with showing the highest and least expression,respectively.", 
+            "You can perform GSEA with MSigDB Gene Sets or your gene sets",
+            "If you select the 'Top Pathways'option, the pathways with the most enrichment are shown . If you choose 'Certain Pathway', the enrichment plot is prepared for the selected pathway. "
           ))
           
         )
@@ -216,12 +216,12 @@ gsea_server <- function(id,Xproj) {
           element = paste0("#", session$ns(c(NA, "gsea_samptyp + .selectize-control", "gsea_feat + .selectize-control ", "gsea_gene_sets" ,"gsea_cat+ .selectize-control ", "individual"))),
           
           intro = paste(c(
-            "This is the gene set enrichment analysis (GSEA) module. Here, you can categorize samples based on a custom criteria and examine whether previously defined or user-provided gene sets are enriched in either of the data subset. <b>NOTE:</b> This module can take some time depending on the data set. Continue with the tutorial to learn more about this module.",
-            "You can select which sample types should be included in the analysis (eg. primary and/or metastatic).",
-            "GSEA is performed between two groups of data. If you would like to perform GSEA for a categorical clinical feature, you are expected to select two data subsets and define one of them as the 'sample' for the analysis (the other one will become reference). If you would like to perform GSEA for a numerical feature such as gene expression, then you can categorize samples based on gene expression values as 'high' and 'low' through user-defined quantiles. Setting high and low cutoff to 50, will categorize gene expression at the median value. You can set this numbers to 25 to compare the top 25% expressors to bottom 25% expressors.",
-            "You can perform GSEA using previously defined gene sets from the <a href='https://www.gsea-msigdb.org/gsea/msigdb/'>Molecular Signatures Database (MSigDB)</a> or provide your own gene sets",
-            "Select MSigDB gene set collection to use in the analyses <b>NOTE:</b> Since some of these collections contain a large number of gene sets, analysis can take some time.",
-            "If you select the 'Top Pathways' option, pathways with the highest and lowest enrichments are shown </i>(they may not always be significant!)</i>. If you choose 'Specific Pathway', the enrichment plot is prepared only for the pathway you select."
+            "This is the GSE Analysis app, press the buttons to learn features of the app.",
+            "You can choose single tissue type or more than one tissue types to filter patients who have that tissue type.",
+            "GSEA is performed between selected two variables. If you choose a clinical feature, you are expected to choose the two variables as the sample ID and the reference ID. If you choose a gene, the gene expressions are divided into two groups as high and low. With high cutoff percent and low cutoff percent, you select percentage of patients with showing the highest and least expression,respectively.",
+            "You can perform GSEA with MSigDB Gene Sets or your gene sets",
+            "You need to identify the gene set for GSEA.",
+            "If you select the 'Top Pathways'option, the pathways with the most enrichment are shown . If you choose 'Certain Pathway', the enrichment plot is prepared for the selected pathway. "
           ))
           
         )
@@ -244,12 +244,12 @@ gsea_server <- function(id,Xproj) {
     
     panel_iv <- InputValidator$new()
     panel_iv$condition(~ input$gsea_feat %in% colnames(con_dat()))  
-    panel_iv$add_rule("gsea_sel_feat_meta_groups", ~ if (length(input$gsea_sel_feat_meta_groups) < 2 & !anyNA(input$gsea_sel_feat_meta_groups)) "Please select one more data subsets")
+    panel_iv$add_rule("gsea_sel_feat_meta_groups", ~ if (length(input$gsea_sel_feat_meta_groups) < 2 & !anyNA(input$gsea_sel_feat_meta_groups)) "Please select one more sample")
  
     numeric_iv <- InputValidator$new()
     numeric_iv$condition(~ input$gsea_feat %in% colnames(con_dat2()))
-    numeric_iv$add_rule("gsea_high_cutoff", ~ if (input$gsea_high_cutoff + input$gsea_low_cutoff > 100 & !anyNA(input$gsea_low_cutoff) & !anyNA(input$gsea_high_cutoff)) "For proper categorization, high and low cutoffs can't exceed 100 when added together")
-    numeric_iv$add_rule("gsea_low_cutoff", ~ if (input$gsea_high_cutoff + input$gsea_low_cutoff > 100 & !anyNA(input$gsea_low_cutoff) & !anyNA(input$gsea_high_cutoff)) "For proper categorization, high and low cutoffs can't exceed 100 when added together")
+    numeric_iv$add_rule("gsea_high_cutoff", ~ if (input$gsea_high_cutoff + input$gsea_low_cutoff > 100 & !anyNA(input$gsea_low_cutoff) & !anyNA(input$gsea_high_cutoff)) "High cutoff percent and low cutoff percent must be less than 100")
+    numeric_iv$add_rule("gsea_low_cutoff", ~ if (input$gsea_high_cutoff + input$gsea_low_cutoff > 100 & !anyNA(input$gsea_low_cutoff) & !anyNA(input$gsea_high_cutoff)) "High cutoff percent and low cutoff percent must be less than 100")
     
     iv <- InputValidator$new()
     iv$add_validator(panel_iv)
@@ -272,11 +272,15 @@ gsea_server <- function(id,Xproj) {
     
    load(file='genesets/msigdb_hallmark.rda')
     
+  names(msigdb_hallmark) <- gsub("HALLMARK_","",names(msigdb_hallmark))
+    
     names(msigdb_hallmark)
     
   } else if(input$gsea_cat == "go") {
     
      load(file='genesets/msigdb_go.rda')
+    
+    names(msigdb_go) <- gsub("GO_","",names(msigdb_go))
     
     names(msigdb_go)
     
@@ -399,6 +403,19 @@ gsea_server <- function(id,Xproj) {
                                   ), 
                                   server = T)})
     
+    
+    
+    # observe({
+    #   req(Xproj$a())
+    #   req(input$gsea_feat)
+    #   if (sum(Xproj$a()[[input$gsea_feat]]) == 0)
+    #     return(cat("Please select a different gene"))
+    #   
+    # })
+    
+    
+    
+    
     # Prompt conditional panel if variable is a gene
     output$gsea_var_status <- reactive({
       
@@ -479,7 +496,7 @@ gsea_server <- function(id,Xproj) {
     
   plot_ind <- reactive({
     
-    if(input$individual == "Specific Pathway" && input$gsea_gene_sets == 'MSigDB'){
+    if(input$individual == "Certain Pathway" && input$gsea_gene_sets == 'MSigDB'){
       
       input$path
       
@@ -487,11 +504,11 @@ gsea_server <- function(id,Xproj) {
       
       NULL
       
-    }else if(input$individual_2 == "Specific Pathway" && input$gsea_gene_sets == 'Custom Gene Set'){
+    }else if(input$individual_2 == "Certain Pathway" && input$gsea_gene_sets == 'Created Gene Set'){
       
       input$cre_path
       
-    }else if(input$individual_2 == "Top Pathways" && input$gsea_gene_sets == 'Custom Gene Set'){
+    }else if(input$individual_2 == "Top Pathways" && input$gsea_gene_sets == 'Created Gene Set'){
       
       NULL
       
@@ -550,9 +567,9 @@ gsea_server <- function(id,Xproj) {
   
   gene_s <- reactive({
     
-    if(input$gsea_gene_sets == 'Custom Gene Set') {
+    if(input$gsea_gene_sets == 'Created Gene Set') {
       
-      "Custom Gene Set"
+      "Created Gene Set"
       
     }else if (input$gsea_gene_sets == 'MSigDB'){
       
@@ -571,11 +588,15 @@ gsea_server <- function(id,Xproj) {
       
       load(file='genesets/msigdb_hallmark.rda')
       
+      names(msigdb_hallmark) <- gsub("HALLMARK_","",names(msigdb_hallmark))
+      
       gene_set <-msigdb_hallmark
       
     } else if (input$gsea_cat == "go" && input$gsea_gene_sets == 'MSigDB') {
       
       load(file='genesets/msigdb_go.rda')
+      
+      names(msigdb_go) <- gsub("GO_","",names(msigdb_go))
       
       gene_set <- msigdb_go
       
@@ -603,7 +624,7 @@ gsea_server <- function(id,Xproj) {
       
       gene_set <- msigdb_all
       
-    }else if (input$gsea_gene_sets == "Custom Gene Set"){
+    }else if (input$gsea_gene_sets == "Created Gene Set"){
       
       gene_set <- gdata()
       
@@ -618,9 +639,7 @@ gsea_server <- function(id,Xproj) {
     
     if(is.numeric(Xproj$a()[[input$gsea_feat]])) {
       
-      # print("high")
-      
-      return("high")
+      print("high")
       
     }else {
       
@@ -636,9 +655,7 @@ gsea_server <- function(id,Xproj) {
     
     if(is.numeric(Xproj$a()[[input$gsea_feat]])) {
       
-      # print("low")
-      
-      return("low")
+      print("low")
       
     }else {
       
@@ -649,21 +666,26 @@ gsea_server <- function(id,Xproj) {
   })
   
   
+  
   #fgsea reactive
   
   res <- reactive({
     
     exprs = gsea_dat()
     
-    minSize = 1 
+    fgsea(pathways = gene_set(), stats = preranked_genes(), minSize = 1, maxSize = ncol(exprs)-3, nPermSimple = 100000, eps = 0)
     
-    maxSize = ncol(exprs)-3
     
-    fgsea(pathways = gene_set(), stats = preranked_genes(), minSize = minSize, maxSize = maxSize)
-    
-    # assign("gsea_res", res, .GlobalEnv)
     
   }) 
+  
+  
+  #hits reactive
+  
+  hits <- reactive({
+    c(grep(plot_ind(), res()$pathway, ignore.case = T, value = T)
+    )})
+  
   
   
   # plot 
@@ -674,17 +696,17 @@ gsea_server <- function(id,Xproj) {
     
     ranked_genes = preranked_genes()
     
-    # pos_marker = NULL 
+    pos_marker = NULL 
     
-    # neg_marker = NULL
+    neg_marker = NULL
     
     sample_id = sample_id()
     
-    # sample_cluster = NULL
+    sample_cluster = NULL
     
     reference_id = reference_id()
     
-    # reference_cluster = NULL
+    reference_cluster = NULL
     
     gene_set = gene_set()
     
@@ -698,7 +720,7 @@ gsea_server <- function(id,Xproj) {
     
     plot_individual = plot_ind()
     
-    append_title = T
+    append_title = F
     
     top_plots_title = T
     
@@ -718,20 +740,18 @@ gsea_server <- function(id,Xproj) {
       
       if (top_plots_title == T) {
         
-        # arg_list <- list(samp_clu = sample_cluster, ref_clu = reference_cluster, pos = paste(pos_marker, collapse = "."), neg = paste(neg_marker,
-        #                                                                                                                               collapse = "."))
-        # select_non_null <- !sapply(arg_list, function(x) {
-        #   identical(x, "")
-        # })
+        arg_list <- list(samp_clu = sample_cluster, ref_clu = reference_cluster, pos = paste(pos_marker, collapse = "."), neg = paste(neg_marker,
+                                                                                                                                      collapse = "."))
+        select_non_null <- !sapply(arg_list, function(x) {
+          identical(x, "")
+        })
         
         
         
         main_title <- paste(sample_id, "vs", reference_id)
-        # plot_subtitle <- paste(names(arg_list[select_non_null]), arg_list[select_non_null], sep = ": ", collapse = "__")
+        plot_subtitle <- paste(names(arg_list[select_non_null]), arg_list[select_non_null], sep = ": ", collapse = "__")
         
-        # plot_title <- paste0(main_title, "\n", plot_subtitle)
-        
-        plot_title <- main_title
+        plot_title <- paste0(main_title, "\n", plot_subtitle)
         
       } else {
         plot_title = ""
@@ -745,83 +765,80 @@ gsea_server <- function(id,Xproj) {
     } else {
       
       
-      hits <- c(grep(plot_individual, res$pathway, ignore.case = T, value = T))
-       
-      assign('hits', hits, .GlobalEnv)
-      # 
-      # 
-      # if (length(hits) > 1) {
-      #   multiple_hits <- t(t(hits))
-      #   colnames(multiple_hits) <- "Multiple pathway matches"
-      #   rownames(multiple_hits) <- c(1:length(hits))
-      #   print(multiple_hits)
-      #   num <- as.numeric(readline(prompt = "Multiple pathways are found. Select a number from the list above "))
-      #   
-      #   
-      #   while (!num %in% 1:length(hits)) {
-      #     num <- as.numeric(readline(prompt = paste0("Please pick a number between 1 and ", length(hits), ":    ")))
-      #   }
-      #   assign("num", num, .GlobalEnv)
-      #   
-      #   annot_padj <- signif(as.numeric(res[res$pathway == hits[num], "padj"]), digits = 2)
-      #   annot_NES <- signif(as.numeric(res[res$pathway == hits[num], "NES"]), digits = 2)
-      #   annot_ES <- signif(as.numeric(res[res$pathway == hits[num], "ES"]), digits = 2)
-      #   
-      #   # grob<- grobTree(textGrob(paste('adj.p: ', annot_padj, '\nNES:', annot_NES), x= 0.1, y=annot_ES, hjust = 0, gp = gpar(col='red',
-      #   # fontsize=3, fontface='italic')))
-      #   
-      #   annot_text <- paste("adj.p: ", annot_padj, "\nNES:", annot_NES)
-      #   
-      #   if (append_title == F) {
-      #     
-      #     # plotEnrichment(pathway = gene_set[[hits[num]]], stats = ranked_genes) + labs(title = hits[num]) + annotation_custom(grob)
-      #     
-      #     plot_grob <- plotEnrichment(pathway = gene_set[[hits[num]]], stats = ranked_genes) + labs(title = hits[num]) + annotate("text",
-      #                                                                                                                             x = x_pos, y = annot_ES/2, label = annot_text, colour = annot_text_color, size = annot_text_size, fontface = annot_text_fontface) +
-      #       theme(plot.title = element_text(size = 5, hjust = 0.5))
-      #     print(plot_grob)
-      #     
-      #   } else {
-      #     
-      #     # arg_list <- list(samp_clu = sample_cluster, ref_clu = reference_cluster, pos = pos_marker, neg = neg_marker)
-      #     # select_non_null <- !sapply(arg_list, function(x) {
-      #     #   identical(x, "")
-      #     # })
-      #     # select_non_null2 <- !sapply(arg_list, is.null)
-      #     # select_non_null <- as.logical(select_non_null * select_non_null2)
-      #     # 
-      #     # plot_subtitle <- paste(names(arg_list[select_non_null]), arg_list[select_non_null], sep = ": ", collapse = "__")
-      #     
-      #     
-      #     
-      #     # plotEnrichment(pathway = gene_set[[hits[num]]], stats = ranked_genes) + labs(title = paste0(hits[num], sample_id, ' vs ', reference_id),
-      #     # subtitle = plot_subtitle)+ annotation_custom(grob)
-      #     
-      #     plot_grob <- plotEnrichment(pathway = gene_set[[hits[num]]], stats = ranked_genes) + 
-      #       labs(title = hits[num], subtitle = paste(sample_id, "vs", reference_id 
-      #                                                # plot_subtitle
-      #                                                )) + 
-      #       annotate("text", x = x_pos, y = annot_ES/2, label = annot_text, colour = annot_text_color,
-      #                                                                                                                                                                                  size = annot_text_size, fontface = annot_text_fontface) + theme(plot.title = element_text(size = 10, hjust = 0.5), plot.subtitle = element_text(size = 6,
-      #                                                                                                                                                                                                                                                                                                                                  hjust = 0.5))
-      #     print(plot_grob)
-      #     
-      #    
-      #     
-      #   }
-      #   
-      #   
-      #   
-      #   ##########################
-      #   
-      # } else {
+      # hits <- c(grep(plot_individual, res$pathway, ignore.case = T, value = T))
+      
+      # assign('hits', hits, .GlobalEnv)
+      
+      
+      if (length(hits()) > 1) {
+        multiple_hits <- t(t(hits()))
+        colnames(multiple_hits) <- "Multiple pathway matches"
+        rownames(multiple_hits) <- c(1:length(hits()))
+        print(multiple_hits)
+        num <- as.numeric(readline(prompt = "Multiple pathways are found. Select a number from the list above "))
+        
+        
+        while (!num %in% 1:length(hits())) {
+          num <- as.numeric(readline(prompt = paste0("Please pick a number between 1 and ", length(hits()), ":    ")))
+        }
+        assign("num", num, .GlobalEnv)
+        
+        annot_padj <- signif(as.numeric(res[res$pathway == hits()[num], "padj"]), digits = 2)
+        annot_NES <- signif(as.numeric(res[res$pathway == hits()[num], "NES"]), digits = 2)
+        annot_ES <- signif(as.numeric(res[res$pathway == hits()[num], "ES"]), digits = 2)
+        
+        # grob<- grobTree(textGrob(paste('adj.p: ', annot_padj, '\nNES:', annot_NES), x= 0.1, y=annot_ES, hjust = 0, gp = gpar(col='red',
+        # fontsize=3, fontface='italic')))
+        
+        annot_text <- paste("adj.p: ", annot_padj, "\nNES:", annot_NES)
+        
+        if (append_title == F) {
+          
+          # plotEnrichment(pathway = gene_set[[hits[num]]], stats = ranked_genes) + labs(title = hits[num]) + annotation_custom(grob)
+          
+          plot_grob <- plotEnrichment(pathway = gene_set[[hits()[num]]], stats = ranked_genes) + labs(title = hits()[num]) + annotate("text",
+                                                                                                                                  x = x_pos, y = annot_ES/2, label = annot_text, colour = annot_text_color, size = annot_text_size, fontface = annot_text_fontface) +
+            theme(plot.title = element_text(size = 5, hjust = 0.5))
+          print(plot_grob)
+          
+        } else {
+          
+          arg_list <- list(samp_clu = sample_cluster, ref_clu = reference_cluster, pos = pos_marker, neg = neg_marker)
+          select_non_null <- !sapply(arg_list, function(x) {
+            identical(x, "")
+          })
+          select_non_null2 <- !sapply(arg_list, is.null)
+          select_non_null <- as.logical(select_non_null * select_non_null2)
+          
+          plot_subtitle <- paste(names(arg_list[select_non_null]), arg_list[select_non_null], sep = ": ", collapse = "__")
+          
+          
+          
+          # plotEnrichment(pathway = gene_set[[hits[num]]], stats = ranked_genes) + labs(title = paste0(hits[num], sample_id, ' vs ', reference_id),
+          # subtitle = plot_subtitle)+ annotation_custom(grob)
+          
+          plot_grob <- plotEnrichment(pathway = gene_set[[hits()[num]]], stats = ranked_genes) + labs(title = hits()[num], subtitle = paste(sample_id,
+                                                                                                                                        "vs", reference_id, plot_subtitle)) + annotate("text", x = x_pos, y = annot_ES/2, label = annot_text, colour = annot_text_color,
+                                                                                                                                                                                       size = annot_text_size, fontface = annot_text_fontface) + theme(plot.title = element_text(size = 10, hjust = 0.5), plot.subtitle = element_text(size = 6,
+                                                                                                                                                                                                                                                                                                                                       hjust = 0.5))
+          print(plot_grob)
+          
+         
+          
+        }
+        
+        
+        
+        ##########################
+        
+      } else {
         
         if (verbose)
-          message(paste("Plotting", hits))
+          message(paste("Plotting", hits()))
         
-        annot_padj <- signif(as.numeric(res[res$pathway == hits, "padj"]), digits = 2)
-        annot_NES <- signif(as.numeric(res[res$pathway == hits, "NES"]), digits = 2)
-        annot_ES <- signif(as.numeric(res[res$pathway == hits, "ES"]), digits = 2)
+        annot_padj <- signif(as.numeric(res[res$pathway == hits(), "padj"]), digits = 2)
+        annot_NES <- signif(as.numeric(res[res$pathway == hits(), "NES"]), digits = 2)
+        annot_ES <- signif(as.numeric(res[res$pathway == hits(), "ES"]), digits = 2)
         x_pos <- length(ranked_genes)/4
         
         # grob<- grobTree(textGrob(paste('adj.p: ', annot_padj, '\nNES:', annot_NES), x= 0.1, y=annot_ES, hjust = 0, gp = gpar(col='red',
@@ -834,47 +851,41 @@ gsea_server <- function(id,Xproj) {
           
           # plotEnrichment(pathway = gene_set[[hits]], stats = ranked_genes) + labs(title = hits) + annotation_custom(grob)
           
-          plot_grob <- plotEnrichment(pathway = gene_set[[hits]], stats = ranked_genes) + labs(title = hits) + annotate("text", x = x_pos,
+          plot_grob <- plotEnrichment(pathway = gene_set[[hits()]], stats = ranked_genes) + labs(title = hits()) + annotate("text", x = x_pos,
                                                                                                                         y = annot_ES/2, label = annot_text, colour = annot_text_color, size = annot_text_size, fontface = annot_text_fontface)
           print(plot_grob)
           
         } else {
           
-          # arg_list <- list(samp_clu = sample_cluster, ref_clu = reference_cluster, pos = paste(pos_marker, collapse = "."), neg = paste(neg_marker,
-          #                                                                                                                               collapse = "."))
-          # 
-          # select_non_null <- !sapply(arg_list, function(x) {
-          #   identical(x, "")
-          # })
-          # select_non_null2 <- !sapply(arg_list, is.null)
-          # select_non_null <- as.logical(select_non_null * select_non_null2)
-          # 
-          # plot_subtitle <- paste(names(arg_list[select_non_null]), arg_list[select_non_null], sep = ": ", collapse = " ")
+          arg_list <- list(samp_clu = sample_cluster, ref_clu = reference_cluster, pos = paste(pos_marker, collapse = "."), neg = paste(neg_marker,
+                                                                                                                                        collapse = "."))
+          
+          select_non_null <- !sapply(arg_list, function(x) {
+            identical(x, "")
+          })
+          select_non_null2 <- !sapply(arg_list, is.null)
+          select_non_null <- as.logical(select_non_null * select_non_null2)
+          
+          plot_subtitle <- paste(names(arg_list[select_non_null]), arg_list[select_non_null], sep = ": ", collapse = " ")
           
           # plotEnrichment(pathway = gene_set[[hits]], stats = ranked_genes) + labs(title = paste0(hits, sample_id, ' vs ', reference_id), subtitle =
           # plot_subtitle)+ annotation_custom(grob)
           
-          plot_grob <- plotEnrichment(pathway = gene_set[[hits]], stats = ranked_genes) + 
-            labs(title = hits, subtitle = paste(sample_id,"vs", reference_id 
-                                                # plot_subtitle
-                                                )) + 
-            annotate("text", x = x_pos, y = annot_ES/2, label = annot_text, colour = annot_text_color,
-                     size = annot_text_size, fontface = annot_text_fontface) + 
-            theme(plot.title = element_text(size = 10, hjust = 0.5), 
-                  plot.subtitle = element_text(size = 6, hjust = 0.5))
-          
+          plot_grob <- plotEnrichment(pathway = gene_set[[hits()]], stats = ranked_genes) + labs(title = hits(), subtitle = paste(sample_id,
+                                                                                                                              "vs", reference_id, plot_subtitle)) + annotate("text", x = x_pos, y = annot_ES/2, label = annot_text, colour = annot_text_color,
+                                                                                                                                                                             size = annot_text_size, fontface = annot_text_fontface) + theme(plot.title = element_text(size = 10, hjust = 0.5), plot.subtitle = element_text(size = 6,
+                                                                                                                                                                                                                                                                                                                             hjust = 0.5))
           print(plot_grob)
         }
         
-      # }
+      }
       
     }
     
     
   })
   
-  
-  
+
 
     # GSEA analysis plot and gene list
     
@@ -892,11 +903,11 @@ gsea_server <- function(id,Xproj) {
           req(iv$is_valid()) 
           
           validate(
-
+            
             need(input$gsea_samptyp, ''),
             need(input$gsea_feat, '')
           )
-
+          
           
           if(input$gsea_feat %in% colnames(con_dat())){
             
@@ -923,7 +934,7 @@ gsea_server <- function(id,Xproj) {
             validate(
               need(input$gsea_cat, '')
             )
-            if (input$individual == "Specific Pathway") {
+            if (input$individual == "Certain Pathway") {
               validate(
                 need(input$path, ""))
             }
@@ -931,11 +942,11 @@ gsea_server <- function(id,Xproj) {
           }
           
           
-          if(input$gsea_gene_sets == "Custom Gene Set"){
+          if(input$gsea_gene_sets == "Created Gene Set"){
             
             validate(need(input$gset_up, ""))
             
-            if (input$individual_2 == "Specific Pathway") {
+            if (input$individual_2 == "Certain Pathway") {
               validate(
                 need(input$cre_path, ""))
             }
@@ -1000,11 +1011,11 @@ gsea_server <- function(id,Xproj) {
             }
             
             
-            if(input$gsea_gene_sets == "Custom Gene Set"){
+            if(input$gsea_gene_sets == "Created Gene Set"){
               
               validate(need(input$gset_up, "Don't forget to upload your csv file"))
               
-              if (input$individual_2 == "Specific Pathway") {
+              if (input$individual_2 == "Certain Pathway") {
                 validate(
                   need(input$cre_path, "Pathway choice is required"))
               }
@@ -1012,9 +1023,9 @@ gsea_server <- function(id,Xproj) {
             
               if(input$gsea_gene_sets == 'MSigDB'){
               
-             validate(need(input$gsea_cat, 'Please select gene set'))
+             validate(need(input$gsea_cat, 'Gene set choice is required'))
               
-              if (input$individual == "Specific Pathway") {
+              if (input$individual == "Certain Pathway") {
                 validate(
                   need(input$path, "Pathway choice is needed"))
               }
@@ -1045,16 +1056,79 @@ gsea_server <- function(id,Xproj) {
               
             })
           
-      
+          #notification
           
-          
-          
-        
-        
+          isolate({
+            
+            req(iv$is_valid()) 
+            
+            validate(
+              
+              need(input$gsea_samptyp, ''),
+              need(input$gsea_feat, '')
+            )
+            
+            
+            if(input$gsea_feat %in% colnames(con_dat())){
+              
+              validate(
+                
+                need(input$gsea_sel_feat_meta_groups, ''),
+                need(input$gsea_sel_feat_meta_groups2, '')
+                
+              )
+              
+            }
+            
+            if(input$gsea_feat %in% colnames(con_dat2())){
+              
+              validate(
+                need(input$gsea_high_cutoff, ""),
+                need(input$gsea_low_cutoff, '')
+              )
+            }
+            
+            
+            if(input$gsea_gene_sets == 'MSigDB'){
+              
+              validate(
+                need(input$gsea_cat, '')
+              )
+              if (input$individual == "Certain Pathway") {
+                validate(
+                  need(input$path, ""))
+              }
+              
+            }
+            
+            
+            if(input$gsea_gene_sets == "Created Gene Set"){
+              
+              validate(need(input$gset_up, ""))
+              
+              if (input$individual_2 == "Certain Pathway") {
+                validate(
+                  need(input$cre_path, ""))
+              }
+              
+            }
+            
+            ties <- reactive({sum(duplicated(preranked_genes()[preranked_genes() != 0]))})
+            
+            
+              
+              if(ties()!= 0){
 
- 
-        
-        
+                showNotification("There are genes in the preranked list having the same ranking value.
+                             This situation may cause unexpected results.", type= "warning", duration = NULL)
+                
+              }
+
+            
+            
+          })
+          
+          
       })
   })
 }

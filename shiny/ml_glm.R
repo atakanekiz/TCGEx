@@ -8,6 +8,7 @@ library(shinythemes)
 library(DT)
 library(ggplot2)
 library(plotly)
+library(shinyjs)
 
 #Functions
 
@@ -109,9 +110,7 @@ regression_sidecontrols <- function(id) {
       condition = "input.regression_workflow == 'ctest_model' ", ns = ns, 
       sliderInput(NS(id,"train_percentage"),
                   "Set the training set percentage (If 30% selected, 30% of the data will be used as training set)",
-                  min = 10, max = 90, value = 10, step = 10),
-      selectizeInput(NS(id,"lambda_for_prediction"), "Select lambda value for prediction: ", 
-                     choices = c("lambda.min","lambda.1se"))
+                  min = 10, max = 90, value = 10, step = 10)
       
     ),
     h3("Regression: Ridge/ElasticNet/Lasso"),
@@ -149,13 +148,13 @@ ml_ui <- function(id) {
           column(6,verbatimTextOutput(NS(id,"response_set"))),
           column(6,verbatimTextOutput(NS(id,"predictor_set")))
         ),
+        # fluidRow(
+        #   column(6,h6("Listed genes are not present in the data and they are removed from the response list.")),
+        #   column(6,h6("Listed genes are not present in the data and they are removed from the predictor list."))
+        # ),
         fluidRow(
-          column(6,h6("Listed genes are not present in the data and they are removed from the response list.")),
-          column(6,h6("Listed genes are not present in the data and they are removed from the predictor list."))
-        ),
-        fluidRow(
-          column(6,verbatimTextOutput(NS(id,"validation_message_response"))),
-          column(6,verbatimTextOutput(NS(id,"validation_message_predictor")))
+          column(6,textOutput(NS(id,"validation_message_response"))),
+          column(6,textOutput(NS(id,"validation_message_predictor")))
         )
         
         
@@ -177,7 +176,15 @@ ml_ui <- function(id) {
                                 choices = c("lambda.min","lambda.1se")),
                  textOutput(NS(id,"lambda_value_min")),
                  textOutput(NS(id,"lambda_value_1se")),
-                 textOutput(NS(id,"model_error"))
+                 conditionalPanel(
+                   condition = "input.regression_workflow == 'ctest_model' ", ns = ns, 
+                   selectizeInput(NS(id,"lambda_for_prediction"), "Select lambda value for prediction: ", 
+                                  choices = c("lambda.min","lambda.1se")),
+                   actionButton(NS(id,"run_prediction"), "Run prediction"),
+                   textOutput(NS(id,"model_error"))
+                   
+                 )
+                 
                  
                  ),
           column(3,
@@ -349,7 +356,9 @@ data_prep_ml_server <- function(id,Xproj) {
       } else if (input$response_prep_method == "cibersort") {
         list_r = cibersort_list()
       }
-      colnames(list_r) = "gene_symbol"
+      if (length(list_r) > 0) {
+        colnames(list_r) = "gene_symbol"
+      }
       unique(list_r)
     })
     
@@ -373,7 +382,9 @@ data_prep_ml_server <- function(id,Xproj) {
           
         }
       }
-      colnames(list_p) <- "gene_symbol"
+      if (length(list_p) > 0) {
+        colnames(list_p) <- "gene_symbol"
+      }
       unique(list_p)
     })
     
@@ -390,12 +401,23 @@ data_prep_ml_server <- function(id,Xproj) {
       response_missing <- response_det()[which(is.exist == "FALSE"),]
       response_missing
     })
-    output$validation_message_predictor <- renderPrint({
-      predictor_missing()
+    output$validation_message_response <- renderText({
+      if (length(response_missing()) > 0) {
+        paste("Listed genes are not present in the data and they are removed from the predictor list:\n",
+            paste(response_missing(), collapse = ","))
+      } else {
+        hide("output")
+      }
     })
     
-    output$validation_message_response <- renderPrint({
-      response_missing()
+    
+    output$validation_message_predictor <- renderText({
+      if (length(predictor_missing()) > 0) {
+        paste("Listed genes are not present in the data and they are removed from the predictor list:\n",
+              paste(predictor_missing(), collapse = ","))
+      } else {
+        hide("output")
+      }
     })
     
     
@@ -421,8 +443,23 @@ data_prep_ml_server <- function(id,Xproj) {
       predictor_det
     })
     
-    output$response_set <- renderPrint({clean_response_set()$gene_symbol}) #response genes 
-    output$predictor_set <- renderPrint({clean_predictor_set()$gene_symbol }) #predictor genes
+    output$response_set <- renderPrint({
+        if(is.null(clean_response_set()$gene_symbol)) {
+          hide("output")
+        } else {
+          show("output")
+          return(clean_response_set()$gene_symbol)
+        }
+    }) 
+    
+    output$predictor_set <- renderPrint({
+      if(is.null(clean_predictor_set()$gene_symbol)) {
+        hide("output")
+      } else {
+        show("output")
+        return(clean_predictor_set()$gene_symbol)
+      }
+    })
   
     reg_data <- reactive({
       select(Xproj$a(), clean_response_set()[,1], clean_predictor_set()[,1]) %>%
@@ -480,11 +517,16 @@ ml_main_server <- function(id,regress_data,Xproj) {
       introjs(session, options = list(steps = help_regression() ) )
     })
     
-    trows <- reactive( { 
-      nrowd <- nrow(regress_data())
-      set.seed(30)
-      trowsx <- sample(1:nrowd, (input$train_percentage*nrowd)/100 ,replace = FALSE)
-      trowsx
+    trows <- eventReactive(input$run, {
+      if (input$regression_workflow == "ctest_model") {
+        nrowd <- nrow(regress_data())
+        set.seed(30)
+        trowsx <- sample(1:nrowd, (input$train_percentage*nrowd)/100 ,replace = FALSE)
+        trowsx
+      } else {
+        NULL
+        
+      }
     })
     
     
@@ -505,8 +547,8 @@ ml_main_server <- function(id,regress_data,Xproj) {
     })
     
     
-    prediction_error <- eventReactive(input$lambda_for_prediction, {
-      if(input$regression_workflow == "ctest_model"){
+    prediction_error <- eventReactive(input$run_prediction, {
+      if(input$regression_workflow == "ctest_model" & !is.null(trows())){
         
         test_regress_data <- regress_data()[-trows(),]
         response_var_test <- as.matrix(select(test_regress_data, response)) 
@@ -514,15 +556,25 @@ ml_main_server <- function(id,regress_data,Xproj) {
         prediction <- predict(cvfit(), s = input$lambda_for_prediction, newx = predictor_var_test)
         
         error <- mean((response_var_test - prediction)^2)
+        error
+      } else  {
+        
         
       }
-      error
+      
     })
     
     coef_data <- reactive({
-      c <- as.matrix(coef(cvfit(), s = input$lambda_for_coef))
-      c <-  c[2:length(rownames(c)), ]
-      as.data.frame(c)})
+      
+      if(!is.null(cvfit())) {
+        c <- as.matrix(coef(cvfit(), s = input$lambda_for_coef))
+        c <-  c[2:length(rownames(c)), ]
+        c = c[order(abs(c), decreasing = TRUE)]
+        as.data.frame(c)
+      } else {
+        NULL
+      }
+      })
     
     
     output$lambda_error_plot <- renderPlot({plot(cvfit(),xvar = "lambda", label = TRUE)})
@@ -563,7 +615,13 @@ ml_main_server <- function(id,regress_data,Xproj) {
     })
     
     output$coef_data <- renderDataTable({
-      coef_data()
+      if(is.null(coef_data())) {
+        hide("output")
+      } else {
+        show("output")
+        return(coef_data())
+      }
+      
     })
     
     output$lambda_value_min <- renderText({
@@ -573,7 +631,13 @@ ml_main_server <- function(id,regress_data,Xproj) {
       paste("lambda.1se: ", cvfit()$lambda.1se)})
     
     output$model_error <- renderText({
-      paste(" MSE Error: ", prediction_error() ) 
+      if(is.null(prediction_error())) {
+        hide("output")
+      } else {
+        show("output")
+        paste(" MSE Error: ", prediction_error() )
+      }
+       
     })
     
     output$download_coef <- downloadHandler(
