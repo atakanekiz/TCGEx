@@ -45,17 +45,16 @@ gene_vs_cat_ui <- function(id, label, choices){
                        "Select faceting variable (optional)",
                        choices=NULL, # will be updated dynamically
                        options = list(placeholder = "eg. meta.gender")),
-        actionBttn(inputId = ns("cat_gene_run"), 
-                   label = "Generate Correlation Plot",
-                   style = "unite",
-                   block = TRUE,
-                   color = "primary"),
-        br(),
         
         checkboxInput(inputId = ns("exprs_stats"), "Show statistics?", F),
-        downloadButton(ns("downloadPlot4"), "Download Meta Data Analysis Plot", style="color: #eeeeee; background-color: #01303f; border-color: #01303f")
+        downloadButton(ns("downloadPlot4"), "Download plot", style="color: #eeeeee; background-color: #01303f; border-color: #01303f"),
         
+        #help section UI
         
+        introjsUI(),
+        actionButton(ns("genecat_help"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
+        
+
       ),
       
       mainPanel(
@@ -63,7 +62,7 @@ gene_vs_cat_ui <- function(id, label, choices){
         
         plotOutput(outputId = ns("exprs_plot")),
         
-        conditionalPanel(           ##Before I change it this panel was including every conditional panel, we can make in this way again (Cagatay)
+        conditionalPanel(           ## Before changing this section, panel was including every conditional panel. It can be reverted if needed
           
           h3("Graphing options"),
           
@@ -210,6 +209,46 @@ gene_vs_cat_server <- function(id,Xproj){
   moduleServer(id,function(input, output, session){
     
     
+    genecat_steps <- reactive({
+      
+      
+      return(
+        
+        data.frame(
+          
+          element = paste0("#", session$ns(c(NA, 
+                                             "exprs_samptyp + .selectize-control", 
+                                             "cat_plotvar + .selectize-control",
+                                             "cat_plotvarsubset + .selectize-control",
+                                             "num_plotvar + .selectize-control",
+                                             "facet_plotvar + .selectize-control",
+                                             "exprs_stats",
+                                             "downloadPlot4"))),
+          
+          intro = c(
+            "This is feature-to-metadata visualization module. You can select various data subsets and see how numeric features such as gene expression differs among these. Continue the tutorial to see how the module works.",
+            "Select sample type you would like to analyze here.",
+            "Define which data subsets you want to include in the analysis.",
+            "Here, you can select the categorical variable to place on the x-axis",
+            "Select a numeric feature to plot in the y-axis",
+            "You can also select faceting variables to examine how feature-vs-category relationship might be different in various data subsets (eg. males and females).",
+            "Click here if you would like to show statistics on the graph. You can also define reference group or specific pair-wise comparisons in the main panel.",
+            "You can download the plot by clicking here."
+          )
+          
+        )
+        
+      )
+    })
+    
+    
+    observeEvent(input$genecat_help, {
+      
+      introjs(session, options = list(steps = genecat_steps()) )
+      
+    })
+    
+    
      # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
      observe({updateSelectizeInput(session,
                                    "exprs_samptyp",
@@ -262,9 +301,8 @@ gene_vs_cat_server <- function(id,Xproj){
         validate(need(input$exprs_samptyp, "Select sample type"),
                  need(input$cat_plotvar, "Select categorical variable for x-axis"),
                  need(input$num_plotvar, "Select numerical variable for y-axis"),
-                 need(input$cat_gene_run, " Click generate button to generate the graph"),
-                 if(input$exprs_stats){                              ##Statistics are not working without any reference whenn "ref" chosem, su I put a validation that comes only show statistics button is chosen( Cagatay)
-                   need(input$exprs_statref, "Select reference")}
+                 if(input$exprs_stats){                              ## Validation is active only when statistics button is chosen
+                   need(input$exprs_statref, "Select the reference group below")}
         )
         
         if(input$facet_plotvar == "") facetvar <- NULL else facetvar <- input$facet_plotvar

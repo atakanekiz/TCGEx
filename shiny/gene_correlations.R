@@ -45,13 +45,13 @@ gene_cor_UI <- function(id) {
           ),
           numericInput(
             inputId = ns("top_high"),
-            label = "How many genes with the highest correlation should be shown?",
+            label = "How many genes with the highest positive correlation should be shown?",
             value = 10 ,
             min = 2
           ),
           numericInput(
             inputId = ns("top_low"),
-            label = "How many genes with the least correlation should be shown?",
+            label = "How many genes with the highest negative correlation should be shown?",
             value = 10 ,
             min = 2
           ),
@@ -66,7 +66,7 @@ gene_cor_UI <- function(id) {
                      block = TRUE,
                      color = "primary"),
           br(),
-          downloadButton(ns("downloadDat"), "Download correlation data", style="color: #eeeeee; background-color: #01303f; border-color: #01303f"),
+          downloadButton(ns("downloadDat"), "Download results", style="color: #eeeeee; background-color: #01303f; border-color: #01303f"),
           br(),
           br(),
           #help section UI
@@ -79,8 +79,6 @@ gene_cor_UI <- function(id) {
         mainPanel(
           textOutput(ns("note")),
           verbatimTextOutput(ns("p_text")),
-          textOutput(ns("zero")),
-          verbatimTextOutput(ns("zero_text")),
           DTOutput(ns("g_table"))
         )
         
@@ -184,12 +182,12 @@ gene_cor_tb_server <- function(id,Xproj) {
                 element = paste0("#", session$ns(c(NA, "genecor_samp2 + .selectize-control","p_gene + .selectize-control ", "top_high", "top_low", "corr"))),
                 
                 intro = paste(c(
-                  "This is the Gene Correlation Analysis app, press the buttons to learn features of the app.",
-                  "You can choose single tissue type or more than one tissue types to filter patients who have that tissue type.",
-                  "You must choose a gene for correlation coefficient calculation",
-                  "You can decide on the number of genes with the highest correlation coefficient to show on the table",
-                  "You can decide on the number of genes with the least correlation coefficient to show on the table",
-                  "You can decide on correlation coefficient calculation method."
+                  "This is the Gene Correlation Analysis module. In this first tab, you can select a gene and tabulate its top positively and negatively correlated genes. You can also visualize correlations in the second tab above. Continue the tutorial to learn the features of this module. <b>NOTE:</b> Since pair-wise correlation is calculated genome-wide, this analysis can take a some time.",
+                  "Select sample type (eg. primary and/or metastatic) to focus the analysis on specific patient subsets.",
+                  "Select your gene of interest here.",
+                  "Here you can change the number of top positively correlated genes shown.",
+                  "You can also change the number of top negatively correlated genes shown.",
+                  "Specify how the correlation should be calculated."
 
                 ))
               )
@@ -318,10 +316,7 @@ gene_cor_tb_server <- function(id,Xproj) {
       
       })
       
-      p_table_2 <- reactive ({data.frame(zero_patient = colSums(p_table()==0, na.rm = T),
-                                         patient_no_data = colSums(is.na(p_table())) )
-        
-        })
+      p_table_2 <- reactive ({data.frame(zero_patient = colSums(p_table()==0, na.rm = T)) })
       
         
         gene_table <- reactive({
@@ -355,8 +350,8 @@ gene_cor_tb_server <- function(id,Xproj) {
              validate(
                need(input$genecor_samp2, 'Please select at least one sample type'),
                need(input$p_gene, 'Please select a gene'),
-               need(input$top_high, 'Please choose the number of high correlated genes '),
-               need(input$top_low, 'Please choose the number of low correlated genes')
+               need(input$top_high, 'Please choose how many top positive correlators should be shown'),
+               need(input$top_low, 'Please choose how many top negative correlators should be shown')
              )
              
              gene_table()}) 
@@ -383,40 +378,12 @@ gene_cor_tb_server <- function(id,Xproj) {
                need(input$top_low, '')
              )
              
-          
-            sum(pre_data()[[input$p_gene]]== 0, na.rm = T)
-           
-           
-           
-           })
+             sum(pre_data()[[input$p_gene]] == 0, na.rm = T)})
            
          })
         
          
-         output$zero_text <- renderText({
-           
-           req(input$act)
-           input$act
-           
-           isolate({
-             
-             req(iv$is_valid())
-             
-             validate(
-               need(input$genecor_samp2, ''),
-               need(input$p_gene, ''),
-               need(input$top_high, ''),
-               need(input$top_low, '')
-             )
-             
-             
-             sum(is.na(pre_data()[[input$p_gene]]), na.rm = T)
-             
-             
-             
-           })
-           
-         })
+         
          
          
          
@@ -437,29 +404,11 @@ gene_cor_tb_server <- function(id,Xproj) {
                need(input$top_low, '')
              )
              
-             "The number of patients without chosen gene expressions"
+             "Number of samples where the chosen gene is not expressed"
            })
            
          })
          
-         output$zero <- renderText({
-           
-           req(input$act)
-           input$act
-           
-           isolate({
-             req(iv$is_valid())
-             validate(
-               need(input$genecor_samp2, ''),
-               need(input$p_gene, ''),
-               need(input$top_high, ''),
-               need(input$top_low, '')
-             )
-             
-             "The number of patients without desired gene expression data "
-           })
-           
-         })
          
          #download 
          
@@ -494,16 +443,14 @@ gene_cor_pl_server <- function(id,Xproj) {
           element = paste0("#", session$ns(c(NA, "genecor_samp3 + .selectize-control","corr2", "gen_sel" ))),
           
           intro = paste(c(
-            "This is the Gene Correlation Analysis app, press the buttons to learn features of the app.",
-            "You can choose single tissue type or more than one tissue types to filter patients who have that tissue type.",
-            "You can decide on correlation coefficient calculation method.",
-            "You can choose genes manually or you can upload the gene list as a csv file."
+            "Here, you can visualize gene-to-gene correlations. Continue the tutorial to learn the features of this module.",
+            "Select sample type (eg. primary and/or metastatic) to focus the analysis on specific patient subsets.",
+            "Specify how the correlation should be calculated.",
+            "You can choose genes manually or you can upload the gene list as a csv file. You can create csv file in spreadsheet software by providing your genes in the first column. Please only use gene symbols and ensure that you are using the correct capitalization."
           ))
         )
         
-        
-        
-        
+
       })
       
       
@@ -541,7 +488,7 @@ gene_cor_pl_server <- function(id,Xproj) {
         
         req(input$corr_up)
 
-        glist <- read.table(input$corr_up$datapath, header = FALSE, sep = ";", quote = "\"'",
+        glist <- read.table(input$corr_up$datapath, header = FALSE, sep = ",", quote = "\"'",
                             dec = ".")
 
         colnames(glist)[1] <- "genes"
@@ -640,7 +587,7 @@ gene_cor_pl_server <- function(id,Xproj) {
               
               if(input$gen_sel == 'Upload File'){
                 
-                validate(need(input$corr_up, "Don't forget to upload your file"))
+                validate(need(input$corr_up, "Please upload your file"))
               }
               
               corr_pl()

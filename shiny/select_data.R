@@ -5,7 +5,7 @@ library(ggpubr)
 library(data.table)
 library(plotly)
 library(dplyr)
-library(zstdlite)
+# library(zstdlite)
 library(shinyWidgets)
 
 #ui
@@ -56,12 +56,12 @@ select_data_ui <- function(id) {
 select_data_server<- function(id,Xproj){
   moduleServer(id, function(input, output, session) {
    
-    Xproj$cancer_lenght <- reactive({length(as.vector(input$proj))}) ## a reactive that created for other modules to use the lenght information for several cancers(Cagatay)
+    Xproj$cancer_length <- reactive({length(as.vector(input$proj))}) ## a reactive that created for other modules to use the length information for several cancers
     Xproj$a <- eventReactive(input$run, {
       
      
       
-      if(Xproj$cancer_lenght() == 1){
+      if(Xproj$cancer_length() == 1){
         
         readRDS(paste0("projects/", input$proj, ".rds"))
         
