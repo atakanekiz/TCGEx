@@ -47,20 +47,17 @@ ui <- dashboardPage(skin = "black",
                       sidebarMenu(
                         menuItem("HOMEPAGE",icon = icon("home"),tabName="home"),
                         menuItem("DATA SELECTION",icon = icon("dna"),tabName="select_data"),
-                        menuItem("METADATA ANALYSIS",icon = icon("chart-bar"),tabName="gene_vs_cat"),
-                        menuItem("KAPLAN MEIER",icon = icon("disease"),tabName="km"),
-                        menuItem("GENE-to-GENE CORRELATION",icon = icon("chart-line"),tabName="gene_vs_gene"),
-                        menuItem("CORRELATED GENES",icon = icon("magnifying-glass"),tabName="gene_cor"),                        
-                        menuItem("HEATMAP",icon = icon("microscope"),tabName="heatmap"),
+                        menuItem("KAPLAN-MEIER",icon = icon("disease"),tabName="km"),
                         menuItem("COXPH",icon = icon("biohazard"),tabName="cox"),
-                        menuItem("ROC",icon = icon("capsules"),tabName="roc"),
-                        menuItem("PCA",icon = icon("circle-nodes"),tabName="pca"),
+                        menuItem("GENE-TO-GENE",icon = icon("chart-line"),tabName="gene_vs_gene"),
+                        menuItem("GENE-TO-CATEGORY",icon = icon("chart-bar"),tabName="gene_vs_cat"),
+                        menuItem("GENE CORRELATIONS",icon = icon("magnifying-glass"),tabName="gene_cor"),
+                        menuItem("HEATMAP",icon = icon("microscope"),tabName="heatmap"),
                         menuItem("GSEA",icon = icon("chart-line"),tabName="gsea"),
+                        menuItem("PCA",icon = icon("circle-nodes"),tabName="pca"),
+                        menuItem("ROC",icon = icon("capsules"),tabName="roc"),
                         menuItem("MACHINE LEARNING",icon = icon("atom"),tabName="ml"),
                         menuItem("ABOUT",icon = icon("address-card"),tabName="about")
-                        
-
-                        
                         
                       )
                     ),
@@ -74,7 +71,7 @@ ui <- dashboardPage(skin = "black",
                                     style = "position: fixed; bottom: 0; left: 0; right: 0; height: 45px; background-color: #AAA4A3; color: white; padding: 10px; width: 100%; z-index: 998;",
                                     tags$p(
                                       style = "font-size: 15px; margin: 0; display: inline-block;",
-                                      "We use Google Analytics to give you the best experience on our site and analyze traffic. We wanted to let you know :)",
+                                      "We use Google Analytics to give you the best experience on our site and analyze traffic.",
                                       tags$a(
                                         href = "https://policies.google.com/technologies/cookies",
                                         style = "color: white; font-weight: bold; margin-left: 10px; text-decoration: underline;",
@@ -109,7 +106,7 @@ ui <- dashboardPage(skin = "black",
                                             fluidPage(h1("Receiver Operating Characteristic (ROC) Curve Analysis "),
                                                       roc_ui("module"))),
                                     tabItem(tabName="gene_vs_gene",
-                                            fluidPage(h1("Gene-to-Gene Correlation Analysis"),
+                                            fluidPage(h1("Feature Correlation Analysis"),
                                                       gene_vs_gene_ui("module"))),
                                     tabItem(tabName="cox",
                                             fluidPage(h1("Cox Proportional Hazards Regression"),

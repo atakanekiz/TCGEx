@@ -112,14 +112,14 @@ gene_vs_gene_server <- function(id,Xproj) {
           element = paste0("#", session$ns(c(NA, "genecor_samp + .selectize-control", "Gene1 + .selectize-control ", "Gene2+ .selectize-control ", "notification","genecor_regline", "facet", "formula"))),
           
           intro = paste(c(
-            "This is the Gene-to-Gene Correlation Analysis app, press the buttons to learn features of the app.",
-            "You can choose single tissue type or more than one tissue types to filter patients who have that tissue type.",
-            "Choose a gene for x-axis of the plot.",
-            "Choose a gene for y-axis of the plot.",
-            "Thanks to this button, you will see notification about patients that appear when you hover the mouse over any point",
-            "This button creates the regression line on the plot.",
-            "This button separates the main plot to subplots according to your clinical feature choice ",
-            "This button shows p and R values on the plot."
+            "This is the gene-to-gene visualization module. You can calculate the correlation between two genes and generate scatter plots. Continue with the tutorial to learn features of the module.",
+            "You can select the sample type here (eg. primary and/or metastatic). Only the selected subset(s) will be used in the analysis",
+            "Choose a gene for the x-axis of the plot.",
+            "Choose a gene for the y-axis of the plot.",
+            "Here, you can select whether or not to show associated metadata when you hover the mouse cursor over data points",
+            "You can show or hide the best-fitting line to the data points",
+            "Enter a covariate here to plot the correlations in different data subsets (eg. male and female patients).",
+            "You can also show the correlation coefficient and the p-value of the linear regression."
           ))
           
         )
@@ -176,7 +176,7 @@ gene_vs_gene_server <- function(id,Xproj) {
       
       facet_cat <- reactive({paste("~", input$Facet)})
       
-      g_tit <- reactive({paste(input$Gene1, "vs", input$Gene2, " CORRELATION PLOT")})
+      # g_tit <- reactive({paste(input$Gene1, "vs", input$Gene2, " CORRELATION PLOT")})
       
       
       
@@ -223,7 +223,7 @@ gene_vs_gene_server <- function(id,Xproj) {
             
             
              
-            p <- p + ggtitle(g_tit())
+            # p <- p + ggtitle(g_tit())
             
             {if(input$formula) p <- p + stat_cor(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), family = "Arial", size = 7, color = "black", geom = "label")}        
             
