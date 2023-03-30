@@ -109,13 +109,13 @@ heatmap_ui <- function(id, label, choices) {
       selectizeInput(inputId = ns("clustering_method_rows"), 
                      multiple=F,
                      label = "Choose the clustering method for genes",
-                     choices=c("ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid")),
+                     choices=c("ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid", "ward.D")),
       
       
       selectizeInput(inputId = ns("clustering_method_columns"), 
                      multiple=F,
                      label = "Choose the clustering method for samples",
-                     choices=c("ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid")),
+                     choices=c("ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid", "ward.D")),
       
       actionBttn(inputId = ns("heatmap_run"), 
                  label = "Create Heatmap",
