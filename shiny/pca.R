@@ -368,6 +368,8 @@ pca_server <- function(id,Xproj) {
       
       p_dat <- reactive({
         
+        browser()
+        
         if(input$variance){
           
           if (input$var_gene != 1 & input$var_gene != 0 ) {
