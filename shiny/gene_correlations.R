@@ -18,7 +18,7 @@ gene_cor_UI <- function(id) {
     navbarPage(
       "TCGExplorer",
       tabPanel(
-        "Corr Table",
+        "Correlation Table",
         sidebarPanel(
           
           add_busy_spinner(
@@ -85,7 +85,7 @@ gene_cor_UI <- function(id) {
         
       ),
       tabPanel(
-        "Corr Plot",
+        "Correlation Plot",
         sidebarPanel(
           selectizeInput(ns("genecor_samp3"), multiple=T,
                          "*Please select sample types",

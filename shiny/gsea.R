@@ -125,7 +125,21 @@ gsea_ui <- function(id, label, choices) {
           fileInput(inputId = ns("gset_up"),
                     label = "Upload your gene set as .csv file",
                     accept = c("text/csv", "text/comma-separated-values,text/plain",
-                               ".csv")),  
+                               ".csv")),
+          
+          #'[#########################################################################################################################]
+          #'[Please add hover info for file formatting. Sample code is below]
+          #'[fileInput(..., label = tags$span(
+          #'["3. Please upload your csv file.", 
+          #'[tags$i(
+          #'[   class = "glyphicon glyphicon-info-sign", 
+          #'[   style = "color:#0072B2;",
+          #'[   title = "The csv file should contain two unnamed columns: the first column should contain the gene set name, and the second column should contain gene names. Each gene should be associated with a gene set (ie. no missing data), and multiple gene sets can be provided in one file."
+          #'[))
+          #'[#########################################################################################################################]    
+          
+          
+          
           radioButtons(ns("individual_2"), "Show", choices = c("Top Pathways", "Specific Pathway")),
           
           conditionalPanel(

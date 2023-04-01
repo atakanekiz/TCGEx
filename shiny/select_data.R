@@ -26,7 +26,7 @@ select_data_ui <- function(id) {
     
   
         pickerInput(inputId = ns("proj"), 
-                    "Select TCGA project",
+                    "TCGA projects available",
                     choices = c("ACC-Adrenocortical carcinoma" = "ACC","BLCA-Bladder Urothelial Carcinoma" = "BLCA", "BRCA-Breast invasive carcinoma" = "BRCA", "CESC-Cervical squamous cell carcinoma and endocervical adenocarcinoma" = "CESC", "CHOL-Cholangiocarcinoma" = "CHOL", "COAD-Colon adenocarcinoma" = "COAD" ,"DLBC-Lymphoid Neoplasm Diffuse Large B-cell Lymphoma" = "DLBC", "ESCA-Esophageal carcinoma" = "ESCA", "GBM-Glioblastoma multiforme" ="GBM" , "HNSC-Head and Neck squamous cell carcinoma" = "HNSC", "KICH-Kidney Chromophobe" = "KICH", "KIRC-Kidney renal clear cell carcinoma" = "KIRC" ,"KIRP-Kidney renal papillary cell carcinoma" = "KIRP",
                                 "LAML-Acute Myeloid Leukemia" = "LAML", "LGG-Brain Lower Grade Glioma" = "LGG" , "LIHC-Liver hepatocellular carcinoma" = "LIHC", "LUAD-Lung adenocarcinoma" = "LUAD","LUSC-	Lung squamous cell carcinoma" = "LUSC", "MESO-Mesothelioma" ="MESO", "OV-Ovarian serous cystadenocarcinoma" ="OV",   "PAAD-	Pancreatic adenocarcinoma" = "PAAD", "PCPG-Pheochromocytoma and Paraganglioma" = "PCPG", "PRAD-Prostate adenocarcinoma" = "PRAD",
                                 "READ-Rectum adenocarcinoma" = "READ", "SARC-Sarcoma" = "SARC", "SKCM-Skin Cutaneous Melanoma" = "SKCM" ,"STAD-Stomach adenocarcinoma" = "STAD", "TGCT-Testicular Germ Cell Tumors" = "TGCT", "THCA-Thyroid carcinoma" = "THCA", "THYM-Thymoma" = "THYM", "UCEC-Uterine Corpus Endometrial Carcinoma" = "UCEC", "UCS-Uterine Carcinosarcoma" = "UCS",  "UVM-Uveal Melanoma" = "UVM"),
