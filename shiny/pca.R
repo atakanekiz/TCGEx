@@ -29,9 +29,7 @@ pca_ui <- function(id) {
     
     sidebarPanel(
       
-      checkboxInput(ns("center"), "*Center data", value = TRUE),
-      checkboxInput(ns("scale"), "*Scale variables", value = TRUE),
-      
+
       
       selectizeInput(ns("genecor_samp_2"), multiple=T,
                      "*Please select sample types",
@@ -41,6 +39,10 @@ pca_ui <- function(id) {
       selectizeInput(ns("data"), "*Please select data", 
                      choices = NULL,
                      options=list(placeholder = "eg. RNAseq")),
+      
+      checkboxInput(ns("center"), "Center data", value = TRUE),
+      checkboxInput(ns("scale"), "Scale variables", value = TRUE),
+      
       
       ## conditional panel for gene sets
       # pathway can be chosen according to gene set input
@@ -80,7 +82,7 @@ pca_ui <- function(id) {
         
         sliderInput(inputId = ns("var_gene"),
                     label = "Choose a variance ratio",
-                    min = 0, max = 1, value = 0
+                    min = 0, max = 100, value = 10
         )
           
       ),
@@ -163,9 +165,9 @@ pca_server <- function(id,Xproj) {
       
       ##validate
       iv <- InputValidator$new()
-      
-      iv$add_rule("var_gene", ~ if (input$var_gene == 1 & !anyNA(input$var_gene)) "Your choice must be smaller than 1")
-      
+
+      iv$add_rule("var_gene", ~ if (input$var_gene == 0) "Your choice cannot be zero")
+
       iv$enable()
       
       #inputs
@@ -281,15 +283,25 @@ pca_server <- function(id,Xproj) {
       
       pca_df <- reactive({
         
-        gene_cols <- Xproj$a() %>% 
+        browser()
+        
+        gene_cols <- Xproj$a() %>%
               select(!starts_with("meta.")) %>%
               select(where(is.numeric))
-        
-        gene_name <- colnames(gene_cols)
-        
+        gene_names <- colnames(gene_cols)
+
         pre_d <- Xproj$a()[meta.definition %in% input$genecor_samp_2, ]
         
-        pre_d <- pre_d %>% drop_na(all_of(gene_name))
+        sel_cols <- apply(select(pre_d, all_of(gene_names)), 2, sum)
+        
+        #'[Causes and error in GBM. All rows are dropped. We need to rethink this]
+        #'[###############################################################################]
+        #'[###############################################################################
+        #'[###############################################################################
+        # pre_d <- pre_d %>% drop_na(all_of(gene_names))
+        #'[###############################################################################
+        #'[###############################################################################
+        #'[###############################################################################
         
         pre_d
         
@@ -368,30 +380,38 @@ pca_server <- function(id,Xproj) {
       
       p_dat <- reactive({
         
-        browser()
+        # browser()
         
         if(input$variance){
           
-          if (input$var_gene != 1 & input$var_gene != 0 ) {
+          if (input$var_gene != 100) {
             
-            var_dat <- int_dat()
+            # var_dat <- int_dat()
+            # 
+            # variance_dat <- t(var_dat)
+            # 
+            # evar <- apply(variance_dat,1,var)
+            # 
+            # mostVariant <- variance_dat[evar>quantile(evar,as.numeric(input$var_gene)),]
+            # mostvariantgenes <- rownames(mostVariant)
+            # 
+            # pc_d <- int_dat() %>% select(all_of(mostvariantgenes))
+            # 
+            # pc_d
             
-            variance_dat <- t(var_dat)
+            evar <- apply(int_dat(),2,var)
+            mostvariantgenes <- names(evar)[evar > quantile(evar, 1- as.numeric(input$var_gene)/100)]
+            return(
+              select(int_dat(), all_of(mostvariantgenes))
+            )
             
-            evar <- apply(variance_dat,1,var)
             
-            mostVariant <- variance_dat[evar>quantile(evar,as.numeric(input$var_gene)),]
-            mostvariantgenes <- rownames(mostVariant)
-            
-            pc_d <- int_dat() %>% select(all_of(mostvariantgenes))
-            
-            pc_d
-            
-          } else if(input$var_gene == 0){
+          } else {
             
             int_dat()
          
           }
+          
         }else {
           
           int_dat()
@@ -406,11 +426,11 @@ pca_server <- function(id,Xproj) {
       
       gene_sel <- reactive({Xproj$a() %>% select(where(is.numeric))})
       
-      observe({return(gene_sel())})
+      # observe({return(gene_sel())})
       
       gene_op <- reactive({colnames(gene_sel())})
       
-      observe({return(gene_op())})
+      # observe({return(gene_op())})
       
       
       
@@ -421,15 +441,15 @@ pca_server <- function(id,Xproj) {
 
       gene_mean <- reactive({mean(pca_df()[[input$gene]], na.rm = T)})
 
-      df_class <-  reactive({
-
-        mutate(pca_df(), gene_categorise = case_when(
-          gene_mean() > pca_df()[[input$gene]] ~ "High",
-          gene_mean() < pca_df()[[input$gene]]  ~ "Low")
-
-        )
-
-      })
+      # df_class <-  reactive({
+      # 
+      #   mutate(pca_df(), gene_categorise = case_when(
+      #     gene_mean() > pca_df()[[input$gene]] ~ "High",
+      #     gene_mean() < pca_df()[[input$gene]]  ~ "Low")
+      # 
+      #   )
+      # 
+      # })
 
 
       fill <- reactive({
@@ -441,7 +461,13 @@ pca_server <- function(id,Xproj) {
 
                return({
 
-                 df_class()[["gene_categorise"]]
+                 # df_class()[["gene_categorise"]]
+                 
+                 ifelse(pca_df()[[input$gene]] > gene_mean(),
+                        "High",
+                        "Low")
+                 
+                 
 
 
                }), return({
