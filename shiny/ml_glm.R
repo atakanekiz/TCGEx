@@ -9,6 +9,10 @@ library(DT)
 library(ggplot2)
 library(plotly)
 library(shinyjs)
+library(zstdlite)       #'[Let's try to go back to uncompressed data (more space available in the server)]
+
+
+
 
 #Functions
 
@@ -19,8 +23,16 @@ zero_adjuster <-  function(mdata, max_zero_percent, subgroup = "") {
     zerofreq_list <- sapply(mdata, function(x){ length(which(x==0))/length(x) *100 })
     available <- names(zerofreq_list[zerofreq_list[] < max_zero_percent])
   } else if (subgroup == "cibersort") {
-    mdata <- mdata %>% 
-      select((which(colnames(mdata) == "meta.immune.subtype") + 1):ncol(mdata))
+   
+
+     mdata <- mdata %>% 
+     
+     #'[#########################################################################################################################]   
+     #'[would be better to explicitly select columns instead of position based selection]
+     # select((which(colnames(mdata) == "meta.immune.subtype") + 1):ncol(mdata))
+     select(matches("cells$|cells.(?!\\.)|lymphocytes|macrophages|neutrophils|monocytes|eosinophils", perl = T))
+     #'[#########################################################################################################################]
+
     zerofreq_list <- sapply(mdata, function(x){ length(which(x==0))/length(x) *100 })
     available <- names(zerofreq_list[zerofreq_list[] < max_zero_percent])
   } 
@@ -31,14 +43,26 @@ zero_adjuster <-  function(mdata, max_zero_percent, subgroup = "") {
 dataprepInputControl_UI <- function(id) {
   ns <- NS(id)
   tagList(
-    h3("Metadata"),
-    sliderInput(NS(id,"max_zero_percent"),"Set the maximum percentage of acceptable zero count (for manual selections)",
-                min = 0, max = 100, value = 0, step = 1),
+    h3("Set up variables for analysis"),
+    
+    #'[#########################################################################################################################]
+    #'[#########################################################################################################################]
+    #'[#########################################################################################################################]
+    #'[It is good to include a sample type selection here like the other modules. It looks like the ML is working on the whole]
+    #'[dataset including metastatic, primary, and normal tissues]
+    #'[#########################################################################################################################]
+    #'[#########################################################################################################################]
+    #'[#########################################################################################################################]
+    
+    
+    sliderInput(NS(id,"max_zero_percent"),"Maximum allowed percentage of zero expressors",
+                min = 0, max = 100, value = 100, step = 1),
+
     h3("Response Variable"),
-    radioButtons(NS(id,"response_prep_method"), "Data preparation pipeline: ",
-                 c("Create response set from gene sets available on MSigDB" = "msigdb",
-                   "Create response set manually" = "gene_list",
-                   "Use CIBERSORT metrics as a response variable" = "cibersort")
+    radioButtons(NS(id,"response_prep_method"), "Select an input method",
+                 c("Manually select gene(s) as response variable" = "gene_list",
+                   "Create a response variable from MSigDB gene sets" = "msigdb",
+                   "Use CIBERSORT immune cell signatures as response variable" = "cibersort")
     ),
     conditionalPanel(condition = "input.response_prep_method == 'msigdb' ", ns = ns,
                      selectizeInput(NS(id,"msigdb_setnames_response"), "MSigDB Human Collections", choices = c("hallmark gene sets" = "h","ontology gene sets" = "c5" ,"oncogenic gene sets" = "c6",
@@ -49,11 +73,16 @@ dataprepInputControl_UI <- function(id) {
                      conditionalPanel(condition = "input.msigdb_setnames_response == 'c7'", ns = ns,
                                       radioButtons(NS(id,"immuno_response"), "Select subcategory", choices = c("IMMUNESIGDB"= "immunesigdb","VAX" = "vax"))
                      ),
-                     selectizeInput(NS(id,"msigdb_gene_set_response"), "Select a gene set as a response set",
+                     
+                     #'[#########################################################################################################################]
+                     #'[Please add other gene sets c1, ,c2, c3, c4 as well]
+                     #'[#########################################################################################################################]
+                     
+                     selectizeInput(NS(id,"msigdb_gene_set_response"), "Select a gene set to create an averaged response variable",
                                     choices = c(""))
     ),
-    conditionalPanel(condition = "input.response_prep_method == 'gene_list' ", ns = ns,
-                     radioButtons(NS(id,"obtain_response"), "Create response set by",c("Upload TXT file" = "txt_upload", "Enter gene" = "gene_enter" )),
+    conditionalPanel(condition = "input.response_prep_method == 'gene_list'", ns = ns,
+                     radioButtons(NS(id,"obtain_response"), "Select how to specify genes",c("Type gene names" = "gene_enter", "Upload TXT file" = "txt_upload")),
                      conditionalPanel(condition = "input.obtain_response == 'gene_enter' ", ns = ns,
                                       selectizeInput(NS(id,"gene_list_response"),"Select gene(s)", choices = NULL, multiple = TRUE)
                      ),
@@ -61,14 +90,19 @@ dataprepInputControl_UI <- function(id) {
                                       fileInput(NS(id,"response_set_file"), "Upload File",
                                                 accept =  c(".txt",".csv"))
                      )
+                     
+                     #'[#########################################################################################################################]
+                     #'[Please add hover info regarding file formatting]
+                     #'[#########################################################################################################################]
     ),
     conditionalPanel(condition = "input.response_prep_method == 'cibersort' ", ns = ns,
-                     selectizeInput(NS(id,"cibersort_response_var"), "Select CIBERSORT metric", choices = NULL, multiple = FALSE)
+                     selectizeInput(NS(id,"cibersort_response_var"), "Select immune cell signature", choices = NULL, multiple = FALSE)
     ),
     h3("Predictor Variables"),
-    radioButtons(NS(id,"predictor_prep_method"), "Data preparation pipeline: ",
-                 c("Create predictor set from gene sets available on MSigDB" = "msigdb",
-                   "Create predictor set manually" = "gene_list")
+    radioButtons(NS(id,"predictor_prep_method"), "Select an input method",
+                 c("Manually select predictor variables" = "gene_list",
+                   "Select predictor variables from MSigDB gene sets" = "msigdb"
+                   )
     ),
     conditionalPanel(condition = "input.predictor_prep_method == 'msigdb' ", ns = ns,
                      selectizeInput(NS(id,"msigdb_setnames_predictor"), "MSigDB Human Collections", choices = c("hallmark gene sets" = "h","ontology gene sets" = "c5" ,
@@ -79,11 +113,17 @@ dataprepInputControl_UI <- function(id) {
                      conditionalPanel(condition = "input.msigdb_setnames_predictor == 'c7'", ns = ns,
                                       radioButtons(NS(id,"immuno_predictor"), "Select subcategory", choices = c("IMMUNESIGDB" = "immunesigdb","VAX" = "vax"))
                      ),
+                     
+                     #'[#########################################################################################################################]
+                     #'[Please add other gene sets c1, ,c2, c3, c4 as well]
+                     #'[#########################################################################################################################]
+                     
                      selectizeInput(NS(id,"msigdb_gene_set_predictor"), "Select a gene set as a response set",
                                     choices = c(""))
     ),
     conditionalPanel(condition = "input.predictor_prep_method == 'gene_list' ", ns = ns,
-                     radioButtons(NS(id,"obtain_predictor"), "Create predictor set by",c("Upload TXT file" = "txt_upload", "Enter gene" = "gene_enter",
+                     radioButtons(NS(id,"obtain_predictor"), "Select how to specify genes",c("Type gene names" = "gene_enter",
+                                                                                         "Upload TXT file" = "txt_upload", 
                                                                                          "Use all mRNAs available on the selected data(!)" = "allmRNA_aspredictor",
                                                                                          "Use all miRNAs available on the selected data" = "allmiRNA_aspredictor")),
                      conditionalPanel(condition = "input.obtain_predictor == 'gene_enter' ", ns = ns,
@@ -92,6 +132,11 @@ dataprepInputControl_UI <- function(id) {
                      conditionalPanel(condition = "input.obtain_predictor == 'txt_upload' ", ns = ns,
                                       fileInput(NS(id,"predictor_set_file"), "Upload File",
                                                 accept =  c(".txt","csv"))
+                                      
+                     #'[#########################################################################################################################]
+                     #'[Please add hover info for file formatting]
+                     #'[#########################################################################################################################]                                      
+                                      
                      )
     )
     
@@ -131,7 +176,7 @@ ml_ui <- function(id) {
   navbarPage(
     "TCGExplorer ML",
     tabPanel(
-      "Data&Prep",
+      "Variable selection",
       sidebarPanel(
         dataprepInputControl_UI("ml"),
         introjsUI(),
@@ -162,7 +207,7 @@ ml_ui <- function(id) {
       )
     ),
     tabPanel(
-      "Regression R/EN/L",
+      "Ridge/Elastic Net/LASSO Regression",
       sidebarPanel(
         regression_sidecontrols("ml"),
         introjsUI(),
@@ -173,7 +218,9 @@ ml_ui <- function(id) {
         fluidRow(
           column(3,
                  selectizeInput(NS(id,"lambda_for_coef"), "Select lambda value at which model coefficients are being displayed: ",
-                                choices = c("lambda.min","lambda.1se")),
+                                choices = c("Lambda + 1 standard error (most regularized model)" = "lambda.1se",
+                                            "Minimum lambda (minimum cross-validation error)" = "lambda.min"
+                                            )),
                  textOutput(NS(id,"lambda_value_min")),
                  textOutput(NS(id,"lambda_value_1se")),
                  conditionalPanel(
@@ -219,7 +266,16 @@ data_prep_ml_server <- function(id,Xproj) {
     
     # msigdb_gene_sets =  reactive({readRDS(paste0("projects/", "msigdb_gene_sets", ".rds"))})
     
+    
+    #'[Let's revert back to non-compressed version. We have more space in the server]
+    #'[Please try to see if the gene set object here can be consistent with the other modules (ie using individiual rda's?)]
+    #'[#########################################################################################################################]
+    #'[#########################################################################################################################]
+    #'[#########################################################################################################################]
     msigdb_gene_sets =  reactive({zstd_unserialize(readRDS(paste0("genesets/", "compressed_msigdb_gene_sets", ".rds")))})
+    #'[#########################################################################################################################]
+    #'[#########################################################################################################################]
+    #'[#########################################################################################################################]
     
     
     
@@ -321,10 +377,15 @@ data_prep_ml_server <- function(id,Xproj) {
     # create a list.
     
     available_genelist <- reactive({zero_adjuster(mdata = Xproj$a(),max_zero_percent = input$max_zero_percent, subgroup = "alltranscripts")})
-    available_cibersort <- reactive({zero_adjuster(mdata = Xproj$a(),max_zero_percent = input$max_zero_percent, subgroup = "cibersort")})
+    available_cibersort <- reactive({
+      
+      zero_adjuster(mdata = Xproj$a(),max_zero_percent = input$max_zero_percent, subgroup = "cibersort")}
+      
+      )
     
     
     observeEvent(input$max_zero_percent, {
+      
       cibersort_metrics <- available_cibersort()$available
       genelist <- available_genelist()$available
       updateSelectizeInput(session,'gene_list_response', choices = genelist, server = TRUE)
