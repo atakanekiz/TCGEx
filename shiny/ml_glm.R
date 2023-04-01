@@ -100,7 +100,7 @@ dataprepInputControl_UI <- function(id) {
     ),
     h3("Predictor Variables"),
     radioButtons(NS(id,"predictor_prep_method"), "Select an input method",
-                 c("Manually select predictor variables" = "gene_list",
+                 c("Manually select genes as predictor variables" = "gene_list",
                    "Select predictor variables from MSigDB gene sets" = "msigdb"
                    )
     ),
@@ -118,7 +118,7 @@ dataprepInputControl_UI <- function(id) {
                      #'[Please add other gene sets c1, ,c2, c3, c4 as well]
                      #'[#########################################################################################################################]
                      
-                     selectizeInput(NS(id,"msigdb_gene_set_predictor"), "Select a gene set as a response set",
+                     selectizeInput(NS(id,"msigdb_gene_set_predictor"), "Select response variables from a gene set",
                                     choices = c(""))
     ),
     conditionalPanel(condition = "input.predictor_prep_method == 'gene_list' ", ns = ns,
@@ -134,16 +134,30 @@ dataprepInputControl_UI <- function(id) {
                                                 accept =  c(".txt","csv"))
                                       
                      #'[#########################################################################################################################]
-                     #'[Please add hover info for file formatting]
+                     #'[Please add hover info for file formatting. Sample code is below]
+                     #'[fileInput(..., label = tags$span(
+                     #'["3. Please upload your csv file.", 
+                     #'[tags$i(
+                     #'[   class = "glyphicon glyphicon-info-sign", 
+                     #'[   style = "color:#0072B2;",
+                     #'[   title = "The csv file should contain two unnamed columns: the first column should contain the gene set name, and the second column should contain gene names. Each gene should be associated with a gene set (ie. no missing data), and multiple gene sets can be provided in one file."
+                     #'[))
                      #'[#########################################################################################################################]                                      
                                       
                      )
-    )
+    ),
     
+    # hr(),
+    p("Please move on to the 'Ridge/Elastic Net/Lasso Regression' tab after variable selection"),
+    hr()
     
   )
 }
-regression_sidecontrols <- function(id) {
+
+#'[Very smart way to set this up as a function!]
+#'[#########################################################################################################################]
+#'   
+regression_sidecontrols <- function(id) {  
   ns <- NS(id)
   tagList(
     h3("Workflow"),
@@ -161,7 +175,27 @@ regression_sidecontrols <- function(id) {
     h3("Regression: Ridge/ElasticNet/Lasso"),
     fluidRow(
       column(12,
-             sliderInput(NS(id,"user_alpha"),"Enter an alpha parameter (shrinkage penalty term) to set the regression technique", min = 0, max = 1, value = 1, step = 0.2)
+             sliderInput(NS(id,"user_alpha"),
+                         
+                         label = tags$span(
+                           "Select regression technique by setting shrinkage penalty term (alpha)",
+                           tags$i(
+                             class = "glyphicon glyphicon-info-sign", 
+                             style = "color:#0072B2;",
+                             title = "Value of 1 corresponds to LASSO regression where some coefficients will be shrunken (ie. penalized) all the way to zero. Value of 0 corresponds to Ridge regression where some coefficients will converge to (but not reach) zero. Other values correspond to elastic net regression where the penalty is a mixture of the previous approaches."
+                             
+                           )), min = 0, max = 1, value = 1, step = 0.2
+                         
+                         
+                         
+                         # tags$span(
+                           #'["3. Please upload your csv file.", 
+                           #'[tags$i(
+                           #'[   class = "glyphicon glyphicon-info-sign", 
+                           #'[   style = "color:#0072B2;",
+                           #'[   title = "The csv file should contain two unnamed columns: the first column should contain the gene set name, and the second column should contain gene names. Each gene should be associated with a gene set (ie. no missing data), and multiple gene sets can be provided in one file."
+                         
+                         )
       )
     ),
     
@@ -186,8 +220,8 @@ ml_ui <- function(id) {
       ),
       mainPanel(
         fluidRow(
-          column(6,h3("Response")),
-          column(6,h3("Predictor"))
+          column(6,h3("Response variable(s)")),
+          column(6,h3("Predictor variables"))
         ),
         fluidRow(
           column(6,verbatimTextOutput(NS(id,"response_set"))),
@@ -209,7 +243,7 @@ ml_ui <- function(id) {
     tabPanel(
       "Ridge/Elastic Net/LASSO Regression",
       sidebarPanel(
-        regression_sidecontrols("ml"),
+        regression_sidecontrols("ml"),          #'[Very smart way of using a function here!!!]
         introjsUI(),
         actionButton(ns("mlregression_help"), "Tutorial"),
         width = 3
@@ -285,17 +319,13 @@ data_prep_ml_server <- function(id,Xproj) {
         
         element = paste0("#", session$ns(c(NA,NA, "response_prep_method", "predictor_prep_method")) ),
         intro = paste(c(
-          "Welcome to the TCGEx ML module. In this tab you can construct and choose dependent and independent variables (response & predictors)
-          which will be used to construct a model via regularized regression.",
+          "Welcome to the TCGEx machine learning module. This module is based on generalized linear models and it allows you to perform regularized regression analysis using custom response and predictor variables. Please continue with the tutorial to learn how to use this module.",
           
-          "You can filter out transcriptomes by specifying maximum zero-count percantage toggle prior to the variable selection procedure.
-          This way you can eliminate the transcripts that have above-threshold zero-count.",  
+          "This slider allows you to eliminate genes that are expressed at low levels. The selection here specifies the maximum allowed percentage of zero expression in a given gene. For instance, if this number is set to 50, genes that are not expressed in 50% or more of the samples in the analysis. The default value of 100 indicates that there is no filtering applied.",  
           
-          "From this panel, you can enter response variable determinants either by searching for available MsigDB collections or entering them manually.
-          You can also upload your set of interest from the manual selection menu.",
+          "In this panel, you can specify response variables either by <b>i)</b> entering gene names manually, <b>ii)</b>using genes from MSigDB gene sets, or <b>iii)</b> selecting one of the previously calculated immune cell signatures. When multiple genes are entered or gene sets are selected, a single response variable is calculated by averaging the expression values. For manual gene selection, you can type gene names in the box, or upload a txt file containing gene names.",
           
-          "From this panel, you can enter predictor variables either by searching for available MsigDB collections or entering them manually.
-          You can also upload your set of interest or use all available transcripts from the manual selection menu."
+          "In this panel, you can enter predictor variables either by <b>i)</b> entering them manually (you can type or upload a file), or <b>ii)</b> using genes from MSigDB gene sets. The relationship of these predictor variables and the previously specified response variable will be examined in regularized regression models. After making your selections here, please continue to the regression tab."
           
         ))
       )
@@ -383,7 +413,13 @@ data_prep_ml_server <- function(id,Xproj) {
       
       )
     
-    
+#'[#################################################################################################################]  
+#'[#################################################################################################################]  
+#'[#################################################################################################################]    
+#'[This observeEvent design prevents updating selectize input with gene names before the slider is moved]
+#'[when max_zero_percent is changed, some of the lines here should be already invalidated.]
+#'[Try constructing the code so that updateSelectizeInput doesn't wait for input$max_zero_percent invalidation]    
+        
     observeEvent(input$max_zero_percent, {
       
       cibersort_metrics <- available_cibersort()$available
@@ -391,7 +427,13 @@ data_prep_ml_server <- function(id,Xproj) {
       updateSelectizeInput(session,'gene_list_response', choices = genelist, server = TRUE)
       updateSelectizeInput(session, 'gene_list_predictor', choices = genelist, server = TRUE)
       updateSelectizeInput(session,'cibersort_response_var', choices = cibersort_metrics, server = TRUE)
-    })
+    }, ignoreInit = FALSE, ignoreNULL = FALSE)
+    
+#'[#################################################################################################################]      
+#'[#################################################################################################################]     
+#'[#################################################################################################################] 
+#'
+
     
     
     
@@ -542,13 +584,17 @@ ml_main_server <- function(id,regress_data,Xproj) {
         
         return(
           data.frame(
-          element = paste0("#", session$ns(c(NA, "regression_workflow","user_alpha", "lambda_for_coef + .selectize-control")) ),
+          element = paste0("#", session$ns(c(NA, "regression_workflow","user_alpha", "lambda_for_coef + .selectize-control", NA)) ),
           intro = paste(c(
-            "In this tab, you can determine necessary parameters to conduct regularized regression with the variables that you have already specified.",
-            "You can either split the data into train and test sets or use all of it to create the model. If you choose splitting option, you will be able to
-            make a prediction with your model and examine mean-squared-error.",
-            "You can choose the method of regularized regression from the alpha parameter slider control. ɑ=0 for  Ridge, ɑ=1 for Lasso and 0<ɑ<1 for Elastic-Net regression.",
-            "You can choose the lambda value at which the variable coefficients of the model are displayed."
+            "After specifying response and predictor variables in the previous tab, you can determine necessary parameters for regularized regression analysis here.",
+            "You can perform regression on the whole data or split the data set into 'training' and 'test' subsets. Splitting allows examining the model accuracy through the mean-squared-error.",
+            "You can choose the method of regularized regression using this slider. alpha = 1 corresponds to LASSO regression where some coefficients will be shrunk (ie. penalized) all the way to zero. alpha = 0 corresponds to Ridge regression where some coefficients will converge to (but not reach) zero. 0 < alpha < 1 corresponds to Elastic-Net regression where the penalty is a mixture of both.",
+            "You can choose the lambda value at which the variable coefficients of the model are displayed. Lambda is the regularization parameter in the model. Minimum lambda is the value that gives the minimum cross-validation error in the regression. Lambda + 1 se is the value of lambda that gives the most regularized (ie. more penalized and simpler) model where the cross-validation error is within the one strandard error of the minimum. 
+            <br>
+            <br>
+            For further details, please see Friedman J, Hastie T, and Tibshirani R. “Regularization Paths for Generalized Linear Models via Coordinate Descent.” Journal of Statistical Software, Articles 33 (1): 1–22. (2010) https://doi.org/10.18637/jss.v033.i01",
+            
+            "Graphs that will appear in the main panel will show how the increasing levels of model penalization affects predictor coefficient shrinkage and the overall mean-squared-error."
             
           ))
         ))
