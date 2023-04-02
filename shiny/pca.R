@@ -309,7 +309,7 @@ pca_server <- function(id,Xproj) {
 
         pre_d <- Xproj$a()[meta.definition %in% input$genecor_samp_2, ]
         
-        sel_cols <- apply(select(pre_d, all_of(gene_names)), 2, sum)
+        # sel_cols <- apply(select(pre_d, all_of(gene_names)), 2, sum)
         
         #'[Causes an error in GBM. All rows are dropped. We need to rethink this]
         #'[###############################################################################]
