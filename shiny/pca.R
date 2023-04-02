@@ -18,7 +18,7 @@ pca_ui <- function(id) {
   ns <- NS(id)
   tagList(
     
-       add_busy_spinner(
+    add_busy_spinner(
       spin = "cube-grid",
       position = "top-right",
       color = "#01303f",
@@ -29,30 +29,43 @@ pca_ui <- function(id) {
     
     sidebarPanel(
       
-      checkboxInput(ns("center"), "*Center data", value = TRUE),
-      checkboxInput(ns("scale"), "*Scale variables", value = TRUE),
       
       
       selectizeInput(ns("genecor_samp_2"), multiple=T,
-                     "*Please select sample types",
+                     "Please select sample types",
                      choices=NULL,
                      options=list(placeholder = "eg. Primary solid tumor")),
       
-      selectizeInput(ns("data"), "*Please select data", 
+      selectizeInput(ns("data"), "*Please select input genes", 
                      choices = NULL,
                      options=list(placeholder = "eg. RNAseq")),
+      
+      checkboxInput(ns("center"), "Center data", value = TRUE),
+      checkboxInput(ns("scale"), "Scale variables", value = TRUE),
+      
       
       ## conditional panel for gene sets
       # pathway can be chosen according to gene set input
       
       conditionalPanel(
         
-        condition = 'input.data == "Created Gene Set"', ns = ns,
+        condition = 'input.data == "Custom gene set"', ns = ns,
+        
+        
         
         fileInput(inputId = ns("pca_up"),
-                  label = "Upload your gene set as .csv file",
+                  label = tags$span(
+                    "3. Please upload your csv file.",
+                    tags$i(
+                      class = "glyphicon glyphicon-info-sign",
+                      style = "color:#0072B2;",
+                      title = "The csv file should contain a single unnamed column with gene names. Each gene should be associated with a human gene set (ie. no missing data)"
+                    )),
                   accept = c("text/csv", "text/comma-separated-values,text/plain",
                              ".csv")), 
+       
+        
+        
         
       ),
       
@@ -60,9 +73,9 @@ pca_ui <- function(id) {
         
         condition = 'input.data == "MSigDB Gene Sets"', ns = ns,
         
-        selectizeInput(ns("cat"), "Please select a Human MSigDB Collection", 
+        selectizeInput(ns("cat"), "Please select an MSigDB Collection", 
                        choices = NULL,
-                    options=list(placeholder = "eg. CM - Cancer Modules")),
+                       options=list(placeholder = "eg. CM - Cancer Modules")),
         
         selectizeInput(ns("chosen_gs"), 
                        "*Please select a pathway", 
@@ -72,29 +85,29 @@ pca_ui <- function(id) {
         
       ),
       
-      checkboxInput(ns("variance"), "Keep highly variant genes  ", value = F),
+      checkboxInput(ns("variance"), "Apply variance filtering", value = F),
       
       conditionalPanel(
         
         condition = 'input.variance', ns = ns,
         
         sliderInput(inputId = ns("var_gene"),
-                    label = "Choose a variance ratio",
-                    min = 0, max = 1, value = 0
+                    label = "Keep genes with the top n% variation",
+                    min = 0, max = 100, value = 10
         )
-          
+        
       ),
       
-      selectizeInput(ns("gene"), "*Please select classification factor", 
-                     options=list(placeholder = "eg. meta.gender or CD8A"),
+      selectizeInput(ns("gene"), "*Please select feature to annotate", 
+                     options=list(placeholder = "eg. meta.gender, gene name"),
                      choices = NULL),
-
-      selectizeInput(ns("palette"), "*Please select plot palette",
+      
+      selectizeInput(ns("palette"), "*Please select a color palette",
                      choices = NULL,
                      options=list(placeholder = "eg. Nature")
-
+                     
       ),
-
+      
       actionBttn(inputId = ns("did"), 
                  label = "Perform PCA",
                  style = "unite",
@@ -111,7 +124,10 @@ pca_ui <- function(id) {
     
     mainPanel(
       
-      plotlyOutput(outputId = ns("ex"))
+      plotlyOutput(outputId = ns("ex"),
+                   width = "100%",
+                   height = "600px"
+                   )
       
       
     )
@@ -140,14 +156,14 @@ pca_server <- function(id,Xproj) {
           element = paste0("#", session$ns(c(NA, "center", "scale", "genecor_samp_2 + .selectize-control" ,"data + .selectize-control", "variance","gene + .selectize-control", "palette + .selectize-control"))),
           
           intro = paste(c(
-            "This is the Principal Compenent Analysis app. It takes a while to prepare the plot. Take a deep breath and wait calmly. Press the buttons to learn features of the app.",
-            "If data is centered, the centroid of the plot will be on the origin.",
-            "The binary variable which is on a different scale from the others may generate a clustering effect where one might not be in PC Analysis normally. Scaling prevents this effect.",
-            "You can choose single tissue type or more than one tissue types to filter patients who have that tissue type.",
-            "You can keep the large data or extract some pieces by using RNAseq, miRNAseq or gene sets, MSigDB or you created.",
-            "You can pull genes that have desired variance ratio",
-            "You can create clusters according to genes as high and low expression groups or the clinical features such as gender.",
-            "You can decide the plot colors according to the palette choice."
+            "This is the Principal Compenent Analysis (PCA) module. PCA is a dimensionality reduction method allowing multidimensional datasets to be visualized on a two dimensional graph. Principal components are derived from linear combinations of the original variables and they represent the variation in the data set. <b>NOTE:</b> Creating PCA plots can take some time, please be patient. Continue tutorial to learn more about this module.",
+            "By default, gene expression values are centered by subtracting the mean expression value.",
+            "A variable that is on a different scale from the others may dominate the variance direction. Scaling (default) gene expression values prevents this effect.",
+            "You can select sample types to include in the analysis here.",
+            "Here, you can select the genes to be used in PCA. You can select <b>i)<b/> a custom list of genes, <b>ii)<b/> all genes (RNAseq and miRNAseq data), <b>iii)<b/> miRNAs (mature miRNAs from miRNAseq), or <b>iv)<b/> genes annotated in MSigDB gene sets.",
+            "Here, you can apply variance filtering to keep most highly variable genes in the analysis. Setting this value to 10, for instance, will select the genes having the top 10% highest variation in the dataset.",
+            "You can color code the data points on the graph using gene expression values or clinical meta data. If you select a gene name here, gene expression will be categorized at the median value per sample and points will be annotated. You can also select a clinical meta data (eg. meta.gender) to color points accordingly.",
+            "You can change the color palette of the graph here."
           ))
           
         )
@@ -164,7 +180,7 @@ pca_server <- function(id,Xproj) {
       ##validate
       iv <- InputValidator$new()
       
-      iv$add_rule("var_gene", ~ if (input$var_gene == 1 & !anyNA(input$var_gene)) "Your choice must be smaller than 1")
+      iv$add_rule("var_gene", ~ if (input$var_gene == 0) "Your choice cannot be zero")
       
       iv$enable()
       
@@ -172,7 +188,7 @@ pca_server <- function(id,Xproj) {
       
       observe({updateSelectizeInput(session, "genecor_samp_2",choices = Xproj$a()[["meta.definition"]], server = T)})
       observe(updateSelectizeInput(session, 'data', 
-                                   choices = c("All genes", "miRNA", "RNAseq", "MSigDB Gene Sets", "Created Gene Set"),
+                                   choices = c("All genes", "miRNA", "RNAseq", "MSigDB Gene Sets", "Custom gene set"),
                                    selected = "",
                                    server = TRUE))
       
@@ -204,12 +220,18 @@ pca_server <- function(id,Xproj) {
                                    ),
                                    selected = "",
                                    server = TRUE))
-    
+      
       observe(updateSelectizeInput(session, 'gene', 
                                    choices = colnames(Xproj$a()), 
                                    selected = "",
                                    server = TRUE))
-
+      
+      #'[##########################################################################################]
+      #'[##########################################################################################]
+      #'[Does this have to be updated dynamically?]
+      #'
+      #'[in order to show example, i couldn't show example label via select input or selectize input non-dinamically] 
+      
       observe(updateSelectizeInput(session, 'palette',
                                    choices = list(`Pre-made palettes` = list(
                                      "Nature"="npg",
@@ -232,11 +254,14 @@ pca_server <- function(id,Xproj) {
                                        "Purple-Green" = "PRGn",
                                        "Pink-Green" = "PiYG",
                                        "Brown-Green" = "BrBG")),
-                                   selected = "",
+                                   selected = "J Clin Onc",
                                    server = TRUE))
-
+      
+      #'[##########################################################################################]
+      #'[##########################################################################################]
+      
       observeEvent(input$cat,{
-    
+        
         req(input$cat)
         
         updateSelectizeInput(session, "chosen_gs", choices = gene_sets()[["gs_name"]],selected = "", server = TRUE)
@@ -281,29 +306,34 @@ pca_server <- function(id,Xproj) {
       
       pca_df <- reactive({
         
-        gene_cols <- Xproj$a() %>% 
-              select(!starts_with("meta.")) %>%
-              select(where(is.numeric))
         
-        gene_name <- colnames(gene_cols)
+        
+        gene_cols <- Xproj$a() %>%
+          select(!starts_with("meta.")) %>%
+          select(where(is.numeric))
+        gene_names <- colnames(gene_cols)
         
         pre_d <- Xproj$a()[meta.definition %in% input$genecor_samp_2, ]
         
-        pre_d <- pre_d %>% drop_na(all_of(gene_name))
+        # sel_cols <- apply(select(pre_d, all_of(gene_names)), 2, sum)
+        
+        pre_d <- pre_d %>% 
+          select(!(any_of(gene_names)& where(~ any(is.na(.x)))))
+       
         
         pre_d
         
-        })
+      })
       
       all_genes <- reactive({
         
         pc_df <-  pca_df() %>% 
-              select(!starts_with("meta.")) %>%
-              select(where(is.numeric))
+          select(!starts_with("meta.")) %>%
+          select(where(is.numeric))
         
         pc_df <- remove_constant(pc_df)
         
-        })
+      })
       
       cre_gene <- reactive({
         
@@ -353,13 +383,13 @@ pca_server <- function(id,Xproj) {
           
           df_pathway
           
-        }else if(input$data == "Created Gene Set" & input$did > 0){
+        }else if(input$data == "Custom gene set" & input$did > 0){
           
-
+          
           
           df_created <-  all_genes()[,intersect(cre_gene()[["genes"]], colnames(all_genes())),with=F]
-        
-            
+          
+          
         }
         
       })
@@ -368,28 +398,26 @@ pca_server <- function(id,Xproj) {
       
       p_dat <- reactive({
         
+        # browser()
+        
         if(input$variance){
           
-          if (input$var_gene != 1 & input$var_gene != 0 ) {
+          if (input$var_gene != 100) {
             
-            var_dat <- int_dat()
+
+            evar <- apply(int_dat(),2,var)
+            mostvariantgenes <- names(evar)[evar > quantile(evar, 1- as.numeric(input$var_gene)/100)]
+            return(
+              select(int_dat(), all_of(mostvariantgenes))
+            )
             
-            variance_dat <- t(var_dat)
             
-            evar <- apply(variance_dat,1,var)
-            
-            mostVariant <- variance_dat[evar>quantile(evar,as.numeric(input$var_gene)),]
-            mostvariantgenes <- rownames(mostVariant)
-            
-            pc_d <- int_dat() %>% select(all_of(mostvariantgenes))
-            
-            pc_d
-            
-          } else if(input$var_gene == 0){
+          } else {
             
             int_dat()
-         
+            
           }
+          
         }else {
           
           int_dat()
@@ -404,54 +432,50 @@ pca_server <- function(id,Xproj) {
       
       gene_sel <- reactive({Xproj$a() %>% select(where(is.numeric))})
       
-      observe({return(gene_sel())})
-      
       gene_op <- reactive({colnames(gene_sel())})
-      
-      observe({return(gene_op())})
-      
-      
       
       
       ## classification function
       # if input is a gene, high low classification is performed, if input is a clinic, clinic class. is performed
       
-
-      gene_mean <- reactive({mean(pca_df()[[input$gene]], na.rm = T)})
-
-      df_class <-  reactive({
-
-        mutate(pca_df(), gene_categorise = case_when(
-          gene_mean() > pca_df()[[input$gene]] ~ "High",
-          gene_mean() < pca_df()[[input$gene]]  ~ "Low")
-
-        )
-
-      })
-
-
+      
+      gene_median <- reactive({median(pca_df()[[input$gene]], na.rm = T)})
+      
+      
       fill <- reactive({
-
-
+        
+        
         ifelse(input$gene %in% gene_op(),
-
-
-
+               
+               
+               
                return({
-
-                 df_class()[["gene_categorise"]]
-
-
+                 
+                 # df_class()[["gene_categorise"]]
+                 
+                 ifelse(pca_df()[[input$gene]] > gene_median(),
+                        "High",
+                        "Low")
+                 
+                 #'[##########################################################################################]
+                 #'[##########################################################################################]
+                 #'[Please ensure that the order of annotation coloring vector and the pca data is the same]
+                 #'[We don't want the order to be shuffled somehow, otherwise wrongs plots will be generated]
+                 #'[for PCA ,constant columns are removed, some gene columns for classification might be constant, so initial data must be proper because there is no change in row number]
+                 #'[##########################################################################################]
+                 #'[##########################################################################################]
+                 
+                 
                }), return({
-
+                 
                  pca_df()[[input$gene]]
-
+                 
                })
-
+               
         )
-
+        
       })
-
+      
       
       
       
@@ -459,7 +483,7 @@ pca_server <- function(id,Xproj) {
       
       tit_legend <- reactive({
         
-       
+        
         
         ifelse(input$gene %in% gene_op(), return({paste("Chosen Gene Factor : ", input$gene)}), 
                paste("Chosen Clinical Factor  : ", input$gene) )
@@ -472,30 +496,39 @@ pca_server <- function(id,Xproj) {
       
       tit_plot <- reactive({
         
+        
+        #'[##########################################################################################]
+        #'[##########################################################################################]
+        #'[Please ensure these titles look good on different screen sizes (try changing the window size)]
+        #'[If it doesn't look good, maybe titles can be omitted altogether]
+        #'[##########################################################################################]
+        #'[##########################################################################################]
+        
+        
         if(input$data == "All genes" ){
           
-          return({paste("PCA using all genes")})
+          return("PCA using all genes")
           
         }else if(input$data == "miRNA"){
           
-          return({paste("PCA using all miRNAseq")})
+          return("PCA using all miRNAseq data")
           
           
         }else if(input$data == "RNAseq"){
           
           return({
             
-            return({paste("PCA using all RNAseq")})
+            return("PCA using all RNAseq data")
             
           })
           
         }else if(input$data == "MSigDB Gene Sets") {
           
-          return({paste("PCA using genes with", input$chosen_gs)})
+          return(paste("PCA using genes from", input$chosen_gs))
           
-        }else if(input$data == "Created Gene Set") {
+        }else if(input$data == "Custom gene set") {
           
-          return({print("PCA using genes with Created Gene Set")})
+          return("PCA using genes from custom gene set")
           
         }
         
@@ -520,14 +553,14 @@ pca_server <- function(id,Xproj) {
             
             validate(
               need(input$genecor_samp_2, 'Choose at least one sample type'),
-              need(input$data, 'Data type is needed'),
-              need(input$gene, 'Classification factor is needed'),
-              need(input$palette, 'Palette choice is needed'),
+              need(input$data, 'Please select input genes'),
+              need(input$gene, 'Please select a feature annotate (eg. specific genes or clinical meta data'),
+              need(input$palette, 'Please select a color palette'),
             )
             
-            if(input$data == "Created Gene Set"){
+            if(input$data == "Custom gene set"){
               
-              validate(need(input$pca_up, "Don't forget to upload your csv file"))
+              validate(need(input$pca_up, "Please upload your csv file"))
               
             }
             
@@ -543,31 +576,31 @@ pca_server <- function(id,Xproj) {
             # pc2<- prcomp(p_dat(), center = input$center, scale. = input$scale)
             
             pca <- fviz_pca_ind(pc2(), geom.ind = "point", pointshape = 19,
-                         fill.ind = fill(),
-                         col.ind = "black",
-                         palette = input$palette,
-                         addEllipses = T,
-                         ellipse.level=0.95,
-                         label = "var",
-                         col.var = "black",
-                         repel = TRUE,
-                         legend.title = tit_legend(),
-                         geom = c("text","point"),
-                         stroke = 0.1
-                         
-                         
+                                fill.ind = fill(),
+                                col.ind = "black",
+                                palette = input$palette,
+                                addEllipses = T,
+                                ellipse.level=0.95,
+                                label = "var",
+                                col.var = "black",
+                                repel = TRUE,
+                                legend.title = tit_legend(),
+                                geom = c("text","point"),
+                                stroke = 0.1
+                                
+                                
             ) +
               ggtitle(tit_plot()) +
               labs(x = "PC1", y = "PC2")+
-              theme(plot.title = element_text(hjust = 0.5))
+              theme(plot.title = element_text(size = 15, hjust = 0.5))
             
             
-           
-
+            
+            
           })
           
-           
-            
+          
+          
           
           
         })
