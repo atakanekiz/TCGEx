@@ -18,7 +18,7 @@ gene_cor_UI <- function(id) {
     navbarPage(
       "TCGExplorer",
       tabPanel(
-        "Corr Table",
+        "Correlation Table",
         sidebarPanel(
           
           add_busy_spinner(
@@ -85,7 +85,7 @@ gene_cor_UI <- function(id) {
         
       ),
       tabPanel(
-        "Corr Plot",
+        "Correlation Plot",
         sidebarPanel(
           selectizeInput(ns("genecor_samp3"), multiple=T,
                          "*Please select sample types",
@@ -113,7 +113,13 @@ gene_cor_UI <- function(id) {
             condition = "input.gen_sel == 'Upload File' ", ns = ns,
             
             fileInput(inputId = ns("corr_up"),
-                      label = "Upload your gene set as .csv file",
+                      label = tags$span(
+                        "Please upload your csv file.",
+                        tags$i(
+                          class = "glyphicon glyphicon-info-sign",
+                          style = "color:#0072B2;",
+                          title = "The csv file should contain a single unnamed column with human gene names."
+                        )),
                       accept = c("text/csv", "text/comma-separated-values,text/plain",
                                  ".csv")),  
           ),

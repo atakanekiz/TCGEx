@@ -55,11 +55,11 @@ pca_ui <- function(id) {
         
         fileInput(inputId = ns("pca_up"),
                   label = tags$span(
-                    "3. Please upload your csv file.",
+                    "Please upload your csv file.",
                     tags$i(
                       class = "glyphicon glyphicon-info-sign",
                       style = "color:#0072B2;",
-                      title = "The csv file should contain a single unnamed column with gene names. Each gene should be associated with a human gene set (ie. no missing data)"
+                      title = "The csv file should contain a single unnamed column with human gene names. Each gene should be associated with a gene set (ie. no missing data)"
                     )),
                   accept = c("text/csv", "text/comma-separated-values,text/plain",
                              ".csv")), 
@@ -501,6 +501,7 @@ pca_server <- function(id,Xproj) {
         #'[##########################################################################################]
         #'[Please ensure these titles look good on different screen sizes (try changing the window size)]
         #'[If it doesn't look good, maybe titles can be omitted altogether]
+        #'[I updated plot visualization please check]
         #'[##########################################################################################]
         #'[##########################################################################################]
         
