@@ -66,7 +66,15 @@ ui <- dashboardPage(skin = "black",
                     ),
                     dashboardBody(
                                   tags$head(
-                                            includeHTML(("google-analytics.html"))
+                                    tags$script(src = "https://www.googletagmanager.com/gtag/js?id=G-HWCPP52NZ2"),
+                                    tags$script(
+                                      HTML(
+                                        "window.dataLayer = window.dataLayer || [];
+                                        function gtag(){dataLayer.push(arguments);}
+                                        gtag('js', new Date());
+                                        gtag('config', 'G-HWCPP52NZ2');"
+                                      )
+                                    )
                                   ),
                                   
                                   tags$div(
