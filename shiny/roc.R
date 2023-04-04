@@ -162,6 +162,7 @@ roc_ui <- function(id, label, choices) {
     mainPanel(
       plotOutput(outputId = ns("multi_plot"), width = "800px", height = "500px"), #ROC plot.
       DT::dataTableOutput(outputId = ns("auctable")), #Area Under Curve (AUC) value table from ROC plot.
+      DT::dataTableOutput(outputId = ns("intersect_genes_table")), #Intersected genes table between the csv file and the data.
       DT::dataTableOutput(outputId = ns("gene_set_table")) #Selected MSigDB gene names as a table.
     )
   )
@@ -181,42 +182,90 @@ roc_server <- function(id, Xproj) {
         if(input$selectore == "Numeric Values"){
           
           return(
-            data.frame(
+            
+            if(input$roc_gene_selector == "Manually enter gene names"){
               
-              element = paste0("#", session$ns(c(NA, "roc_definition_sel + .selectize-control", "selectore + .selectize-control", "one_gene + .selectize-control ", "hi_cutoff_covar", "lo_cutoff_covar",  "genesss + .selectize-control ", "cate + .selectize-control ", "chosen_gs + .selectize-control "))),
+              data.frame(
+                
+                element = paste0("#", session$ns(c(NA, "roc_definition_sel + .selectize-control", "selectore + .selectize-control", "one_gene + .selectize-control ", "hi_cutoff_covar", "lo_cutoff_covar",  "genesss + .selectize-control ", "cate + .selectize-control ", "chosen_gs + .selectize-control "))),
+                
+                intro = paste(c(
+                  "This is the ROC (receiver operating characteristic) analysis module. In this module, you can binarize samples based on gene expression or categorical meta data and test the predictive power of a custom variable. ROC plots show True Positive Rate (TPR) and False Positive Rate (FPR) along the y- and x-axes, respectively. A completely random classifier would appear along the diagonal line in the graph and would have Area Under the Curve (AUC) of 0.5. The curve for a good positive predictor appears in the top half of the plot (AUC > 0.5), and the curve for a good negative predictor appears in the bottom half (AUC < 0.5). Continue the tutorial to learn how to use this module.",
+                  "Select sample types here to focus the analysis on specific subsets.",
+                  "ROC analysis is performed between two classes in the response variable as '1' (desired outcome group) and '0' (undesired outcome group). You can specify these classes for both categorical and numeric variables in the TCGA data. Here you need to select what kind of response variable you are interested in.",
+                  "Select the numerical variable you want to binarize here",
+                  "High cutoff input allows you to assign samples to class-1 if their values are more than the specified quantile here. For instance setting this value to 25 would mean binarizing the top 25% of the data as '1'. If you want to binarize at the median value this value should be 50 (default)",
+                  "Low cutoff input allows you to assign samples to class-0 if their values are less than the specified quantile here. For instance setting this value to 25 would mean binarizing the bottom 25% of the data as '0'. If you want to binarize at the median value this value should be 50 (default)",
+                  "Here, you select the predictor variable. If you enter more than one variable, their values will be averaged.",
+                  "If desired, the average expression value of a specific MSigDB gene set can be added to the graph.",
+                  "If you would like to include a curve for a specific MSigDB gene set, select it here."
+                ))
+              )
               
-              intro = paste(c(
-                "This is the ROC (receiver operating characteristic) analysis module. In this module, you can binarize samples based on gene expression or categorical meta data and test the predictive power of a custom variable. ROC plots show True Positive Rate (TPR) and False Positive Rate (FPR) along the y- and x-axes, respectively. A completely random classifier would appear along the diagonal line in the graph and would have Area Under the Curve (AUC) of 0.5. The curve for a good positive predictor appears in the top half of the plot (AUC > 0.5), and the curve for a good negative predictor appears in the bottom half (AUC < 0.5). Continue the tutorial to learn how to use this module.",
-                "Select sample types here to focus the analysis on specific subsets.",
-                "ROC analysis is performed between two classes in the response variable as '1' (desired outcome group) and '0' (undesired outcome group). You can specify these classes for both categorical and numeric variables in the TCGA data. Here you need to select what kind of response variable you are interested in.",
-                "Select the numerical variable you want to binarize here",
-                "High cutoff input allows you to assign samples to class-1 if their values are more than the specified quantile here. For instance setting this value to 25 would mean binarizing the top 25% of the data as '1'. If you want to binarize at the median value this value should be 50 (default)",
-                "Low cutoff input allows you to assign samples to class-0 if their values are less than the specified quantile here. For instance setting this value to 25 would mean binarizing the bottom 25% of the data as '0'. If you want to binarize at the median value this value should be 50 (default)",
-                "Here, you select the predictor variable. If you enter more than one variable, their values will be averaged.",
-                "If desired, the average expression value of a specific MSigDB gene set can be added to the graph.",
-                "If you would like to include a curve for a specific MSigDB gene set, select it here."
-              ))
-            )
+              
+            } else if (input$roc_gene_selector ==  "Upload a csv file") {
+              
+              data.frame(
+                
+                element = paste0("#", session$ns(c(NA, "roc_definition_sel + .selectize-control", "selectore + .selectize-control", "one_gene + .selectize-control ", "hi_cutoff_covar", "lo_cutoff_covar",  "roc_csv + .selectize-control ", "cate + .selectize-control ", "chosen_gs + .selectize-control "))),
+                
+                intro = paste(c(
+                  "This is the ROC (receiver operating characteristic) analysis module. In this module, you can binarize samples based on gene expression or categorical meta data and test the predictive power of a custom variable. ROC plots show True Positive Rate (TPR) and False Positive Rate (FPR) along the y- and x-axes, respectively. A completely random classifier would appear along the diagonal line in the graph and would have Area Under the Curve (AUC) of 0.5. The curve for a good positive predictor appears in the top half of the plot (AUC > 0.5), and the curve for a good negative predictor appears in the bottom half (AUC < 0.5). Continue the tutorial to learn how to use this module.",
+                  "Select sample types here to focus the analysis on specific subsets.",
+                  "ROC analysis is performed between two classes in the response variable as '1' (desired outcome group) and '0' (undesired outcome group). You can specify these classes for both categorical and numeric variables in the TCGA data. Here you need to select what kind of response variable you are interested in.",
+                  "Select the numerical variable you want to binarize here",
+                  "High cutoff input allows you to assign samples to class-1 if their values are more than the specified quantile here. For instance setting this value to 25 would mean binarizing the top 25% of the data as '1'. If you want to binarize at the median value this value should be 50 (default)",
+                  "Low cutoff input allows you to assign samples to class-0 if their values are less than the specified quantile here. For instance setting this value to 25 would mean binarizing the bottom 25% of the data as '0'. If you want to binarize at the median value this value should be 50 (default)",
+                  "You can upload a csv file including your genes of interest to see them as a ROC curve. If you enter more than one variable, their values will be averaged.",
+                  "If desired, the average expression value of a specific MSigDB gene set can be added to the graph.",
+                  "If you would like to include a curve for a specific MSigDB gene set, select it here."
+                ))
+              )
+              
+            }
           )
         } else {
           return(
             
-            data.frame(
+            if(input$roc_gene_selector == "Manually enter gene names"){
               
-              element = paste0("#", session$ns(c(NA, "roc_definition_sel + .selectize-control", "selectore + .selectize-control", "binaryone + .selectize-control ", "binarytwo + .selectize-control ", "binarythree + .selectize-control ", "genesss + .selectize-control ", "cate + .selectize-control ", "chosen_gs + .selectize-control "))),
+              data.frame(
+                
+                element = paste0("#", session$ns(c(NA, "roc_definition_sel + .selectize-control", "selectore + .selectize-control", "binaryone + .selectize-control ", "binarytwo + .selectize-control ", "binarythree + .selectize-control ", "genesss + .selectize-control ", "cate + .selectize-control ", "chosen_gs + .selectize-control "))),
+                
+                intro = paste(c(
+                  "This is the ROC (receiver operating characteristic) analysis module. In this module, you can binarize samples based on gene expression or categorical meta data and test the predictive power of a custom variable. ROC plots show True Positive Rate (TPR) and False Positive Rate (FPR) along the y- and x-axes, respectively. A completely random classifier would appear along the diagonal line in the graph and would have Area Under the Curve (AUC) of 0.5. The curve for a good positive predictor appears in the top half of the plot (AUC > 0.5), and the curve for a good negative predictor appears in the bottom half (AUC < 0.5). Continue the tutorial to learn how to use this module.",
+                  "Select sample types here to focus the analysis on specific subsets.",
+                  "ROC analysis is performed between two classes in the response variable as '1' (desired outcome group) and '0' (undesired outcome group). You can specify these classes for both categorical and numeric variables in the TCGA data. Here you need to select what kind of response variable you are interested in.",
+                  "You can select the categorical variable to binarize here. In the next step, you will decide which data subsets will be classified as 1 and 0.",
+                  "In this box, you can select which data subsets will be classified as '1'. For example, if you have chosen 'meta.gender' previously, you can choose 'female' observations to belong to class-1 here. If the categorical variable you selected has multiple subsets, you can specify more than one subset as well.",
+                  "In this box, you can select which data subsets will be classified as '0'. For example, if you have chosen 'meta.gender' previously, you can choose 'male' observations to belong to class-0 here. If the categorical variable you selected has multiple subsets, you can specify more than one subset as well.",
+                  "Here, you select the predictor variable. If you enter more than one variable, their values will be averaged.",
+                  "If desired, the average expression value of a specific MSigDB gene set can be added to the graph.",
+                  "If you would like to include a curve for a specific MSigDB gene set, select it here."
+                ))
+              )
               
-              intro = paste(c(
-                "This is the ROC (receiver operating characteristic) analysis module. In this module, you can binarize samples based on gene expression or categorical meta data and test the predictive power of a custom variable. ROC plots show True Positive Rate (TPR) and False Positive Rate (FPR) along the y- and x-axes, respectively. A completely random classifier would appear along the diagonal line in the graph and would have Area Under the Curve (AUC) of 0.5. The curve for a good positive predictor appears in the top half of the plot (AUC > 0.5), and the curve for a good negative predictor appears in the bottom half (AUC < 0.5). Continue the tutorial to learn how to use this module.",
-                "Select sample types here to focus the analysis on specific subsets.",
-                "ROC analysis is performed between two classes in the response variable as '1' (desired outcome group) and '0' (undesired outcome group). You can specify these classes for both categorical and numeric variables in the TCGA data. Here you need to select what kind of response variable you are interested in.",
-                "You can select the categorical variable to binarize here. In the next step, you will decide which data subsets will be classified as 1 and 0.",
-                "In this box, you can select which data subsets will be classified as '1'. For example, if you have chosen 'meta.gender' previously, you can choose 'female' observations to belong to class-1 here. If the categorical variable you selected has multiple subsets, you can specify more than one subset as well.",
-                "In this box, you can select which data subsets will be classified as '0'. For example, if you have chosen 'meta.gender' previously, you can choose 'male' observations to belong to class-0 here. If the categorical variable you selected has multiple subsets, you can specify more than one subset as well.",
-                "Here, you select the predictor variable. If you enter more than one variable, their values will be averaged.",
-                "If desired, the average expression value of a specific MSigDB gene set can be added to the graph.",
-                "If you would like to include a curve for a specific MSigDB gene set, select it here."
-              ))
-            )
+            } else if (input$roc_gene_selector ==  "Upload a csv file") {
+              
+              data.frame(
+                
+                element = paste0("#", session$ns(c(NA, "roc_definition_sel + .selectize-control", "selectore + .selectize-control", "binaryone + .selectize-control ", "binarytwo + .selectize-control ", "binarythree + .selectize-control ", "genesss + .selectize-control ", "cate + .selectize-control ", "chosen_gs + .selectize-control "))),
+                
+                intro = paste(c(
+                  "This is the ROC (receiver operating characteristic) analysis module. In this module, you can binarize samples based on gene expression or categorical meta data and test the predictive power of a custom variable. ROC plots show True Positive Rate (TPR) and False Positive Rate (FPR) along the y- and x-axes, respectively. A completely random classifier would appear along the diagonal line in the graph and would have Area Under the Curve (AUC) of 0.5. The curve for a good positive predictor appears in the top half of the plot (AUC > 0.5), and the curve for a good negative predictor appears in the bottom half (AUC < 0.5). Continue the tutorial to learn how to use this module.",
+                  "Select sample types here to focus the analysis on specific subsets.",
+                  "ROC analysis is performed between two classes in the response variable as '1' (desired outcome group) and '0' (undesired outcome group). You can specify these classes for both categorical and numeric variables in the TCGA data. Here you need to select what kind of response variable you are interested in.",
+                  "You can select the categorical variable to binarize here. In the next step, you will decide which data subsets will be classified as 1 and 0.",
+                  "In this box, you can select which data subsets will be classified as '1'. For example, if you have chosen 'meta.gender' previously, you can choose 'female' observations to belong to class-1 here. If the categorical variable you selected has multiple subsets, you can specify more than one subset as well.",
+                  "In this box, you can select which data subsets will be classified as '0'. For example, if you have chosen 'meta.gender' previously, you can choose 'male' observations to belong to class-0 here. If the categorical variable you selected has multiple subsets, you can specify more than one subset as well.",
+                  "You can upload a csv file including your genes of interest to see them as a ROC curve. If you enter more than one variable, their values will be averaged.",
+                  "If desired, the average expression value of a specific MSigDB gene set can be added to the graph.",
+                  "If you would like to include a curve for a specific MSigDB gene set, select it here."
+                ))
+              )
+              
+            }
           )
         }
         
@@ -441,8 +490,17 @@ roc_server <- function(id, Xproj) {
             #Calculation of plot with the chosen multiple genes.
             
             validate(need(input$roc_definition_sel, "Please select a sample type"))
-            validate(need(input$genesss, "Please select genes to create a custom predictor (multiple genes will be averaged)"))
             validate(need(input$chosen_gs, "Please select an MSigDB gene set"))
+            
+            if(input$roc_gene_selector == "Manually enter gene names"){
+
+              validate(need(input$genesss, "Please select genes to create a custom predictor (multiple genes will be averaged)"))
+              
+            } else if (input$roc_gene_selector ==  "Upload a csv file") {
+              
+              validate(need(input$roc_csv, "Please upload a csv file to create a custom predictor (multiple genes will be averaged)"))
+              
+              }
             
             longtest <- melt_roc(df_final_data(), input$one_gene, c("custom_gene_set", "selected_msigdb_gene_set"))
             multiplot1 <- ggplot(longtest, aes(d = D, m = M, color = name)) + geom_roc() + style_roc() + theme(legend.text = element_text(size = 18)) + geom_abline(slope = 1, intercept = 0, linetype = 2, color = "grey50") 
@@ -454,7 +512,16 @@ roc_server <- function(id, Xproj) {
             
             validate(need(input$roc_definition_sel, "Please select a sample type"))
             validate(need(input$one_gene, "Please choose gene expression data"))
-            validate(need(input$genesss, "Please select genes to create a custom predictor (multiple genes will be averaged)"))
+            
+            if(input$roc_gene_selector == "Manually enter gene names"){
+              
+              validate(need(input$genesss, "Please select genes to create a custom predictor (multiple genes will be averaged)"))
+              
+            } else if (input$roc_gene_selector ==  "Upload a csv file") {
+              
+              validate(need(input$roc_csv, "Please upload a csv file to create a custom predictor (multiple genes will be averaged)"))
+              
+            }
             
             basicplot <- ggplot(df_final_data(), aes(d = df_final_data()[[input$one_gene]], m = custom_gene_set)) + geom_roc() + geom_abline(slope = 1, intercept = 0, linetype = 2, color = "#030300") + coord_fixed()
             styledplotroc <- basicplot + style_roc() + annotate("text", x =.75, y =.25, label = paste ("AUC =", round (calc_auc (basicplot) ["AUC"], 2))) 
@@ -470,7 +537,16 @@ roc_server <- function(id, Xproj) {
           validate(need(input$binaryone, "Please choose numeric variable to binarize"))
           validate(need(input$binarytwo, "Please choose value(s) to classify as class-1"))
           validate(need(input$binarythree, "Please choose value(s) to classify as class-0"))
-          validate(need(input$genesss, "Please select gene(s) to create a custom predictor (multiple genes will be averaged)"))
+          
+          if(input$roc_gene_selector == "Manually enter gene names"){
+            
+            validate(need(input$genesss, "Please select genes to create a custom predictor (multiple genes will be averaged)"))
+            
+          } else if (input$roc_gene_selector ==  "Upload a csv file") {
+            
+            validate(need(input$roc_csv, "Please upload a csv file to create a custom predictor (multiple genes will be averaged)"))
+            
+          }
           
           if(input$show_msigdb_gene_sets == TRUE){
             
@@ -516,7 +592,15 @@ roc_server <- function(id, Xproj) {
         
         if(input$selectore == "Numeric Values"){
           
-          validate(need(input$genesss, "Select genes to create a custom predictor (Multiple genes will be averaged)"))
+          if(input$roc_gene_selector == "Manually enter gene names"){
+            
+            validate(need(input$genesss, "Please select genes to create a custom predictor (multiple genes will be averaged)"))
+            
+          } else if (input$roc_gene_selector ==  "Upload a csv file") {
+            
+            validate(need(input$roc_csv, "Please upload a csv file to create a custom predictor (multiple genes will be averaged)"))
+            
+          }
           
           fortable1 <- calc_auc(roc_multi_plot())
           return(fortable1)
@@ -526,7 +610,16 @@ roc_server <- function(id, Xproj) {
           validate(need(input$binaryone, "Please choose numeric variable to binarize"))
           validate(need(input$binarytwo, "Please choose value(s) to be classified as class-1"))
           validate(need(input$binarythree, "Choose second value(s) to be classified as class-0"))
-          validate(need(input$genesss, "Select genes to create a custom predictor (multiple genes will be averaged)"))
+          
+          if(input$roc_gene_selector == "Manually enter gene names"){
+            
+            validate(need(input$genesss, "Please select genes to create a custom predictor (multiple genes will be averaged)"))
+            
+          } else if (input$roc_gene_selector ==  "Upload a csv file") {
+            
+            validate(need(input$roc_csv, "Please upload a csv file to create a custom predictor (multiple genes will be averaged)"))
+            
+          }
           
           fortable2 <- calc_auc(roc_multi_plot())
           return(fortable2)
@@ -542,6 +635,37 @@ roc_server <- function(id, Xproj) {
         # Output for the area under curve (AUC).
         
         roc_auc_data()
+        
+      })
+      
+      observeEvent(input$roc_run, {
+        
+        #Table output of the intersected gene names between the csv file and selected the cancer data.
+        
+        output$intersect_genes_table <- DT::renderDataTable({
+
+          if(input$roc_gene_selector ==  "Upload a csv file"){
+            
+            req(pre_df())
+
+            validate(need(input$roc_csv, "Please upload a csv file to create a custom predictor (multiple genes will be averaged)"))
+
+            req(input$roc_definition_sel)
+            
+            uploaded_roc_csv <- input$roc_csv
+            
+            selected_roc_csv <- read.csv(uploaded_roc_csv$datapath, stringsAsFactors = FALSE, header = FALSE)$V1
+            
+            roc_same_gene_names = intersect(selected_roc_csv, colnames(pre_df()))
+            
+            intersect_data_frame <- as.data.frame(roc_same_gene_names)
+            
+            colnames(intersect_data_frame)[which(names(intersect_data_frame) == "roc_same_gene_names")] <- "Intersected genes between csv file and chosen cancer data"
+            
+            intersect_data_frame <- as.data.frame(intersect_data_frame)
+          }
+          
+        })
         
       })
       
