@@ -77,7 +77,7 @@ heatmap_ui <- function(id, label, choices) {
       
       sliderInput(inputId = ns("variable"),
                   label = "Variation filter (Keep top n% variable genes)",
-                  min = 0, max = 100, value = 0
+                  min = 0, max = 100, value = 100
       ),
       
       span(style="color:#3382FF",
