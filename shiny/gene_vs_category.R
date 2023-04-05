@@ -45,15 +45,14 @@ gene_vs_cat_ui <- function(id, label, choices){
                        "Select faceting variable (optional)",
                        choices=NULL, # will be updated dynamically
                        options = list(placeholder = "eg. meta.gender")),
-        actionBttn(inputId = ns("cat_gene_run"), 
-                   label = "Generate Correlation Plot",
-                   style = "unite",
-                   block = TRUE,
-                   color = "primary"),
-        br(),
         
         checkboxInput(inputId = ns("exprs_stats"), "Show statistics?", F),
-        downloadButton(ns("downloadPlot4"), "Download Meta Data Analysis Plot", style="color: #eeeeee; background-color: #01303f; border-color: #01303f")
+        downloadButton(ns("downloadPlot4"), "Download plot", style="color: #eeeeee; background-color: #01303f; border-color: #01303f"),
+        
+        #help section UI
+        
+        introjsUI(),
+        actionButton(ns("genecat_help"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
         
         
       ),
@@ -63,7 +62,7 @@ gene_vs_cat_ui <- function(id, label, choices){
         
         plotOutput(outputId = ns("exprs_plot")),
         
-        conditionalPanel(           ##Before I change it this panel was including every conditional panel, we can make in this way again (Cagatay)
+        conditionalPanel(           ## Before changing this section, panel was including every conditional panel. It can be reverted if needed
           
           h3("Graphing options"),
           
@@ -210,211 +209,250 @@ gene_vs_cat_server <- function(id,Xproj){
   moduleServer(id,function(input, output, session){
     
     
-     # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
-     observe({updateSelectizeInput(session,
-                                   "exprs_samptyp",
-                                   choices = Xproj$a()$meta.definition,
-                                   server = T)})
-
-    #   # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
-    observe({updateSelectizeInput(session,
-                                   "cat_plotvar", selected="",
-                                   choices = colnames(Xproj$a()%>% select(starts_with("meta."))),
-                                   server = T)})
-    
-       # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
-     observe({updateSelectizeInput(session,
-                                     "cat_plotvarsubset", selected=levels(factor(Xproj$a()[[input$cat_plotvar]])),
-                                     choices = levels(factor(Xproj$a()[[input$cat_plotvar]])),
-                                   server = T)})
-    
-    
-       # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
-     observe({updateSelectizeInput(session,
-                                   "num_plotvar", selected="",
-                                   choices = colnames(Xproj$a()%>% select(-starts_with("meta."))),
-                                   server = T)})
-    
-  
-       # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
-     observe({updateSelectizeInput(session,
-                                   "facet_plotvar", selected="",
-                                   choices = colnames(Xproj$a()%>% select(starts_with("meta."))),
-                                   server = T)})
-    
-    
-       # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
-     observe({updateSelectizeInput(session,
-                                   "exprs_statref", selected="",
-                                   choices = levels(factor(Xproj$a()[[input$cat_plotvar]])),
-                                   server = T)})
-    
-  
-       # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
-     observe({updateSelectizeInput(session,
-                                   "exprs_statpairs", selected="",
-                                   choices = input$cat_plotvarsubset,
-                                   server = T)})
-
+    genecat_steps <- reactive({
       
-      exprs_plotdat <- reactive({
+      
+      return(
         
-        validate(need(input$exprs_samptyp, "Select sample type"),
-                 need(input$cat_plotvar, "Select categorical variable for x-axis"),
-                 need(input$num_plotvar, "Select numerical variable for y-axis"),
-                 need(input$cat_gene_run, " Click generate button to generate the graph"),
-                 if(input$exprs_stats){                              ##Statistics are not working without any reference whenn "ref" chosem, su I put a validation that comes only show statistics button is chosen( Cagatay)
-                   need(input$exprs_statref, "Select reference")}
+        data.frame(
+          
+          element = paste0("#", session$ns(c(NA, 
+                                             "exprs_samptyp + .selectize-control", 
+                                             "cat_plotvar + .selectize-control",
+                                             "cat_plotvarsubset + .selectize-control",
+                                             "num_plotvar + .selectize-control",
+                                             "facet_plotvar + .selectize-control",
+                                             "exprs_stats",
+                                             "downloadPlot4"))),
+          
+          intro = c(
+            "This is feature-to-metadata visualization module. You can select various data subsets and see how numeric features such as gene expression differs among these. Continue the tutorial to see how the module works.",
+            "Select sample type you would like to analyze here.",
+            "Define which data subsets you want to include in the analysis.",
+            "Here, you can select the categorical variable to place on the x-axis",
+            "Select a numeric feature to plot in the y-axis",
+            "You can also select faceting variables to examine how feature-vs-category relationship might be different in various data subsets (eg. males and females).",
+            "Click here if you would like to show statistics on the graph. You can also define reference group or specific pair-wise comparisons in the main panel.",
+            "You can download the plot by clicking here."
+          )
+          
         )
         
-        if(input$facet_plotvar == "") facetvar <- NULL else facetvar <- input$facet_plotvar
-        
-        sel_cols <- c("meta.definition", input$num_plotvar, input$cat_plotvar, facetvar)
-        
-        df <- Xproj$a()[, ..sel_cols]
-        
-        df <- df[meta.definition %in% input$exprs_samptyp, ]
-        
-        df <- df[get(input$cat_plotvar) %in% input$cat_plotvarsubset, ]
-        
-        df
-        
-      })
-      
-      complist <- reactiveVal(NULL)
-      
-      
-      observeEvent(input$exprs_addcomp, {
-        
-        updatedcomps <- append(complist(), list(input$exprs_statpairs))
-        
-        complist(updatedcomps)
-        
-        
-        # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
-        observe({updateSelectizeInput(session, 
-                                      "exprs_statpairs", selected="",
-                                      choices = input$cat_plotvarsubset,
-                                      server = T)})
-        
-      })
-      
-      
-      observeEvent(input$exprs_resetcomp, complist(NULL))
-      
-      
-      output$exprs_statpairlist <- renderPrint({
-        
-        complist()
-        
-      })
-      
-      
-      
-      stat_layer <-reactive({ 
-        
-  
-        form <- as.formula(paste0(input$num_plotvar, "~", input$cat_plotvar))
-        
-        if(input$facet_plotvar == "") facetvar <- NULL else facetvar <- input$facet_plotvar
-        
-        
-        if(input$select_comp == "pairs") refgrp = NULL else refgrp =input$exprs_statref
-        
-        
-        if(is.null(facetvar)) df = exprs_plotdat() else {
-          
-          df = subset(exprs_plotdat(), ave(get(input$num_plotvar),
-                                            get(facetvar),
-                                            get(input$cat_plotvar), FUN = length)>1)
-          
-        }
-        
-
-        res <-compare_means(form, df,
-                             method=input$exprs_statmethod,
-                             p.adjust.method = input$exprs_padjmethod,
-                             group.by = facetvar, 
-                             ref.group = refgrp)
-        
-        
-        res$p.signif.adj <- ifelse(res$p.adj <= 0.0001, "****",
-                                   ifelse(res$p.adj <= 0.001, "***",
-                                          ifelse(res$p.adj <= 0.01, "**",
-                                                 ifelse(res$p.adj <= 0.05, "*", "ns"))))
-        
-        res$y.position <- max(exprs_plotdat()[[input$num_plotvar]], na.rm = T)
-        
-        
-        
-        if(input$select_comp == "pairs"){
-          
-          
-          reslev <- level_extractor(res)
-          
-          selpos <- unlist(lapply(complist(), function(x) which(reslev == paste(levels(factor(x)), collapse = "_"))))
-          
-          
-          res2 <- res[selpos, ]
-          
-          return(res2)
-          
-        } else  return(res)   # return stats data frame
-        
-        
-        
-      })
-      
-      
-      val3 <- reactiveValues()
-      
-      output$exprs_plot <- renderPlot({
+      )
+    })
     
+    
+    observeEvent(input$genecat_help, {
+      
+      introjs(session, options = list(steps = genecat_steps()) )
+      
+    })
+    
+    
+    # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
+    observe({updateSelectizeInput(session,
+                                  "exprs_samptyp",
+                                  choices = Xproj$a()$meta.definition,
+                                  server = T)})
+    
+    #   # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
+    observe({updateSelectizeInput(session,
+                                  "cat_plotvar", selected="",
+                                  choices = colnames(Xproj$a()%>% select(starts_with("meta."))),
+                                  server = T)})
+    
+    # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
+    observe({updateSelectizeInput(session,
+                                  "cat_plotvarsubset", selected=levels(factor(Xproj$a()[[input$cat_plotvar]])),
+                                  choices = levels(factor(Xproj$a()[[input$cat_plotvar]])),
+                                  server = T)})
+    
+    
+    # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
+    observe({updateSelectizeInput(session,
+                                  "num_plotvar", selected="",
+                                  choices = colnames(Xproj$a()%>% select(-starts_with("meta."))),
+                                  server = T)})
+    
+    
+    # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
+    observe({updateSelectizeInput(session,
+                                  "facet_plotvar", selected="",
+                                  choices = colnames(Xproj$a()%>% select(starts_with("meta."))),
+                                  server = T)})
+    
+    
+    # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
+    observe({updateSelectizeInput(session,
+                                  "exprs_statref", selected="",
+                                  choices = levels(factor(Xproj$a()[[input$cat_plotvar]])),
+                                  server = T)})
+    
+    
+    # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
+    observe({updateSelectizeInput(session,
+                                  "exprs_statpairs", selected="",
+                                  choices = input$cat_plotvarsubset,
+                                  server = T)})
+    
+    
+    exprs_plotdat <- reactive({
+      
+      validate(need(input$exprs_samptyp, "Select sample type"),
+               need(input$cat_plotvar, "Select categorical variable for x-axis"),
+               need(input$num_plotvar, "Select numerical variable for y-axis"),
+               if(input$exprs_stats){                              ## Validation is active only when statistics button is chosen
+                 need(input$exprs_statref, "Select the reference group below")}
+      )
+      
+      if(input$facet_plotvar == "") facetvar <- NULL else facetvar <- input$facet_plotvar
+      
+      sel_cols <- c("meta.definition", input$num_plotvar, input$cat_plotvar, facetvar)
+      
+      df <- Xproj$a()[, ..sel_cols]
+      
+      df <- df[meta.definition %in% input$exprs_samptyp, ]
+      
+      df <- df[get(input$cat_plotvar) %in% input$cat_plotvarsubset, ]
+      
+      df
+      
+    })
+    
+    complist <- reactiveVal(NULL)
+    
+    
+    observeEvent(input$exprs_addcomp, {
+      
+      updatedcomps <- append(complist(), list(input$exprs_statpairs))
+      
+      complist(updatedcomps)
+      
+      
+      # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
+      observe({updateSelectizeInput(session, 
+                                    "exprs_statpairs", selected="",
+                                    choices = input$cat_plotvarsubset,
+                                    server = T)})
+      
+    })
+    
+    
+    observeEvent(input$exprs_resetcomp, complist(NULL))
+    
+    
+    output$exprs_statpairlist <- renderPrint({
+      
+      complist()
+      
+    })
+    
+    
+    
+    stat_layer <-reactive({ 
+      
+      
+      form <- as.formula(paste0(input$num_plotvar, "~", input$cat_plotvar))
+      
+      if(input$facet_plotvar == "") facetvar <- NULL else facetvar <- input$facet_plotvar
+      
+      
+      if(input$select_comp == "pairs") refgrp = NULL else refgrp =input$exprs_statref
+      
+      
+      if(is.null(facetvar)) df = exprs_plotdat() else {
         
-        if(input$facet_plotvar == "") facetvar <- NULL else facetvar <- input$facet_plotvar
+        df = subset(exprs_plotdat(), ave(get(input$num_plotvar),
+                                         get(facetvar),
+                                         get(input$cat_plotvar), FUN = length)>1)
+        
+      }
+      
+      
+      res <-compare_means(form, df,
+                          method=input$exprs_statmethod,
+                          p.adjust.method = input$exprs_padjmethod,
+                          group.by = facetvar, 
+                          ref.group = refgrp)
+      
+      
+      res$p.signif.adj <- ifelse(res$p.adj <= 0.0001, "****",
+                                 ifelse(res$p.adj <= 0.001, "***",
+                                        ifelse(res$p.adj <= 0.01, "**",
+                                               ifelse(res$p.adj <= 0.05, "*", "ns"))))
+      
+      res$y.position <- max(exprs_plotdat()[[input$num_plotvar]], na.rm = T)
+      
+      
+      
+      if(input$select_comp == "pairs"){
         
         
+        reslev <- level_extractor(res)
+        
+        selpos <- unlist(lapply(complist(), function(x) which(reslev == paste(levels(factor(x)), collapse = "_"))))
         
         
-        pp <- ggboxplot(exprs_plotdat(), input$cat_plotvar, input$num_plotvar, 
-                       fill = input$cat_plotvar,
-                       facet.by = facetvar,
-                       palette =  input$exprs_plotpal,
-                       add = input$exprs_plotadd,
-                       add.params = list(size=input$exprs_plotaddsize,
-                                         color=input$exprs_plotaddcolor),
-                       outlier.shape=NA,
-                       font.x=18, font.y=18, font.tickslab = 18,
-                       panel.labs.font = list(size=16))
+        res2 <- res[selpos, ]
         
-        if(input$exprs_rotatex) pp <- pp + rotate_x_text(angle=45)
+        return(res2)
         
-        if(input$exprs_stats) pp <- pp + stat_pvalue_manual(stat_layer(), size=7,
+      } else  return(res)   # return stats data frame
+      
+      
+      
+    })
+    
+    
+    val3 <- reactiveValues()
+    
+    output$exprs_plot <- renderPlot({
+      
+      
+      if(input$facet_plotvar == "") facetvar <- NULL else facetvar <- input$facet_plotvar
+      
+      
+      
+      
+      pp <- ggboxplot(exprs_plotdat(), input$cat_plotvar, input$num_plotvar, 
+                      fill = input$cat_plotvar,
+                      facet.by = facetvar,
+                      palette =  input$exprs_plotpal,
+                      add = input$exprs_plotadd,
+                      add.params = list(size=input$exprs_plotaddsize,
+                                        color=input$exprs_plotaddcolor),
+                      outlier.shape=NA,
+                      font.x=18, font.y=18, font.tickslab = 18,
+                      panel.labs.font = list(size=16))
+      
+      if(input$exprs_rotatex) pp <- pp + rotate_x_text(angle=45)
+      
+      if(input$exprs_stats) pp <- pp + stat_pvalue_manual(stat_layer(), size=7,
                                                           label=input$exprs_statlabel, 
                                                           step.increase = 0.1, 
                                                           step.group.by = facetvar)
-  
-        val3$pp <- pp
+      
+      val3$pp <- pp
+      
+      print(pp)
+      
+      
+      
+    })
+    
+    
+    output$downloadPlot4 <- downloadHandler(
+      filename = function() {
+        paste("Meta_Data_plot.png")
+      },
+      content = function(file) {
         
-        print(pp)
-        
-        
+        png(file)
+        print(val3$pp)
+        dev.off()
         
       })
-      
-      
-      output$downloadPlot4 <- downloadHandler(
-        filename = function() {
-          paste("Meta_Data_plot.png")
-        },
-        content = function(file) {
-          
-          png(file)
-          print(val3$pp)
-          dev.off()
-          
-        })
-      
-    }
+    
+  }
   )
 }
