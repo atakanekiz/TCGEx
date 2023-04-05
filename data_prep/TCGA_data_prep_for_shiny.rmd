@@ -1,0 +1,407 @@
+---
+title: "Zero Count Filtration Step"
+author: "memrekus"
+date: "2023-04-04"
+output: html_document
+---
+
+# Get the list of TCGA projects
+
+```{r}
+
+mir_projects <- gsub("_miRisoform.rds", "", list.files("miRNAseq_RDS/"))
+
+rna_projects <- gsub("_rnaseq.rds", "", list.files("RNAseq_RDS/"))
+
+# Ensure match
+sum(rna_projects != mir_projects)
+
+```
+
+# Prepare TCGA data
+
+```{r}
+
+library(TCGAbiolinks)
+library(SummarizedExperiment)
+library(edgeR)
+library(SummarizedExperiment)
+
+library(data.table)
+library(dplyr)
+
+
+for(i in rna_projects) {  # Some projects will fail. Can execute the loop in chunks or create if statements as below
+    
+    message(paste("\n\n\n---------- Processing", i, "----------"))
+    
+    
+    message("Preparing sample level metadata")
+    
+    rna <- readRDS(paste0("RNAseq_RDS/", i, "_rnaseq.rds"))
+    
+    # Prepare sample level data
+    coldat <- as.data.table(colData(rna))
+    
+    coldat <- coldat[, colMeans(is.na(coldat)) != 1, with=F]
+    
+    coldat <- coldat[, !grepl("paper_", colnames(coldat)), with=F]
+    
+    if(!"vital_status" %in% colnames(coldat)) stop("No column name called vital_status")
+    if(!"days_to_death" %in% colnames(coldat)) stop("No column name called days_to_death")
+    if(!"days_to_last_follow_up" %in% colnames(coldat)) stop("No column name called days_to_last_follow_up")
+    
+    coldat$vital_status <- ifelse(coldat$vital_status == "Dead", 1, 0)
+    coldat$days_to_event <- ifelse(coldat$vital_status == 1, coldat$days_to_death, coldat$days_to_last_follow_up)
+    
+    coldat$age_at_diagnosis <- coldat$age_at_diagnosis / 365
+    
+    colnames(coldat) <- paste0("meta.", colnames(coldat))
+    
+   if(!i %in% c("DLBC", "LAML", "MESO", "OV", "TGCT", "THYM")) { subtype <- TCGAquery_subtype(i)
+   
+   subtype <- subtype[, !colnames(subtype) %in% colnames(coldat)]
+    
+    colnames(subtype) <- paste0("meta.", colnames(subtype))
+    
+    # Remove all NA columns
+    subtype <- subtype[, colMeans(is.na(subtype)) != 1]
+    
+    if(i == "SKCM") {colnames(subtype) <- gsub("meta.RNASEQ.CLUSTER_CONSENHIER", 
+                                              "meta.RNAseq.classification", colnames(subtype))
+    
+ subtype$meta.RNAseq.classification <- factor(subtype$meta.RNAseq.classification, 
+                                                   levels=c("immune", "keratin", "MITF-low"))
+    
+ # Use only primary tumor data when duplicates are present
+  nonprim <- duplicated(subtype$meta.patient) & subtype$meta.ALL_PRIMARY_VS_METASTATIC != "All_Primaries"
+  
+  subtype <- subtype[!nonprim, ]
+ 
+ }
+    
+    if(i == "PCPG") subtype$meta.patient <- substr(subtype$`meta.Sample ID`, 1, 12)
+    
+    subtype <- as.data.table(subtype)
+    
+   
+    
+    
+    
+   }
+    
+    
+   
+    
+      message("Preparing RNAseq data")
+    
+    # Prepare RNAseq data
+    rnadat <- assay(rna)
+    
+    rowdat <- as.data.frame(rowData(rna))
+    
+    rnadat <- cpm(rnadat, log=F, prior.count = 0)
+    
+    rnadat <- log(rnadat+1, base = 10)
+    
+    rnadat <- data.table(rnadat)
+    
+    rna_barcodes <- colnames(rnadat)
+    
+    # rnadat$genename <- rowdat$external_gene_name
+    
+    # rnadat$genename <- rowdat$gene_name
+    
+    # rnadat <- rnadat[, lapply(.SD, mean), by="genename"]
+    
+    rnadat<-as.data.frame(t(rnadat))
+    
+    rowdat <- rowdat %>%
+  mutate(duplicated_name = duplicated(gene_name) | duplicated(gene_name, fromLast=T)) %>%
+  mutate(new_name = case_when(
+    duplicated_name == TRUE ~ paste(gene_name, gene_id, sep = "_"),
+    duplicated_name == FALSE ~ gene_name,
+    TRUE ~ "XXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+  )) %>%
+  mutate(new_name = make.names(new_name))
+
+    colnames(rnadat)<- rowdat$new_name
+    
+    rnadat<-data.table(rnadat)
+
+    # genename <- gsub("\\-", ".", rnadat$genename)
+    # 
+    # rnadat <- as.data.table(t(rnadat[, 2:dim(rnadat)[2]]))
+    # 
+    # colnames(rnadat) <- genename
+    
+    rnadat$rna_barcode <- rna_barcodes
+    
+    rnadat$meta.barcode <- rna_barcodes
+    
+    rnadat$portion.barcode <- substr(rnadat$rna_barcode, 1, 19)
+
+    
+    rnadat$patient <- substr(rnadat$rna_barcode, 1, 12)
+    
+    # rnadat$sample.barcode <- substr(rnadat$rna_barcode, 1, 19)
+    
+    
+    
+    
+    
+    # Prepare miRNAseq data
+    
+    message("Preparing miRNAseq data")
+    
+    mir <- readRDS(paste0("miRNAseq_RDS/", i, "_miRisoform.rds" ))  
+    
+    mir_names <- gsub("\\-", ".", mir$mir_name)  
+    
+    mir[is.na(mir)] <- 0
+    
+    mir <- cpm(mir[, 2:dim(mir)[2]], prior.count = 0, log = F)
+    
+    mir <- log(mir+1, base = 10)
+    
+    mir_barcodes <- colnames(mir)[2:dim(mir)[2]]
+    
+    mir <- as.data.table(t(mir[, 2:dim(mir)[2]]))
+    
+    colnames(mir) <- mir_names
+    
+    mir$mir_barcode <- mir_barcodes
+    
+    # mir$meta.barcode <- mir_barcodes
+
+    # mir$sample.barcode <- substr(mir$mir_barcode, 1, 22)
+    
+    # mir$patient <- substr(mir$mir_barcode, 1, 12)
+  
+    mir$portion.barcode <- substr(mir$mir_barcode, 1, 19)
+
+    
+    mir <- mir[, -"nonmature_mir"]
+    
+    
+    message("Creating merged data frame")
+    
+    # Create merged dataframe
+    
+    #'[sdgfsdgfdfgdfgyjuj]
+    
+    rnadat<-rnadat[!duplicated(substr(rnadat$rna_barcode,1,19)),]
+    
+    mir<-mir[!duplicated(substr(mir$mir_barcode,1,19)),]
+    
+    merged <- merge(rnadat, coldat, by="meta.barcode")
+    
+    merged<- merge(merged, mir,all.x=TRUE, by="portion.barcode")
+    
+    if(!i %in% c("DLBC", "LAML", "MESO","OV", "TGCT", "THYM")) merged <- merge(merged, subtype, all.x=T, by.x="patient", by.y="meta.patient")
+    
+    merged <- merged[, !grepl("\\.y$", colnames(merged)), with=F]
+    
+    colnames(merged) <- gsub("\\.x$", "", colnames(merged))
+    
+    colnames(merged) <- gsub(" |\\-", ".", colnames(merged))
+    
+    dupcols <- duplicated(tolower(colnames(merged)))
+    
+    merged <- merged[, !dupcols, with=F]
+    
+    message("Saving RDS file")
+    
+    setcolorder(merged, setdiff(names(merged), c("patient", "sample_barcode")))
+    
+    colnames(merged) <- gsub("^patient$", "meta.patient", colnames(merged))
+    colnames(merged) <- gsub("^sample_barcode$", "meta.sample_barcode", colnames(merged))
+    
+    merged <- merged[, !duplicated(colnames(merged)), with=F] 
+    
+    saveRDS(merged, paste0("projects/", i, ".rds"))
+    
+}
+
+```
+
+# Add PanImmune classification (Thorsson, Cell, 2018)
+
+Supplementary table-S1 contains information for 11080 patients.
+
+From Methods section of the article:
+
+> For the molecular data matrices above, a single representative aliquot was selected per participant for cases where more than one aliquot was available, as follows. When data on more than one tumor sample was available, a choice of primary tumor sample was favored, and in remaining cases metastatic were selected over ''additional metastatic.'' For gene expression, a handful of cases were not resolved by these rules and the following aliquots were adopted based on BCR annotations:
+
+> TCGA-23-1023: TCGA-23-1023-01A-02R-1564-13 TCGA-06-0156-01:TCGA-06-0156-01A-02R-1849-01 TCGA-06-0211-01:TCGA-06-0211-01B-01R-1849-01 TCGA-21-1076-01: TCGA-21-1076-01A-01R-0692-07
+
+```{r}
+
+
+library(data.table)
+
+# Prepare pan immune dataset (S1 table)
+panimm <- readxl::read_xlsx("Thorsson_Cell_S1.xlsx", na = "NA")
+colnames(panimm)[1] <- "patient"
+colnames(panimm) <- gsub("\\-| ", ".", colnames(panimm))
+colnames(panimm) <- paste0("meta.", colnames(panimm))
+colnames(panimm) <- tolower(colnames(panimm))
+panimm <- as.data.table(panimm)
+
+
+files <- gsub(".rds", "", list.files("projects/"))
+
+for(i in files){
+  
+  message(paste("Processing", i))
+
+dat <- readRDS(paste0("projects/", i, ".rds"))
+
+
+# getwd()
+
+
+cols <- colnames(panimm)[colnames(panimm) != "meta.patient"]
+
+# Priority for adding panimmune data to merged dataset 
+# https://gdc.cancer.gov/resources-tcga-users/tcga-code-tables/sample-type-codes
+
+remap <- c(TP = 1,  # primary solid tumor
+           TB = 2,   # primary blood derived cancer from blood
+           TBM = 3, # primary blood derived cancer from BM
+           TM = 4, # metastatic solid tumor
+           TR = 5, # recurrent solid tumor
+           TRB = 6, # recurrent blood derived cancer from blood
+           TRBM = 7, # recurrent blood derived cancer from BM
+           TAP = 8, # additional new primary
+           TAM = 9 # additional new metastatic
+           )
+
+# below code works but it is slow. Try speeding up below by working on DT subset
+# dat[, meta.remapped := remap[meta.shortLetterCode]]
+# setkey(dat, meta.patient, meta.remapped)
+# dat[rowid(meta.patient)==1L, (cols) := panimm[.SD, on=.(meta.patient), mget(cols)]]
+# dat <- dat[is.na(meta.remapped), (cols) := NA]
+
+
+
+
+dat[, meta.remapped := remap[meta.shortLetterCode]]
+
+setkey(dat, meta.patient, meta.remapped)
+
+
+dat_trim <- subset(dat, select= c("meta.patient", "meta.remapped"))
+
+dat_trim[rowid(meta.patient)==1L, (cols) := panimm[.SD, on=.(meta.patient), mget(cols)]]
+
+dat_trim <- dat_trim[is.na(meta.remapped), (cols) := NA]
+
+dat_trim <- dat_trim[, -c("meta.patient", "meta.remapped")]
+
+dat <- cbind(dat, dat_trim)
+
+dat <- dat[, -c("meta.remapped")]
+
+saveRDS(dat, paste0("projects/", i, ".rds"))
+
+}
+
+```
+
+# Recode NA factor levels
+
+```{r}
+
+library(data.table)
+
+
+files <- gsub(".rds", "", list.files("projects/"))
+
+for(i in files){
+  
+  message(paste("Processing", i))
+
+dat <- readRDS(paste0("projects/", i, ".rds"))
+
+dat <- as.data.table(lapply(dat, function(x){
+  
+  if(class(x) == "factor")forcats::fct_explicit_na(x, "NA") else x 
+  
+})
+)
+
+saveRDS(dat, paste0("projects/", i, ".rds"))
+
+}
+
+
+```
+
+# Recode character columns as factors
+
+```{r}
+
+library(data.table)
+
+
+files <- gsub(".rds", "", list.files("projects/"))
+
+for(i in files){
+  
+  message(paste("Processing", i))
+
+dat <- readRDS(paste0("projects/", i, ".rds"))
+
+dat <- as.data.table(lapply(dat, function(x){
+  
+  if(class(x) == "character") {
+    x <- factor(x)
+    forcats::fct_explicit_na(x, "NA")} else x 
+  
+})
+)
+
+saveRDS(dat, paste0("projects/", i, ".rds"))
+
+}
+
+
+```
+
+# Manually edit certain data types
+
+```{r}
+
+skcm <- readRDS("projects/SKCM.rds")
+
+grep("purity", colnames(skcm), ignore.case = T, value = T)
+
+class(skcm$meta.subtype_PURITY..ABSOLUTE.)
+class(skcm$meta.PURITY..ABSOLUTE.)
+
+
+skcm$meta.subtype_PURITY..ABSOLUTE.
+skcm$meta.PURITY..ABSOLUTE.  #more data present
+
+
+skcm$meta.purity <- as.character(skcm$meta.PURITY..ABSOLUTE.) 
+skcm$meta.purity <- gsub(",",".",skcm$meta.purity)
+
+
+skcm$meta.purity <- as.numeric(skcm$meta.purity)
+
+saveRDS(skcm, "projects/SKCM.rds")
+
+```
+
+
+# Zero Count Filtration Step
+
+
+```{r}
+
+# This part is separated from this Rmd file because of the conflict issues based on specific packages, please check the "Zero_Count_Filtration_Step" Rmd file.
+
+```
+
