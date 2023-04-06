@@ -85,11 +85,6 @@ gsea_ui <- function(id, label, choices) {
         
         numericInput(inputId = ns("nperm"), "3. nPerm Value", min = 1000, step = 100, value = 1000),
         
-        sliderInput(inputId = ns("var_g"),
-                    label = "Keep genes with the top n% variation",
-                    min = 0, max = 100, value = 10
-        ),
-        
         radioButtons(ns("gsea_gene_sets"), "Choose gene set collection", choices = c("MSigDB", "Custom Gene Set")),
         
         conditionalPanel(
@@ -102,7 +97,7 @@ gsea_ui <- function(id, label, choices) {
                          options=list(placeholder = "eg. Hallmark")
           ),
           
-          radioButtons(ns("individual"), "Show", choices = c("Top Pathways", "Specific Pathway"), selected = "Specific Pathway"),
+          radioButtons(ns("individual"), "Show", choices = c("Top Pathways", "Specific Pathway")),
           
           conditionalPanel(
             
@@ -433,42 +428,7 @@ gsea_server <- function(id,Xproj) {
     
     outputOptions(output, "gsea_var_status2", suspendWhenHidden = FALSE)
     
-    ## variance
-    
-    # pre_gsea <- reactive({
-    #   
-    #   gene_cols <- Xproj$a() %>%
-    #     select(!starts_with("meta.")) %>%
-    #     select(where(is.numeric))
-    #   
-    #   
-    #   
-    #   if (input$var_g !=100) {
-    #     
-    #     browser()
-    #     
-    #     g_var <- apply(gene_cols,2,var, na.rm=T) 
-    #     
-    #     mostVariablegenes <- names(which(g_var >= quantile(g_var, 1-as.numeric(input$var_g)/100)))
-    #     
-    #     g_dat <- select(Xproj$a(), all_of(mostVariablegenes)) 
-    #     
-    #     return(g_dat)
-    #     
-    #     
-    #   } else if(input$var_g == 100){
-    #     Xproj$a()
-    #   }
-    #   
-    #   
-    #   
-    #   
-    # })
-    
-    
-    
-    
-    ## Data preparation 
+    ## Data preparation for gsea_plotter
     
     gsea_dat <- reactive({ 
       
