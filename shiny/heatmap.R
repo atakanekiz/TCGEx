@@ -528,24 +528,28 @@ heatmap_server <- function(id,Xproj) {
           
           
           return({
-            distfun_row = function(x) stats::dist(x, method = input$clustering_distance_rows)
-            distfun_col =  function(x) stats::dist(x, method = input$clustering_distance_columns)
+            if(input$clustering_distance_rows == "pearson"| input$clustering_distance_rows == "spearman" | input$clustering_distance_rows == "kendall"){
+              distfun_row = function(x) as.dist(1 - cor(t(x), method=input$clustering_distance_rows))
+            } else{
+              distfun_row = function(x) stats::dist(x, method = input$clustering_distance_rows)}
+            
+            if(input$clustering_distance_columns == "pearson"| input$clustering_distance_columns == "spearman" | input$clustering_distance_columns == "kendall"){
+              distfun_col = function(x) as.dist(1 - cor(t(x), method = input$clustering_distance_columns))
+            }else{
+              distfun_col =  function(x) stats::dist(x, method = input$clustering_distance_columns)}
             
             hclustfun_row = function(x) stats::hclust(x, method = input$clustering_method_rows)
             hclustfun_col = function(x) stats::hclust(x, method = input$clustering_method_columns)
             
-            
             heatmap_obj <- heatmaply(mat(), 
-                                     fontsize_row = 9 , 
-                                     colors = rev(brewer.pal(n= 10, "RdBu")) , 
-                                     showticklabels = c(FALSE, TRUE) ,
-                                     distfun_row = distfun_row,
-                                     distfun_col = distfun_col,
-                                     hclustfun_row = hclustfun_row,
-                                     hclustfun_col = hclustfun_col,
-                                     plot_method = "plotly") 
-            
-            heatmap_obj
+                                       fontsize_row = 9 , 
+                                       colors = rev(brewer.pal(n= 10, "RdBu")) , 
+                                       showticklabels = c(FALSE, TRUE) ,
+                                       distfun_row = distfun_row,
+                                       distfun_col = distfun_col,
+                                       hclustfun_row = hclustfun_row,
+                                       hclustfun_col = hclustfun_col,
+                                       plot_method = "plotly")
           })
         } else {
           
@@ -561,27 +565,30 @@ heatmap_server <- function(id,Xproj) {
           }
           validate(need(input$heatmap_run, "Please click the create heatmap button"))
           
-          distfun_row = function(x) stats::dist(x, method = input$clustering_distance_rows)
-          distfun_col =  function(x) stats::dist(x, method = input$clustering_distance_columns)
+          if(input$clustering_distance_rows == "pearson"| input$clustering_distance_rows == "spearman" | input$clustering_distance_rows == "kendall"){
+            distfun_row = function(x) as.dist(1 - cor(t(x), method=input$clustering_distance_rows))
+          } else{
+            distfun_row = function(x) stats::dist(x, method = input$clustering_distance_rows)}
+          
+          if(input$clustering_distance_columns == "pearson"| input$clustering_distance_columns == "spearman" | input$clustering_distance_columns == "kendall"){
+            distfun_col = function(x) as.dist(1 - cor(t(x), method =input$clustering_distance_columns))
+          }else{
+            distfun_col =  function(x) stats::dist(x, method = input$clustering_distance_columns)}
           
           hclustfun_row = function(x) stats::hclust(x, method = input$clustering_method_rows)
           hclustfun_col = function(x) stats::hclust(x, method = input$clustering_method_columns)
           
-          
           heatmap_obj <- heatmaply(mat(), 
-                                   fontsize_row = 9 , 
-                                   col_side_colors = meta(),
-                                   colors = rev(brewer.pal(n= 10, "RdBu")) , 
-                                   showticklabels = c(FALSE, TRUE) ,
-                                   distfun_row = distfun_row,
-                                   distfun_col = distfun_col,
-                                   hclustfun_row = hclustfun_row,
-                                   hclustfun_col = hclustfun_col,
-                                   plot_method = "plotly") 
-          
-          heatmap_obj
-        }
-      })
+                                     fontsize_row = 9 , 
+                                     col_side_colors = meta(),
+                                     colors = rev(brewer.pal(n= 10, "RdBu")) , 
+                                     showticklabels = c(FALSE, TRUE) ,
+                                     distfun_row = distfun_row,
+                                     distfun_col = distfun_col,
+                                     hclustfun_row = hclustfun_row,
+                                     hclustfun_col = hclustfun_col,
+                                     plot_method = "plotly")
+      }})
       
       output$heatmap_plot <- renderPlotly({
         
