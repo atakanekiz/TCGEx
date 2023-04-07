@@ -97,7 +97,7 @@ gsea_ui <- function(id, label, choices) {
                          options=list(placeholder = "eg. Hallmark")
           ),
           
-          radioButtons(ns("individual"), "Show", choices = c("Top Pathways", "Specific Pathway")),
+          radioButtons(ns("individual"), "Show", choices = c("Top Pathways", "Specific Pathway"), selected = "Specific Pathway"),
           
           conditionalPanel(
             
@@ -129,7 +129,7 @@ gsea_ui <- function(id, label, choices) {
                     ),
                     accept = c("text/csv", "text/comma-separated-values,text/plain",
                                ".csv")),  
-          radioButtons(ns("individual_2"), "Show", choices = c("Top Pathways", "Specific Pathway")),
+          radioButtons(ns("individual_2"), "Show", choices = c("Top Pathways", "Specific Pathway"), selected = "Specific Pathway"),
           
           conditionalPanel(
             
@@ -307,12 +307,6 @@ gsea_server <- function(id,Xproj) {
         
         names(msigdb_motif)
         
-      }else if(input$gsea_cat == "all") {
-        
-        load(file='genesets/msigdb_all.rda')
-        
-        names(msigdb_all)
-        
       }
       
     })
@@ -405,8 +399,7 @@ gsea_server <- function(id,Xproj) {
                                                                     "GO" = "go",
                                                                     "Curated" = "curated", 
                                                                     "Immune" = "immune",
-                                                                    "Motif" = "motif",
-                                                                    "All Gene Sets" = "all")
+                                                                    "Motif" = "motif")
                                   ), 
                                   server = T)})
     
@@ -608,13 +601,7 @@ gsea_server <- function(id,Xproj) {
         
         gene_set <- msigdb_motif
         
-      } else if (input$gsea_cat == "all" && input$gsea_gene_sets == 'MSigDB') {
-        
-        load(file='genesets/msigdb_all.rda')
-        
-        gene_set <- msigdb_all
-        
-      }else if (input$gsea_gene_sets == "Custom Gene Set"){
+      } else if (input$gsea_gene_sets == "Custom Gene Set"){
         
         gene_set <- gdata()
         
@@ -664,18 +651,14 @@ gsea_server <- function(id,Xproj) {
     
     res <- reactive({
       
+      
       fgsea(pathways = gene_set(), stats = preranked_genes(), minSize = 1, maxSize = ncol(gsea_dat())-3,  nPermSimple = input$nperm)
       
       
       
     }) 
     
-    
-    #hits reactive
-    
-    hits <- reactive({
-      c(grep(plot_ind(), res()$pathway, ignore.case = T, value = T)
-      )})
+  
     
     
     
@@ -705,11 +688,11 @@ gsea_server <- function(id,Xproj) {
         
         
         if (verbose)
-          message(paste("Plotting", hits()))
+          message(paste("Plotting", plot_ind()))
         
-        annot_padj <- signif(as.numeric(res()[res()$pathway == hits(), "padj"]), digits = 2)
-        annot_NES <- signif(as.numeric(res()[res()$pathway == hits(), "NES"]), digits = 2)
-        annot_ES <- signif(as.numeric(res()[res()$pathway == hits(), "ES"]), digits = 2)
+        annot_padj <- signif(as.numeric(res()[res()$pathway == plot_ind(), "padj"]), digits = 2)
+        annot_NES <- signif(as.numeric(res()[res()$pathway == plot_ind(), "NES"]), digits = 2)
+        annot_ES <- signif(as.numeric(res()[res()$pathway == plot_ind(), "ES"]), digits = 2)
         x_pos <- length(preranked_genes())/4
         
         
@@ -717,8 +700,8 @@ gsea_server <- function(id,Xproj) {
         
         
         
-        plot_grob <- plotEnrichment(pathway = gene_set()[[hits()]], stats = preranked_genes()) + 
-          labs(title = hits(), subtitle = paste(sample_id(),"vs", reference_id() 
+        plot_grob <- plotEnrichment(pathway = gene_set()[[plot_ind()]], stats = preranked_genes()) + 
+          labs(title = plot_ind(), subtitle = paste(sample_id(),"vs", reference_id() 
                                                 
           )) + 
           annotate("text", x = x_pos, y = annot_ES/2, label = annot_text, colour = "black",
