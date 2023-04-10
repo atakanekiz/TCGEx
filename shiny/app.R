@@ -40,7 +40,10 @@ mytheme <- create_theme(
 ui <- dashboardPage(skin = "black", 
                     title = "TCGExplorer",
                     dashboardHeader(
-                      title = tags$img(src='images/tcgex_logo_2.jpg', align = 'middle', height = '50px')
+                      title = tags$a(href = "https://tcgex.iyte.edu.tr/",
+                                     tags$img(src='images/tcgex_logo_2.jpg', align = 'middle', height = '50px')
+                        
+                         )
                       ),
                     dashboardSidebar(
                       minified = F,
