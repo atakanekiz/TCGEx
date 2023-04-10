@@ -85,7 +85,7 @@ ui <- dashboardPage(skin = "black",
                                     style = "position: fixed; bottom: 0; left: 0; right: 0; height: 45px; background-color: #AAA4A3; color: white; padding: 10px; width: 100%; z-index: 998;",
                                     tags$p(
                                       style = "font-size: 15px; margin: 0; display: inline-block;",
-                                      "We use Google Analytics to give you the best experience on our site and analyze traffic. We wanted to let you know :)",
+                                      "We use Google Analytics to give you the best experience on our site and analyze traffic.",
                                       tags$a(
                                         href = "https://policies.google.com/technologies/cookies",
                                         style = "color: white; font-weight: bold; margin-left: 10px; text-decoration: underline;",
