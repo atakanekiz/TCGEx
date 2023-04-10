@@ -47,6 +47,13 @@ gene_vs_cat_ui <- function(id, label, choices){
                        options = list(placeholder = "eg. meta.gender")),
         
         checkboxInput(inputId = ns("exprs_stats"), "Show statistics?", F),
+        
+        actionBttn(inputId = ns("cat_gene_run"), 
+                   label = "Generate Correlation Plot",
+                   style = "unite",
+                   block = TRUE,
+                   color = "primary"),
+        br(),
         downloadButton(ns("downloadPlot4"), "Download plot", style="color: #eeeeee; background-color: #01303f; border-color: #01303f"),
         
         #help section UI
@@ -301,6 +308,7 @@ gene_vs_cat_server <- function(id,Xproj){
       validate(need(input$exprs_samptyp, "Select sample type"),
                need(input$cat_plotvar, "Select categorical variable for x-axis"),
                need(input$num_plotvar, "Select numerical variable for y-axis"),
+               need(input$cat_gene_run, " Click generate button to generate the graph"),
                if(input$exprs_stats){                              ## Validation is active only when statistics button is chosen
                  need(input$exprs_statref, "Select the reference group below")}
       )
@@ -350,6 +358,13 @@ gene_vs_cat_server <- function(id,Xproj){
     
     
     stat_layer <-reactive({ 
+      validate(need(input$exprs_samptyp, "Select sample type"),
+               need(input$cat_plotvar, "Select categorical variable for x-axis"),
+               need(input$num_plotvar, "Select numerical variable for y-axis"),
+               need(input$cat_gene_run, " Click generate button to generate the graph"),
+               if(input$exprs_stats){                              ## Validation is active only when statistics button is chosen
+                 need(input$exprs_statref, "Select the reference group below")}
+      )
       
       
       form <- as.formula(paste0(input$num_plotvar, "~", input$cat_plotvar))
