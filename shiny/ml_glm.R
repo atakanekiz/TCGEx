@@ -59,15 +59,15 @@ dataprepInputControl_UI <- function(id) {
                    "Use CIBERSORT immune cell signatures as response variable" = "cibersort")
     ),
     conditionalPanel(condition = "input.response_prep_method == 'msigdb' ", ns = ns,
-                     selectizeInput(NS(id,"msigdb_setnames_response"), "MSigDB Human Collections", choices = c("hallmark gene sets" = "H",
-                                                                                                               "positional gene sets" = "C1",
-                                                                                                               "curated gene sets" = "C2",
-                                                                                                               "regulatory target gene sets" = "C3",
-                                                                                                               "computational gene sets" = "C4",
-                                                                                                               "ontology gene sets" = "C5" ,
-                                                                                                               "oncogenic gene sets" = "C6",
-                                                                                                               "immunologic gene sets" = "C7",
-                                                                                                               "cell type signature gene sets" = "C8"
+                     selectizeInput(NS(id,"msigdb_setnames_response"), "MSigDB Human Collections", choices = c("Hallmark gene sets (H)" = "H",
+                                                                                                               "Positional gene sets (C1)" = "C1",
+                                                                                                               "Curated gene sets (C2)" = "C2",
+                                                                                                               "Regulatory target gene sets (C3)" = "C3",
+                                                                                                               "Computational gene sets (C4)" = "C4",
+                                                                                                               "Ontology gene sets (C5)" = "C5" ,
+                                                                                                               "Oncogenic gene sets (C6)" = "C6",
+                                                                                                               "Immunologic gene sets (C7)" = "C7",
+                                                                                                               "Cell type signature gene sets (C8)" = "C8"
                                                                                                                )),
                      conditionalPanel(condition = "input.msigdb_setnames_response == 'C2'|input.msigdb_setnames_response =='C3'|
                                       input.msigdb_setnames_response =='C4'|
@@ -92,7 +92,7 @@ dataprepInputControl_UI <- function(id) {
                                         tags$i(
                                           class = "glyphicon glyphicon-info-sign", 
                                           style = "color:#0072B2;",
-                                          title = "The csv file should contain two unnamed columns: the first column should contain the gene set name, and the second column should contain gene names. Each gene should be associated with a gene set (ie. no missing data), and multiple gene sets can be provided in one file."
+                                          title = "The .csv or .txt file should contain a list of gene symbols. Neither matrix/dataframe structure nor named columns are required. If a matrix/dataframe provided, first column will be extracted as a gene list."
                                         )
                                       ), accept =  c(".txt","csv") 
                                       )
@@ -110,15 +110,15 @@ dataprepInputControl_UI <- function(id) {
                  )
     ),
     conditionalPanel(condition = "input.predictor_prep_method == 'msigdb' ", ns = ns,
-                     selectizeInput(NS(id,"msigdb_setnames_predictor"), "MSigDB Human Collections", choices = c("hallmark gene sets" = "H",
-                                                                                                               "positional gene sets" = "C1",
-                                                                                                               "curated gene sets" = "C2",
-                                                                                                               "regulatory target gene sets" = "C3",
-                                                                                                               "computational gene sets" = "C4",
-                                                                                                               "ontology gene sets" = "C5" ,
-                                                                                                               "oncogenic gene sets" = "C6",
-                                                                                                               "immunologic gene sets" = "C7",
-                                                                                                               "cell type signature gene sets" = "C8"
+                     selectizeInput(NS(id,"msigdb_setnames_predictor"), "MSigDB Human Collections", choices = c("Hallmark gene sets (H1)" = "H",
+                                                                                                               "Positional gene sets (C1)" = "C1",
+                                                                                                               "Curated gene sets (C2)" = "C2",
+                                                                                                               "Regulatory target gene sets (C3)" = "C3",
+                                                                                                               "Computational gene sets (C4)" = "C4",
+                                                                                                               "Ontology gene sets (C5)" = "C5" ,
+                                                                                                               "Oncogenic gene sets (C6)" = "C6",
+                                                                                                               "Immunologic gene sets (C7)" = "C7",
+                                                                                                               "Cell type signature gene sets (C8)" = "C8"
                      )),
                      conditionalPanel(condition = "input.msigdb_setnames_predictor == 'C2'|input.msigdb_setnames_predictor =='C3'|
                                       input.msigdb_setnames_predictor =='C4'|
@@ -147,7 +147,7 @@ dataprepInputControl_UI <- function(id) {
                                         tags$i(
                                           class = "glyphicon glyphicon-info-sign", 
                                           style = "color:#0072B2;",
-                                          title = "The csv file should contain two unnamed columns: the first column should contain the gene set name, and the second column should contain gene names. Each gene should be associated with a gene set (ie. no missing data), and multiple gene sets can be provided in one file."
+                                          title = "The .csv or .txt file should contain a list of gene symbols. Neither matrix/dataframe structure nor named columns are required. If a matrix/dataframe provided, first column will be extracted as a gene list." 
                                         )
                                       ), accept =  c(".txt","csv") 
                                                 )
