@@ -43,10 +43,11 @@ zero_adjuster <-  function(mdata, max_zero_percent, subgroup = "") {
 dataprepInputControl_UI <- function(id) {
   ns <- NS(id)
   tagList(
+    
     h3("Set up variables for analysis"),
     
     
-    selectizeInput(NS(id,"sample_type_reg"), "Select Sample Type", choices = NULL,
+    selectizeInput(NS(id,"sample_type_reg"), "Select Sample Type", choices = NULL, multiple = TRUE,
                    options=list(placeholder = "eg. Primary solid tumor")),
     sliderInput(NS(id,"max_zero_percent"),"Maximum allowed percentage of zero expressors",
                 min = 0, max = 100, value = 100, step = 1),
@@ -231,10 +232,7 @@ ml_ui <- function(id) {
           column(6,verbatimTextOutput(NS(id,"response_set"))),
           column(6,verbatimTextOutput(NS(id,"predictor_set")))
         ),
-        # fluidRow(
-        #   column(6,h6("Listed genes are not present in the data and they are removed from the response list.")),
-        #   column(6,h6("Listed genes are not present in the data and they are removed from the predictor list."))
-        # ),
+        
         fluidRow(
           column(6,textOutput(NS(id,"validation_message_response"))),
           column(6,textOutput(NS(id,"validation_message_predictor")))
@@ -246,6 +244,14 @@ ml_ui <- function(id) {
     ),
     tabPanel(
       "Ridge/Elastic Net/LASSO Regression",
+      add_busy_spinner(
+        spin = "cube-grid",
+        position = "full-page",
+        color = "#01303f",
+        margins = c(300, 500),
+        height = "60px",
+        width = "60px"),
+      
       sidebarPanel(
         regression_sidecontrols("ml"),          #'[Very smart way of using a function here!!!]
         introjsUI(),
@@ -568,7 +574,8 @@ data_prep_ml_server <- function(id,Xproj) {
     })
     
     reg_data <- reactive({
-      filtered_data = Xproj$a() %>% filter(meta.sample_type == input$sample_type_reg)
+      
+      filtered_data = Xproj$a() %>% filter(meta.sample_type %in% input$sample_type_reg)
       
       select(filtered_data, clean_response_set()[,1], clean_predictor_set()[,1]) %>%
         
