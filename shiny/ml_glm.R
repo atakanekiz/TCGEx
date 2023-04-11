@@ -9,6 +9,10 @@ library(DT)
 library(ggplot2)
 library(plotly)
 library(shinyjs)
+library(zstdlite)       #'[Let's try to go back to uncompressed data (more space available in the server)]
+
+
+
 
 #Functions
 
@@ -19,86 +23,150 @@ zero_adjuster <-  function(mdata, max_zero_percent, subgroup = "") {
     zerofreq_list <- sapply(mdata, function(x){ length(which(x==0))/length(x) *100 })
     available <- names(zerofreq_list[zerofreq_list[] < max_zero_percent])
   } else if (subgroup == "cibersort") {
+    
+    
     mdata <- mdata %>% 
-      select((which(colnames(mdata) == "meta.immune.subtype") + 1):ncol(mdata))
+      
+      #'[#########################################################################################################################]   
+      #'[would be better to explicitly select columns instead of position based selection]
+      # select((which(colnames(mdata) == "meta.immune.subtype") + 1):ncol(mdata))
+      select(matches("cells$|cells.(?!\\.)|lymphocytes|macrophages|neutrophils|monocytes|eosinophils", perl = T))
+    #'[#########################################################################################################################]
+    
     zerofreq_list <- sapply(mdata, function(x){ length(which(x==0))/length(x) *100 })
     available <- names(zerofreq_list[zerofreq_list[] < max_zero_percent])
   } 
   return(as.data.frame(available))
 }
 
-#UI
+#UI 
 dataprepInputControl_UI <- function(id) {
   ns <- NS(id)
   tagList(
-    h3("Metadata"),
-    sliderInput(NS(id,"max_zero_percent"),"Set the maximum percentage of acceptable zero count (for manual selections)",
-                min = 0, max = 100, value = 0, step = 1),
+    h3("Set up variables for analysis"),
+    
+    
+    selectizeInput(NS(id,"sample_type_reg"), "Select Sample Type", choices = NULL,
+                   options=list(placeholder = "eg. Primary solid tumor")),
+    sliderInput(NS(id,"max_zero_percent"),"Maximum allowed percentage of zero expressors",
+                min = 0, max = 100, value = 100, step = 1),
+    
     h3("Response Variable"),
-    radioButtons(NS(id,"response_prep_method"), "Data preparation pipeline: ",
-                 c("Create response set from gene sets available on MSigDB" = "msigdb",
-                   "Create response set manually" = "gene_list",
-                   "Use CIBERSORT metrics as a response variable" = "cibersort")
+    radioButtons(NS(id,"response_prep_method"), "Select an input method",
+                 c("Manually select gene(s) as response variable" = "gene_list",
+                   "Create a response variable from MSigDB gene sets" = "msigdb",
+                   "Use CIBERSORT immune cell signatures as response variable" = "cibersort")
     ),
     conditionalPanel(condition = "input.response_prep_method == 'msigdb' ", ns = ns,
-                     selectizeInput(NS(id,"msigdb_setnames_response"), "MSigDB Human Collections", choices = c("hallmark gene sets" = "h","ontology gene sets" = "c5" ,"oncogenic gene sets" = "c6",
-                                                                                                               "immunologic gene sets" = "c7")),
-                     conditionalPanel(condition = "input.msigdb_setnames_response == 'c5'", ns = ns, 
-                                      radioButtons(NS(id,"go_term_response"),"Select go term" ,choices = c("GO:BP" = "go_bp","GO:CC" = "go_cc","GO:MF" = "go_mf"))
+                     selectizeInput(NS(id,"msigdb_setnames_response"), "MSigDB Human Collections", choices = c("hallmark gene sets" = "H",
+                                                                                                               "positional gene sets" = "C1",
+                                                                                                               "curated gene sets" = "C2",
+                                                                                                               "regulatory target gene sets" = "C3",
+                                                                                                               "computational gene sets" = "C4",
+                                                                                                               "ontology gene sets" = "C5" ,
+                                                                                                               "oncogenic gene sets" = "C6",
+                                                                                                               "immunologic gene sets" = "C7",
+                                                                                                               "cell type signature gene sets" = "C8"
+                                                                                                               )),
+                     conditionalPanel(condition = "input.msigdb_setnames_response == 'C2'|input.msigdb_setnames_response =='C3'|
+                                      input.msigdb_setnames_response =='C4'|
+                                      input.msigdb_setnames_response =='C5'|
+                                      input.msigdb_setnames_response =='C7' ", ns = ns, 
+                                      selectizeInput(NS(id,"msigdb_subc_response"),"Select subcategory" ,choices = c(""))
                      ),
-                     conditionalPanel(condition = "input.msigdb_setnames_response == 'c7'", ns = ns,
-                                      radioButtons(NS(id,"immuno_response"), "Select subcategory", choices = c("IMMUNESIGDB"= "immunesigdb","VAX" = "vax"))
-                     ),
-                     selectizeInput(NS(id,"msigdb_gene_set_response"), "Select a gene set as a response set",
+                     
+                     
+                     
+                     selectizeInput(NS(id,"msigdb_gene_set_response"), "Select a gene set to create an averaged response variable",
                                     choices = c(""))
     ),
-    conditionalPanel(condition = "input.response_prep_method == 'gene_list' ", ns = ns,
-                     radioButtons(NS(id,"obtain_response"), "Create response set by",c("Upload TXT file" = "txt_upload", "Enter gene" = "gene_enter" )),
+    conditionalPanel(condition = "input.response_prep_method == 'gene_list'", ns = ns,
+                     radioButtons(NS(id,"obtain_response"), "Select how to specify genes",c("Type gene names" = "gene_enter", "Upload TXT file" = "txt_upload")),
                      conditionalPanel(condition = "input.obtain_response == 'gene_enter' ", ns = ns,
-                                      selectizeInput(NS(id,"gene_list_response"),"Select gene(s)", choices = NULL, multiple = TRUE)
+                                      selectizeInput(NS(id,"gene_list_response"),"Select gene(s)", choices = NULL, multiple = TRUE, options=list(placeholder = "CD8A, hsa.miR.935, etc. "))
                      ),
                      conditionalPanel(condition = "input.obtain_response == 'txt_upload' ", ns = ns,
-                                      fileInput(NS(id,"response_set_file"), "Upload File",
-                                                accept =  c(".txt",".csv"))
+                                      fileInput(NS(id,"response_set_file"), label = tags$span(
+                                        "Upload File",
+                                        tags$i(
+                                          class = "glyphicon glyphicon-info-sign", 
+                                          style = "color:#0072B2;",
+                                          title = "The csv file should contain two unnamed columns: the first column should contain the gene set name, and the second column should contain gene names. Each gene should be associated with a gene set (ie. no missing data), and multiple gene sets can be provided in one file."
+                                        )
+                                      ), accept =  c(".txt","csv") 
+                                      )
                      )
+                     
+                     
     ),
     conditionalPanel(condition = "input.response_prep_method == 'cibersort' ", ns = ns,
-                     selectizeInput(NS(id,"cibersort_response_var"), "Select CIBERSORT metric", choices = NULL, multiple = FALSE)
+                     selectizeInput(NS(id,"cibersort_response_var"), "Select immune cell signature", choices = NULL, multiple = FALSE)
     ),
     h3("Predictor Variables"),
-    radioButtons(NS(id,"predictor_prep_method"), "Data preparation pipeline: ",
-                 c("Create predictor set from gene sets available on MSigDB" = "msigdb",
-                   "Create predictor set manually" = "gene_list")
+    radioButtons(NS(id,"predictor_prep_method"), "Select an input method",
+                 c("Manually select genes as predictor variables" = "gene_list",
+                   "Select predictor variables from MSigDB gene sets" = "msigdb"
+                 )
     ),
     conditionalPanel(condition = "input.predictor_prep_method == 'msigdb' ", ns = ns,
-                     selectizeInput(NS(id,"msigdb_setnames_predictor"), "MSigDB Human Collections", choices = c("hallmark gene sets" = "h","ontology gene sets" = "c5" ,
-                                                                                                                "oncogenic gene sets" = "c6","immunologic gene sets" = "c7")),
-                     conditionalPanel(condition = "input.msigdb_setnames_predictor == 'c5'", ns = ns,
-                                      radioButtons(NS(id,"go_term_predictor"),"Select go term" ,choices = c("GO:BP" = "go_bp","GO:CC"= "go_cc","GO:MF"="go_mf"))
+                     selectizeInput(NS(id,"msigdb_setnames_predictor"), "MSigDB Human Collections", choices = c("hallmark gene sets" = "H",
+                                                                                                               "positional gene sets" = "C1",
+                                                                                                               "curated gene sets" = "C2",
+                                                                                                               "regulatory target gene sets" = "C3",
+                                                                                                               "computational gene sets" = "C4",
+                                                                                                               "ontology gene sets" = "C5" ,
+                                                                                                               "oncogenic gene sets" = "C6",
+                                                                                                               "immunologic gene sets" = "C7",
+                                                                                                               "cell type signature gene sets" = "C8"
+                     )),
+                     conditionalPanel(condition = "input.msigdb_setnames_predictor == 'C2'|input.msigdb_setnames_predictor =='C3'|
+                                      input.msigdb_setnames_predictor =='C4'|
+                                      input.msigdb_setnames_predictor =='C5'|
+                                      input.msigdb_setnames_predictor =='C7' ", ns = ns, 
+                                      selectizeInput(NS(id,"msigdb_subc_predictor"),"Select subcategory" ,choices = c(""))
                      ),
-                     conditionalPanel(condition = "input.msigdb_setnames_predictor == 'c7'", ns = ns,
-                                      radioButtons(NS(id,"immuno_predictor"), "Select subcategory", choices = c("IMMUNESIGDB" = "immunesigdb","VAX" = "vax"))
-                     ),
-                     selectizeInput(NS(id,"msigdb_gene_set_predictor"), "Select a gene set as a response set",
+                     
+                     
+                     
+                     
+                     selectizeInput(NS(id,"msigdb_gene_set_predictor"), "Select response variables from a gene set",
                                     choices = c(""))
     ),
     conditionalPanel(condition = "input.predictor_prep_method == 'gene_list' ", ns = ns,
-                     radioButtons(NS(id,"obtain_predictor"), "Create predictor set by",c("Upload TXT file" = "txt_upload", "Enter gene" = "gene_enter",
-                                                                                         "Use all mRNAs available on the selected data(!)" = "allmRNA_aspredictor",
-                                                                                         "Use all miRNAs available on the selected data" = "allmiRNA_aspredictor")),
+                     radioButtons(NS(id,"obtain_predictor"), "Select how to specify genes",c("Type gene names" = "gene_enter",
+                                                                                             "Upload TXT file" = "txt_upload", 
+                                                                                             "Use all mRNAs available on the selected data(!)" = "allmRNA_aspredictor",
+                                                                                             "Use all miRNAs available on the selected data" = "allmiRNA_aspredictor")),
                      conditionalPanel(condition = "input.obtain_predictor == 'gene_enter' ", ns = ns,
-                                      selectizeInput(NS(id,"gene_list_predictor"),"Select gene(s)", choices = c(""), multiple = TRUE)
+                                      selectizeInput(NS(id,"gene_list_predictor"),"Select gene(s)", choices = c(""), multiple = TRUE, options=list(placeholder = "FGR, hsa.miR.107, etc. "))
                      ),
                      conditionalPanel(condition = "input.obtain_predictor == 'txt_upload' ", ns = ns,
-                                      fileInput(NS(id,"predictor_set_file"), "Upload File",
-                                                accept =  c(".txt","csv"))
+                                      fileInput(NS(id,"predictor_set_file"), label = tags$span(
+                                        "Upload File",
+                                        tags$i(
+                                          class = "glyphicon glyphicon-info-sign", 
+                                          style = "color:#0072B2;",
+                                          title = "The csv file should contain two unnamed columns: the first column should contain the gene set name, and the second column should contain gene names. Each gene should be associated with a gene set (ie. no missing data), and multiple gene sets can be provided in one file."
+                                        )
+                                      ), accept =  c(".txt","csv") 
+                                                )
+                                      
+                                                                            
+                                      
                      )
-    )
+    ),
     
+    # hr(),
+    p("Please move on to the 'Ridge/Elastic Net/Lasso Regression' tab after variable selection"),
+    hr()
     
   )
 }
-regression_sidecontrols <- function(id) {
+
+#'[Very smart way to set this up as a function!]
+#'[#########################################################################################################################]
+#'   
+regression_sidecontrols <- function(id) {  
   ns <- NS(id)
   tagList(
     h3("Workflow"),
@@ -116,13 +184,28 @@ regression_sidecontrols <- function(id) {
     h3("Regression: Ridge/ElasticNet/Lasso"),
     fluidRow(
       column(12,
-             sliderInput(NS(id,"user_alpha"),"Enter an alpha parameter (shrinkage penalty term) to set the regression technique", min = 0, max = 1, value = 1, step = 0.2)
+             sliderInput(NS(id,"user_alpha"),
+                         
+                         label = tags$span(
+                           "Select regression technique by setting shrinkage penalty term (alpha)",
+                           tags$i(
+                             class = "glyphicon glyphicon-info-sign", 
+                             style = "color:#0072B2;",
+                             title = "Value of 1 corresponds to LASSO regression where some coefficients will be shrunken (ie. penalized) all the way to zero. Value of 0 corresponds to Ridge regression where some coefficients will converge to (but not reach) zero. Other values correspond to elastic net regression where the penalty is a mixture of the previous approaches."
+                             
+                           )), min = 0, max = 1, value = 1, step = 0.2
+                         
+                         
+                         
+                         
+                         
+             )
       )
     ),
     
     actionButton(ns("run"), "Run"),
     downloadButton(NS(id,"download_coef"),"Download Coefficients")
-          
+    
   )
   
 }
@@ -131,7 +214,7 @@ ml_ui <- function(id) {
   navbarPage(
     "TCGExplorer ML",
     tabPanel(
-      "Data&Prep",
+      "Variable selection",
       sidebarPanel(
         dataprepInputControl_UI("ml"),
         introjsUI(),
@@ -141,8 +224,8 @@ ml_ui <- function(id) {
       ),
       mainPanel(
         fluidRow(
-          column(6,h3("Response")),
-          column(6,h3("Predictor"))
+          column(6,h3("Response variable(s)")),
+          column(6,h3("Predictor variables"))
         ),
         fluidRow(
           column(6,verbatimTextOutput(NS(id,"response_set"))),
@@ -162,9 +245,9 @@ ml_ui <- function(id) {
       )
     ),
     tabPanel(
-      "Regression R/EN/L",
+      "Ridge/Elastic Net/LASSO Regression",
       sidebarPanel(
-        regression_sidecontrols("ml"),
+        regression_sidecontrols("ml"),          #'[Very smart way of using a function here!!!]
         introjsUI(),
         actionButton(ns("mlregression_help"), "Tutorial"),
         width = 3
@@ -173,7 +256,9 @@ ml_ui <- function(id) {
         fluidRow(
           column(3,
                  selectizeInput(NS(id,"lambda_for_coef"), "Select lambda value at which model coefficients are being displayed: ",
-                                choices = c("lambda.min","lambda.1se")),
+                                choices = c("Lambda + 1 standard error (most regularized model)" = "lambda.1se",
+                                            "Minimum lambda (minimum cross-validation error)" = "lambda.min"
+                                )),
                  textOutput(NS(id,"lambda_value_min")),
                  textOutput(NS(id,"lambda_value_1se")),
                  conditionalPanel(
@@ -186,18 +271,18 @@ ml_ui <- function(id) {
                  )
                  
                  
-                 ),
+          ),
           column(3,
                  dataTableOutput(NS(id,"coef_data"))
                  
-                 ),
+          ),
           column(6,
                  plotlyOutput(NS(id,"coef_lambda_plot")),
                  
                  plotOutput(NS(id,"lambda_error_plot"))
                  
                  
-                 )
+          )
           
           
           
@@ -212,14 +297,24 @@ ml_ui <- function(id) {
 
 
 #Server Modules
+
 data_prep_ml_server <- function(id,Xproj) {
   moduleServer(id,function(input,output,session){
     
     #Response, obtain from msigdb
-    
+    ##################
     # msigdb_gene_sets =  reactive({readRDS(paste0("projects/", "msigdb_gene_sets", ".rds"))})
     
-    msigdb_gene_sets =  reactive({zstd_unserialize(readRDS(paste0("genesets/", "compressed_msigdb_gene_sets", ".rds")))})
+    
+    #'[Let's revert back to non-compressed version. We have more space in the server]
+    #'[Please try to see if the gene set object here can be consistent with the other modules (ie using individiual rda's?)]
+    #'[#########################################################################################################################]
+    #'[#########################################################################################################################]
+    #'[#########################################################################################################################]
+    msigdb_gene_sets =  reactive({readRDS(paste0("genesets/", "msigdb_collections", ".rds"))})
+    #'[#########################################################################################################################]
+    #'[#########################################################################################################################]
+    #'[#########################################################################################################################]
     
     
     
@@ -229,17 +324,13 @@ data_prep_ml_server <- function(id,Xproj) {
         
         element = paste0("#", session$ns(c(NA,NA, "response_prep_method", "predictor_prep_method")) ),
         intro = paste(c(
-          "Welcome to the TCGEx ML module. In this tab you can construct and choose dependent and independent variables (response & predictors)
-          which will be used to construct a model via regularized regression.",
+          "Welcome to the TCGEx machine learning module. This module is based on generalized linear models and it allows you to perform regularized regression analysis using custom response and predictor variables. Please continue with the tutorial to learn how to use this module.",
           
-          "You can filter out transcriptomes by specifying maximum zero-count percantage toggle prior to the variable selection procedure.
-          This way you can eliminate the transcripts that have above-threshold zero-count.",  
+          "This slider allows you to eliminate genes that are expressed at low levels. The selection here specifies the maximum allowed percentage of zero expression in a given gene. For instance, if this number is set to 50, genes that are not expressed in 50% or more of the samples in the analysis. The default value of 100 indicates that there is no filtering applied.",  
           
-          "From this panel, you can enter response variable determinants either by searching for available MsigDB collections or entering them manually.
-          You can also upload your set of interest from the manual selection menu.",
+          "In this panel, you can specify response variables either by <b>i)</b> entering gene names manually, <b>ii)</b>using genes from MSigDB gene sets, or <b>iii)</b> selecting one of the previously calculated immune cell signatures. When multiple genes are entered or gene sets are selected, a single response variable is calculated by averaging the expression values. For manual gene selection, you can type gene names in the box, or upload a txt file containing gene names.",
           
-          "From this panel, you can enter predictor variables either by searching for available MsigDB collections or entering them manually.
-          You can also upload your set of interest or use all available transcripts from the manual selection menu."
+          "In this panel, you can enter predictor variables either by <b>i)</b> entering them manually (you can type or upload a file), or <b>ii)</b> using genes from MSigDB gene sets. The relationship of these predictor variables and the previously specified response variable will be examined in regularized regression models. After making your selections here, please continue to the regression tab."
           
         ))
       )
@@ -252,85 +343,98 @@ data_prep_ml_server <- function(id,Xproj) {
       introjs(session, options = list(steps = help_dataprep() ) )
     })
     
+    observe({
+      subcat_response = names(msigdb_gene_sets()[[input$msigdb_setnames_response]])
+      if (length(subcat_response) > 1)  {
+        updateSelectizeInput(session,'msigdb_subc_response', choices = subcat_response , server = TRUE)
+      } 
+    })
     
-    response_msigdb_data <- reactive({
-      if (input$msigdb_setnames_response == "c5") {
-        msigdb_response <- msigdb_gene_sets()[["c5"]]
-        msigdb_response <- msigdb_response[[input$go_term_response]]
-        updateSelectizeInput(session, 'msigdb_gene_set_response', choices = msigdb_response$names$gs_name,server = TRUE)
+    response_msigdb_handler <- reactive({
+      ms = msigdb_gene_sets()
+      if(input$msigdb_setnames_response == "C2"|input$msigdb_setnames_response =="C3"|
+         input$msigdb_setnames_response =="C4"|input$msigdb_setnames_response =="C5"|input$msigdb_setnames_response =="C7") {
         
-        response_m <- as.data.frame(msigdb_response$data)
-      } else if (input$msigdb_setnames_response == "c7") {
-        
-        msigdb_response <- msigdb_gene_sets()[["c7"]]
-        msigdb_response <- msigdb_response[[input$immuno_response]]
-        
-        updateSelectizeInput(session, 'msigdb_gene_set_response', choices = msigdb_response$names$gs_name,server = TRUE)
-        
-        response_m <- as.data.frame(msigdb_response$data)
+        response_m = ms[[input$msigdb_setnames_response]][[input$msigdb_subc_response]]
+        gene_sets = names(table(response_m$gs_name))
+
+        updateSelectizeInput(session,'msigdb_gene_set_response', choices = gene_sets , server = TRUE)
+        response_m
+
       } else {
-        
-        msigdb_response <- msigdb_gene_sets()[[input$msigdb_setnames_response]]
-        updateSelectizeInput(session, 'msigdb_gene_set_response', choices = msigdb_response$names$gs_name,server = TRUE)
-        
-        response_m <- as.data.frame(msigdb_response$data)
+        response_m = ms[[input$msigdb_setnames_response]]
+        gene_sets = names(table(response_m$gs_name))
+        updateSelectizeInput(session,'msigdb_gene_set_response', choices = gene_sets , server = TRUE)
       }
       response_m
     })
     
     response_msigdb_genes <- reactive({
-      filter(response_msigdb_data(), gs_name == input$msigdb_gene_set_response) %>% select(gene_symbol)
+      filter(response_msigdb_handler(), gs_name == input$msigdb_gene_set_response ) %>% select(gene_symbol)
     })
     
+    ########################################################3
+    observe({
+      subcat_predictor = names(msigdb_gene_sets()[[input$msigdb_setnames_predictor]])
+      if (length(subcat_predictor) > 1)  {
+        updateSelectizeInput(session,'msigdb_subc_predictor', choices = subcat_predictor , server = TRUE)
+      } 
+    })
     
-    
-    #Predictor, obtain from msigdb.
-    predictor_msigdb_data <- reactive({
-      if (input$msigdb_setnames_predictor == "c5") {
+    predictor_msigdb_handler <- reactive({
+      ms = msigdb_gene_sets()
+      if(input$msigdb_setnames_predictor == "C2"|input$msigdb_setnames_predictor =="C3"|
+         input$msigdb_setnames_predictor =="C4"|input$msigdb_setnames_predictor =="C5"|input$msigdb_setnames_predictor =="C7") {
         
-        msigdb_predictor <- msigdb_gene_sets()[["c5"]]
-        msigdb_predictor <- msigdb_predictor[[input$go_term_predictor]]
+        predictor_m = ms[[input$msigdb_setnames_predictor]][[input$msigdb_subc_predictor]]
+        gene_sets = names(table(predictor_m$gs_name))
         
-        updateSelectizeInput(session, 'msigdb_gene_set_predictor', choices = msigdb_predictor$names$gs_name,server = TRUE)
+        updateSelectizeInput(session,'msigdb_gene_set_predictor', choices = gene_sets , server = TRUE)
+        predictor_m
         
-        predictor_m <- as.data.frame(msigdb_predictor$data)
-        
-      } else if (input$msigdb_setnames_predictor == "c7") {
-        
-        msigdb_predictor <- msigdb_gene_sets()[["c7"]]
-        msigdb_predictor <- msigdb_predictor[[input$immuno_predictor]]
-        
-        updateSelectizeInput(session,'msigdb_gene_set_predictor', choices = msigdb_predictor$names$gs_name,server = TRUE)
-        
-        predictor_m <- as.data.frame(msigdb_predictor$data)
       } else {
-        
-        msigdb_predictor <- msigdb_gene_sets()[[input$msigdb_setnames_predictor]]
-        updateSelectizeInput(session,'msigdb_gene_set_predictor', choices = msigdb_predictor$names$gs_name,server = TRUE)
-        
-        predictor_m <- as.data.frame(msigdb_predictor$data)
+        predictor_m = ms[[input$msigdb_setnames_predictor]]
+        gene_sets = names(table(predictor_m$gs_name))
+        updateSelectizeInput(session,'msigdb_gene_set_predictor', choices = gene_sets , server = TRUE)
       }
       predictor_m
     })
     
     predictor_msigdb_genes <- reactive({
-      filter(predictor_msigdb_data(), gs_name == input$msigdb_gene_set_predictor) %>% select(gene_symbol)
+      filter(predictor_msigdb_handler(), gs_name == input$msigdb_gene_set_predictor ) %>% select(gene_symbol)
     })
     
     
     # create a list.
     
     available_genelist <- reactive({zero_adjuster(mdata = Xproj$a(),max_zero_percent = input$max_zero_percent, subgroup = "alltranscripts")})
-    available_cibersort <- reactive({zero_adjuster(mdata = Xproj$a(),max_zero_percent = input$max_zero_percent, subgroup = "cibersort")})
+    available_cibersort <- reactive({
+      
+      zero_adjuster(mdata = Xproj$a(),max_zero_percent = input$max_zero_percent, subgroup = "cibersort")}
+      
+    )
     
     
-    observeEvent(input$max_zero_percent, {
-      cibersort_metrics <- available_cibersort()$available
-      genelist <- available_genelist()$available
-      updateSelectizeInput(session,'gene_list_response', choices = genelist, server = TRUE)
-      updateSelectizeInput(session, 'gene_list_predictor', choices = genelist, server = TRUE)
-      updateSelectizeInput(session,'cibersort_response_var', choices = cibersort_metrics, server = TRUE)
+    
+    observe({
+      if (!is.null(Xproj$a())) {
+        
+        updateSelectizeInput(session,'sample_type_reg', choices = names(table(Xproj$a()$meta.sample_type)),selected = "", server = TRUE)
+        cibersort_metrics <- available_cibersort()$available
+        genelist <- available_genelist()$available
+        updateSelectizeInput(session,'gene_list_response', choices = genelist, selected = "", server = TRUE)
+        updateSelectizeInput(session, 'gene_list_predictor', choices = genelist,selected = "",server = TRUE)
+        updateSelectizeInput(session,'cibersort_response_var', choices = cibersort_metrics, server = TRUE)
+      }
     })
+    
+    
+    
+    #'[#################################################################################################################]      
+    #'[#################################################################################################################]     
+    #'[#################################################################################################################] 
+    
+    
     
     
     
@@ -404,7 +508,7 @@ data_prep_ml_server <- function(id,Xproj) {
     output$validation_message_response <- renderText({
       if (length(response_missing()) > 0) {
         paste("Listed genes are not present in the data and they are removed from the predictor list:\n",
-            paste(response_missing(), collapse = ","))
+              paste(response_missing(), collapse = ","))
       } else {
         hide("output")
       }
@@ -444,12 +548,12 @@ data_prep_ml_server <- function(id,Xproj) {
     })
     
     output$response_set <- renderPrint({
-        if(is.null(clean_response_set()$gene_symbol)) {
-          hide("output")
-        } else {
-          show("output")
-          return(clean_response_set()$gene_symbol)
-        }
+      if(is.null(clean_response_set()$gene_symbol)) {
+        hide("output")
+      } else {
+        show("output")
+        return(clean_response_set()$gene_symbol)
+      }
     }) 
     
     output$predictor_set <- renderPrint({
@@ -459,10 +563,15 @@ data_prep_ml_server <- function(id,Xproj) {
         show("output")
         return(clean_predictor_set()$gene_symbol)
       }
+      
+      
     })
-  
+    
     reg_data <- reactive({
-      select(Xproj$a(), clean_response_set()[,1], clean_predictor_set()[,1]) %>%
+      filtered_data = Xproj$a() %>% filter(meta.sample_type == input$sample_type_reg)
+      
+      select(filtered_data, clean_response_set()[,1], clean_predictor_set()[,1]) %>%
+        
         mutate(response = select(., clean_response_set()[,1]) %>% rowMeans()) %>%
         select(response, clean_predictor_set()[,1]) %>% 
         na.omit()
@@ -481,16 +590,20 @@ ml_main_server <- function(id,regress_data,Xproj) {
         
         return(
           data.frame(
-          element = paste0("#", session$ns(c(NA, "regression_workflow","user_alpha", "lambda_for_coef + .selectize-control")) ),
-          intro = paste(c(
-            "In this tab, you can determine necessary parameters to conduct regularized regression with the variables that you have already specified.",
-            "You can either split the data into train and test sets or use all of it to create the model. If you choose splitting option, you will be able to
-            make a prediction with your model and examine mean-squared-error.",
-            "You can choose the method of regularized regression from the alpha parameter slider control. ɑ=0 for  Ridge, ɑ=1 for Lasso and 0<ɑ<1 for Elastic-Net regression.",
-            "You can choose the lambda value at which the variable coefficients of the model are displayed."
-            
+            element = paste0("#", session$ns(c(NA, "regression_workflow","user_alpha", "lambda_for_coef + .selectize-control", NA)) ),
+            intro = paste(c(
+              "After specifying response and predictor variables in the previous tab, you can determine necessary parameters for regularized regression analysis here.",
+              "You can perform regression on the whole data or split the data set into 'training' and 'test' subsets. Splitting allows examining the model accuracy through the mean-squared-error.",
+              "You can choose the method of regularized regression using this slider. alpha = 1 corresponds to LASSO regression where some coefficients will be shrunk (ie. penalized) all the way to zero. alpha = 0 corresponds to Ridge regression where some coefficients will converge to (but not reach) zero. 0 < alpha < 1 corresponds to Elastic-Net regression where the penalty is a mixture of both.",
+              "You can choose the lambda value at which the variable coefficients of the model are displayed. Lambda is the regularization parameter in the model. Minimum lambda is the value that gives the minimum cross-validation error in the regression. Lambda + 1 se is the value of lambda that gives the most regularized (ie. more penalized and simpler) model where the cross-validation error is within the one strandard error of the minimum. 
+            <br>
+            <br>
+            For further details, please see Friedman J, Hastie T, and Tibshirani R. “Regularization Paths for Generalized Linear Models via Coordinate Descent.” Journal of Statistical Software, Articles 33 (1): 1–22. (2010) https://doi.org/10.18637/jss.v033.i01",
+              
+              "Graphs that will appear in the main panel will show how the increasing levels of model penalization affects predictor coefficient shrinkage and the overall mean-squared-error."
+              
+            ))
           ))
-        ))
         
         
       } else if (input$regression_workflow == "ctest_model") {
@@ -512,7 +625,7 @@ ml_main_server <- function(id,regress_data,Xproj) {
         
       }
     })
-  
+    
     observeEvent(input$mlregression_help, {
       introjs(session, options = list(steps = help_regression() ) )
     })
@@ -574,7 +687,7 @@ ml_main_server <- function(id,regress_data,Xproj) {
       } else {
         NULL
       }
-      })
+    })
     
     
     output$lambda_error_plot <- renderPlot({plot(cvfit(),xvar = "lambda", label = TRUE)})
@@ -605,7 +718,7 @@ ml_main_server <- function(id,regress_data,Xproj) {
                   show.legend = FALSE)+
         geom_vline(xintercept = lmin) +
         geom_vline(xintercept = l1se) 
-
+      
       g <- g + theme(legend.title = element_blank())
       g <- g + theme(legend.position='none')
       
@@ -637,7 +750,7 @@ ml_main_server <- function(id,regress_data,Xproj) {
         show("output")
         paste(" MSE Error: ", prediction_error() )
       }
-       
+      
     })
     
     output$download_coef <- downloadHandler(
