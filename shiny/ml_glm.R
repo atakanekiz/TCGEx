@@ -766,7 +766,7 @@ ml_main_server <- function(id,regress_data,Xproj) {
         paste(input$lambda_for_coef, ".xlsx", sep = "")
       },
       content <-  function(file) {
-        write.xlsx(coef_data(), file, row.names = FALSE)
+        write.xlsx(coef_data(), file, row.names = TRUE)
       }
     )
     
