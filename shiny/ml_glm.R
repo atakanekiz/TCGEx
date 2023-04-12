@@ -247,7 +247,7 @@ ml_ui <- function(id) {
       "Ridge/Elastic Net/LASSO Regression",
       add_busy_spinner(
         spin = "cube-grid",
-        position = "full-page",
+        position = "top-right",
         color = "#01303f",
         margins = c(300, 500),
         height = "60px",
