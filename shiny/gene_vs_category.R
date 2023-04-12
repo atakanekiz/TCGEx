@@ -262,10 +262,14 @@ gene_vs_cat_server <- function(id,Xproj){
                                   choices = Xproj$a()$meta.definition,
                                   server = T)})
     
+    hidden_cols_cat_plotvar<-reactive({c("meta.definition", "meta.barcode")})
+    all_cols_cat_plotvar <- reactive({colnames(Xproj$a() %>% select(starts_with("meta.")))})
+    available_cols_cat_plotvar <- reactive({setdiff(all_cols_cat_plotvar(), hidden_cols_cat_plotvar())})
+    
     #   # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
     observe({updateSelectizeInput(session,
                                   "cat_plotvar", selected="",
-                                  choices = colnames(Xproj$a()%>% select(starts_with("meta."))),
+                                  choices = available_cols_cat_plotvar(),
                                   server = T)})
     
     # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
