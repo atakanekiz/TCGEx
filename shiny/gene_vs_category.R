@@ -262,9 +262,15 @@ gene_vs_cat_server <- function(id,Xproj){
                                   choices = Xproj$a()$meta.definition,
                                   server = T)})
     
-    hidden_cols_cat_plotvar<-reactive({c("meta.definition", "meta.barcode")})
-    all_cols_cat_plotvar <- reactive({colnames(Xproj$a() %>% select(starts_with("meta.")))})
-    available_cols_cat_plotvar <- reactive({setdiff(all_cols_cat_plotvar(), hidden_cols_cat_plotvar())})
+    # Remove cols which is includinf more than 10 levels
+    
+    hidden_cols_cat_plotvar<-reactive({"meta.definition"})
+    
+    meta_cols_cat_plotvar <- reactive({colnames(Xproj$a())[grep("^meta\\.", colnames(Xproj$a()))]})
+    
+    sel_cols_cat_plotvar <- reactive({meta_cols_cat_plotvar()[unlist(lapply(Xproj$a()[, meta_cols_cat_plotvar(), with = FALSE], function(x) length(levels(x)))) < 10]})
+    
+    available_cols_cat_plotvar <- reactive({setdiff(sel_cols_cat_plotvar(), hidden_cols_cat_plotvar())})
     
     #   # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
     observe({updateSelectizeInput(session,
