@@ -1,4 +1,5 @@
 # Load the packages
+
 library(pheatmap)
 library(shiny)
 library(RColorBrewer)
@@ -8,8 +9,10 @@ library(heatmaply)
 library(dplyr)
 library(shinyWidgets)
 library(rintrojs)
+library(readxl)
 
 # Define UI for application that draws a histogram
+
 heatmap_ui <- function(id, label, choices) {
   ns <- NS(id)
   tagList(
@@ -30,7 +33,7 @@ heatmap_ui <- function(id, label, choices) {
                      options=list(placeholder = "eg. Primary solid tumor")),
       selectizeInput(inputId = ns("selectors"),
                      label= "2. Choose how you would like to select genes to be shown",
-                     choices = c("Manually enter gene names", "MSigDB gene sets", "Upload a csv file"),
+                     choices = c("Manually enter gene names", "MSigDB gene sets", "Upload a xlsx/xls file"),
                      multiple = FALSE),
       conditionalPanel(
         condition = "input.selectors == 'Manually enter gene names'",
@@ -61,17 +64,17 @@ heatmap_ui <- function(id, label, choices) {
                        choices = NULL)
       ),
       conditionalPanel(
-        condition = "input.selectors == 'Upload a csv file'",
+        condition = "input.selectors == 'Upload a xlsx/xls file'",
         ns=ns,
         fileInput(ns("heatmap_csv"), 
-                  # label = "3. Please upload your csv file.",
                   label = tags$span(
-                    "3. Please upload your csv file.", 
+                    "3. Please upload your xlsx/xls file.", 
                     tags$i(
                       class = "glyphicon glyphicon-info-sign", 
                       style = "color:#0072B2;",
-                      title = "The csv file should contain two unnamed columns: the first column should contain the gene set name, and the second column should contain gene names. Each gene should be associated with a gene set (ie. no missing data), and multiple gene sets can be provided in one file."
+                      title = "The xlsx/xls file should contain two unnamed columns: the first column should contain the gene set name, and the second column should contain gene names. Each gene should be associated with a gene set (ie. no missing data), and multiple gene sets can be provided in one file."
                     )),
+                  accept = c(".xls", ".xlsx"),
                   multiple = FALSE)
       ),
       
@@ -200,7 +203,7 @@ heatmap_server <- function(id,Xproj) {
             )
             
           )
-        } else if (input$selectors == "Upload a csv file"){
+        } else if (input$selectors == "Upload a xlsx/xls file"){
           return(
             
             data.frame(
@@ -212,7 +215,7 @@ heatmap_server <- function(id,Xproj) {
                 "This is the heatmap module where you can visualize expression patterns of selected genes. Continue the tutorial to learn how to use this module",
                 "You can select sample types to focus the analysis on the specific subsets.",
                 "Here you can choose how you would like to select genes for the plot",
-                "You can upload a csv file including your genes of interest to see them on the heatmap",
+                "You can upload a xlsx/xls file including your genes of interest to see them on the heatmap",
                 "Next, you can apply a variance filter to keep only highly variable genes in the plot. 100 (default) means no filter is applied. If you like to see top 10% variable genes only, set this value to 10. Such filtering can help see more informative genes.",
                 "You can select categorical clinical meta data features to show as annotations on top of the heatmap.",
                 "You can also create an annotation bar by categorizing the patients based on their gene expression levels. You can specify one or more genes here. When multiple genes are entered, their average is calculated. Patients are categorized as 'high' and 'low' according to the median gene expression value",
@@ -245,7 +248,7 @@ heatmap_server <- function(id,Xproj) {
         updateSelectizeInput(session = getDefaultReactiveDomain(),"chosen_gse", choices = gene_sets()$gs_name, selected = character(0) ,server = TRUE)
       })
       
-      # observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "selectors", choices = c("Manually enter gene names", "MSigDB gene sets", "Upload a csv file"), server = TRUE)})
+      # observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "selectors", choices = c("Manually enter gene names", "MSigDB gene sets", "Upload a xlsx/xls file"), server = TRUE)})
       
       observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "genes", choices = colnames(Xproj$a()[, lapply(Xproj$a(), is.numeric) == TRUE, with = FALSE]), server = TRUE)})
       observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "annotation", choices = colnames(Xproj$a()[, lapply(Xproj$a(), is.factor) == TRUE, with = FALSE]), selected = character(0), server = TRUE)})
@@ -342,7 +345,7 @@ heatmap_server <- function(id,Xproj) {
           
           daf <- daf[,selected_cols]  
           
-        } else if(input$selectors == "Upload a csv file"){
+        } else if(input$selectors == "Upload a xlsx/xls file"){
           
           req(input$heatmap_csv)
           
@@ -352,7 +355,7 @@ heatmap_server <- function(id,Xproj) {
           
           uploaded_heatmap_csv <- input$heatmap_csv
           
-          selected_csv <- read.csv(uploaded_heatmap_csv$datapath, stringsAsFactors = FALSE, header = FALSE)$V1
+          selected_csv <- read_excel(uploaded_heatmap_csv$datapath, sheet = 1, col_names = F)$V1
           
           same_gene_names = intersect(selected_csv, colnames(daf))
           

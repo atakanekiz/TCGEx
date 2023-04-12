@@ -857,7 +857,7 @@ gsea_server <- function(id,Xproj) {
           
           if(input$gsea_gene_sets == "Custom Gene Set"){
             
-            validate(need(input$gset_up, "Don't forget to upload your csv file"))
+            validate(need(input$gset_up, "Don't forget to upload your xlsx/xls file"))
             
             if (input$individual_2 == "Specific Pathway") {
               validate(

@@ -13,6 +13,7 @@ library(rintrojs)
 library(plotly)
 library(shinyvalidate)
 library(shinyWidgets)
+library(readxl)
 
 pca_ui <- function(id) {
   ns <- NS(id)
@@ -55,19 +56,18 @@ pca_ui <- function(id) {
         
         fileInput(inputId = ns("pca_up"),
                   label = tags$span(
-                    "Please upload your csv file.",
+                    "Please upload your xlsx/xls file.",
                     tags$i(
                       class = "glyphicon glyphicon-info-sign",
                       style = "color:#0072B2;",
-                      title = "The csv file should contain a single unnamed column with human gene names. Each gene should be associated with a gene set (ie. no missing data)"
+                      title = "The xlsx/xls file should contain a single unnamed column with human gene names. Each gene should be associated with a gene set (ie. no missing data)"
                     )),
-                  accept = c("text/csv", "text/comma-separated-values,text/plain",
-                             ".csv")), 
+                  accept = c(".xls", ".xlsx" # "text/csv", "text/comma-separated-values,text/plain", ".csv")), 
        
         
         
         
-      ),
+      ))),
       
       conditionalPanel(
         
@@ -339,8 +339,7 @@ pca_server <- function(id,Xproj) {
         
         req(input$pca_up)
         
-        c_gene <- read.table(input$pca_up$datapath, header = FALSE, sep = ";", quote = "\"'",
-                             dec = ".")  
+        c_gene <- read.excel(input$pca_up$datapath, sheet = 1, col_names = F)  
         
         colnames(c_gene)[1] <- "genes" 
         
@@ -561,7 +560,7 @@ pca_server <- function(id,Xproj) {
             
             if(input$data == "Custom gene set"){
               
-              validate(need(input$pca_up, "Please upload your csv file"))
+              validate(need(input$pca_up, "Please upload your xlsx/xls file"))
               
             }
             

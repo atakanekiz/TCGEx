@@ -1,4 +1,5 @@
 # Load the packages
+
 library(dplyr)
 library(shiny)
 library(shinydashboard)
@@ -10,6 +11,7 @@ library(msigdbr)
 library(data.table)
 library(shinyWidgets)
 library(rintrojs)
+library(readxl)
 
 roc_ui <- function(id, label, choices) {
   ns <- NS(id)
@@ -69,7 +71,7 @@ roc_ui <- function(id, label, choices) {
       ),
       selectizeInput(inputId = ns("roc_gene_selector"),
                      label= "Choose how you would like to select genes to be shown",
-                     choices = c("Manually enter gene names", "Upload a csv file"),
+                     choices = c("Manually enter gene names", "Upload a xlsx/xls file"),
                      multiple = FALSE),
       conditionalPanel(
         condition = "input.roc_gene_selector == 'Manually enter gene names'",
@@ -81,17 +83,18 @@ roc_ui <- function(id, label, choices) {
                        options=list(placeholder = "eg. TSPAN6, TNMD etc."))
       ),
       conditionalPanel(
-        condition = "input.roc_gene_selector == 'Upload a csv file'",
+        condition = "input.roc_gene_selector == 'Upload a xlsx/xls file'",
         ns=ns,
         fileInput(ns("roc_csv"), 
-                  # label = "3. Please upload your csv file.",
+                  # label = "3. Please upload your xlsx/xls file.",
                   label = tags$span(
-                    "Please upload your csv file.", 
+                    "Please upload your xlsx/xls file.", 
                     tags$i(
                       class = "glyphicon glyphicon-info-sign", 
                       style = "color:#0072B2;",
-                      title = "The csv file should contain two unnamed columns: the first column should contain the gene set name, and the second column should contain gene names. Each gene should be associated with a gene set (ie. no missing data), and multiple gene sets can be provided in one file."
+                      title = "The xlsx/xls file should contain two unnamed columns: the first column should contain the gene set name, and the second column should contain gene names. Each gene should be associated with a gene set (ie. no missing data), and multiple gene sets can be provided in one file."
                     )),
+                  accept = c(".xls", ".xlsx"),
                   multiple = FALSE))
       ,
       materialSwitch(inputId = ns("show_msigdb_gene_sets"),
@@ -162,7 +165,7 @@ roc_ui <- function(id, label, choices) {
     mainPanel(
       plotOutput(outputId = ns("multi_plot"), width = "800px", height = "500px"), #ROC plot.
       DT::dataTableOutput(outputId = ns("auctable")), #Area Under Curve (AUC) value table from ROC plot.
-      DT::dataTableOutput(outputId = ns("intersect_genes_table")), #Intersected genes table between the csv file and the data.
+      DT::dataTableOutput(outputId = ns("intersect_genes_table")), #Intersected genes table between the xlsx/xls file and the data.
       DT::dataTableOutput(outputId = ns("gene_set_table")) #Selected MSigDB gene names as a table.
     )
   )
@@ -203,7 +206,7 @@ roc_server <- function(id, Xproj) {
               )
               
               
-            } else if (input$roc_gene_selector ==  "Upload a csv file") {
+            } else if (input$roc_gene_selector ==  "Upload a xlsx/xls file") {
               
               data.frame(
                 
@@ -216,7 +219,7 @@ roc_server <- function(id, Xproj) {
                   "Select the numerical variable you want to binarize here",
                   "High cutoff input allows you to assign samples to class-1 if their values are more than the specified quantile here. For instance setting this value to 25 would mean binarizing the top 25% of the data as '1'. If you want to binarize at the median value this value should be 50 (default)",
                   "Low cutoff input allows you to assign samples to class-0 if their values are less than the specified quantile here. For instance setting this value to 25 would mean binarizing the bottom 25% of the data as '0'. If you want to binarize at the median value this value should be 50 (default)",
-                  "You can upload a csv file including your genes of interest to see them as a ROC curve. If you enter more than one variable, their values will be averaged.",
+                  "You can upload a xlsx/xls file including your genes of interest to see them as a ROC curve. If you enter more than one variable, their values will be averaged.",
                   "If desired, the average expression value of a specific MSigDB gene set can be added to the graph.",
                   "If you would like to include a curve for a specific MSigDB gene set, select it here."
                 ))
@@ -246,7 +249,7 @@ roc_server <- function(id, Xproj) {
                 ))
               )
               
-            } else if (input$roc_gene_selector ==  "Upload a csv file") {
+            } else if (input$roc_gene_selector ==  "Upload a xlsx/xls file") {
               
               data.frame(
                 
@@ -259,7 +262,7 @@ roc_server <- function(id, Xproj) {
                   "You can select the categorical variable to binarize here. In the next step, you will decide which data subsets will be classified as 1 and 0.",
                   "In this box, you can select which data subsets will be classified as '1'. For example, if you have chosen 'meta.gender' previously, you can choose 'female' observations to belong to class-1 here. If the categorical variable you selected has multiple subsets, you can specify more than one subset as well.",
                   "In this box, you can select which data subsets will be classified as '0'. For example, if you have chosen 'meta.gender' previously, you can choose 'male' observations to belong to class-0 here. If the categorical variable you selected has multiple subsets, you can specify more than one subset as well.",
-                  "You can upload a csv file including your genes of interest to see them as a ROC curve. If you enter more than one variable, their values will be averaged.",
+                  "You can upload a xlsx/xls file including your genes of interest to see them as a ROC curve. If you enter more than one variable, their values will be averaged.",
                   "If desired, the average expression value of a specific MSigDB gene set can be added to the graph.",
                   "If you would like to include a curve for a specific MSigDB gene set, select it here."
                 ))
@@ -333,11 +336,11 @@ roc_server <- function(id, Xproj) {
           
           pre_df[, custom_gene_set := rowMeans(.SD, na.rm = TRUE), .SDcols = c(input$genesss)]  
           
-        } else if (input$roc_gene_selector ==  "Upload a csv file") {
+        } else if (input$roc_gene_selector ==  "Upload a xlsx/xls file") {
           
           uploaded_roc_csv <- input$roc_csv
           
-          selected_roc_csv <- read.csv(uploaded_roc_csv$datapath, stringsAsFactors = FALSE, header = FALSE)$V1
+          selected_roc_csv <- read.excel(uploaded_roc_csv$datapath, sheet = 1, col_names = F)$V1
           
           roc_same_gene_names = intersect(selected_roc_csv, colnames(pre_df))
           
@@ -496,9 +499,9 @@ roc_server <- function(id, Xproj) {
 
               validate(need(input$genesss, "Please select genes to create a custom predictor (multiple genes will be averaged)"))
               
-            } else if (input$roc_gene_selector ==  "Upload a csv file") {
+            } else if (input$roc_gene_selector ==  "Upload a xlsx/xls file") {
               
-              validate(need(input$roc_csv, "Please upload a csv file to create a custom predictor (multiple genes will be averaged)"))
+              validate(need(input$roc_csv, "Please upload a xlsx/xls file to create a custom predictor (multiple genes will be averaged)"))
               
               }
             
@@ -517,9 +520,9 @@ roc_server <- function(id, Xproj) {
               
               validate(need(input$genesss, "Please select genes to create a custom predictor (multiple genes will be averaged)"))
               
-            } else if (input$roc_gene_selector ==  "Upload a csv file") {
+            } else if (input$roc_gene_selector ==  "Upload a xlsx/xls file") {
               
-              validate(need(input$roc_csv, "Please upload a csv file to create a custom predictor (multiple genes will be averaged)"))
+              validate(need(input$roc_csv, "Please upload a xlsx/xls file to create a custom predictor (multiple genes will be averaged)"))
               
             }
             
@@ -542,9 +545,9 @@ roc_server <- function(id, Xproj) {
             
             validate(need(input$genesss, "Please select genes to create a custom predictor (multiple genes will be averaged)"))
             
-          } else if (input$roc_gene_selector ==  "Upload a csv file") {
+          } else if (input$roc_gene_selector ==  "Upload a xlsx/xls file") {
             
-            validate(need(input$roc_csv, "Please upload a csv file to create a custom predictor (multiple genes will be averaged)"))
+            validate(need(input$roc_csv, "Please upload a xlsx/xls file to create a custom predictor (multiple genes will be averaged)"))
             
           }
           
@@ -596,9 +599,9 @@ roc_server <- function(id, Xproj) {
             
             validate(need(input$genesss, "Please select genes to create a custom predictor (multiple genes will be averaged)"))
             
-          } else if (input$roc_gene_selector ==  "Upload a csv file") {
+          } else if (input$roc_gene_selector ==  "Upload a xlsx/xls file") {
             
-            validate(need(input$roc_csv, "Please upload a csv file to create a custom predictor (multiple genes will be averaged)"))
+            validate(need(input$roc_csv, "Please upload a xlsx/xls file to create a custom predictor (multiple genes will be averaged)"))
             
           }
           
@@ -615,9 +618,9 @@ roc_server <- function(id, Xproj) {
             
             validate(need(input$genesss, "Please select genes to create a custom predictor (multiple genes will be averaged)"))
             
-          } else if (input$roc_gene_selector ==  "Upload a csv file") {
+          } else if (input$roc_gene_selector ==  "Upload a xlsx/xls file") {
             
-            validate(need(input$roc_csv, "Please upload a csv file to create a custom predictor (multiple genes will be averaged)"))
+            validate(need(input$roc_csv, "Please upload a xlsx/xls file to create a custom predictor (multiple genes will be averaged)"))
             
           }
           
@@ -640,27 +643,27 @@ roc_server <- function(id, Xproj) {
       
       observeEvent(input$roc_run, {
         
-        #Table output of the intersected gene names between the csv file and selected the cancer data.
+        #Table output of the intersected gene names between the xlsx/xls file and selected the cancer data.
         
         output$intersect_genes_table <- DT::renderDataTable({
 
-          if(input$roc_gene_selector ==  "Upload a csv file"){
+          if(input$roc_gene_selector ==  "Upload a xlsx/xls file"){
             
             req(pre_df())
 
-            validate(need(input$roc_csv, "Please upload a csv file to create a custom predictor (multiple genes will be averaged)"))
+            validate(need(input$roc_csv, "Please upload a xlsx/xls file to create a custom predictor (multiple genes will be averaged)"))
 
             req(input$roc_definition_sel)
             
             uploaded_roc_csv <- input$roc_csv
             
-            selected_roc_csv <- read.csv(uploaded_roc_csv$datapath, stringsAsFactors = FALSE, header = FALSE)$V1
+            selected_roc_csv <- read.excel(uploaded_roc_csv$datapath, sheet = 1, col_names = F)$V1
             
             roc_same_gene_names = intersect(selected_roc_csv, colnames(pre_df()))
             
             intersect_data_frame <- as.data.frame(roc_same_gene_names)
             
-            colnames(intersect_data_frame)[which(names(intersect_data_frame) == "roc_same_gene_names")] <- "Intersected genes between csv file and chosen cancer data"
+            colnames(intersect_data_frame)[which(names(intersect_data_frame) == "roc_same_gene_names")] <- "Intersected genes between xlsx/xls file and chosen cancer data"
             
             intersect_data_frame <- as.data.frame(intersect_data_frame)
           }

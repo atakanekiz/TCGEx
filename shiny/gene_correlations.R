@@ -11,6 +11,8 @@ library(stats)
 library(openxlsx)
 library(corrplot)
 library(RColorBrewer)
+library(readxl)
+
 gene_cor_UI <- function(id) {
   ns <- NS(id)
   tagList(
@@ -114,14 +116,13 @@ gene_cor_UI <- function(id) {
             
             fileInput(inputId = ns("corr_up"),
                       label = tags$span(
-                        "Please upload your csv file.",
+                        "Please upload your xlsx/xls file.",
                         tags$i(
                           class = "glyphicon glyphicon-info-sign",
                           style = "color:#0072B2;",
-                          title = "The csv file should contain a single unnamed column with human gene names."
+                          title = "The xlsx/xls file should contain a single unnamed column with human gene names."
                         )),
-                      accept = c("text/csv", "text/comma-separated-values,text/plain",
-                                 ".csv")),  
+                      accept = c(".xls", ".xlsx")),  
           ),
           
           actionBttn(inputId = ns("act2"),
@@ -452,7 +453,7 @@ gene_cor_pl_server <- function(id,Xproj) {
             "Here, you can visualize gene-to-gene correlations. Continue the tutorial to learn the features of this module.",
             "Select sample type (eg. primary and/or metastatic) to focus the analysis on specific patient subsets.",
             "Specify how the correlation should be calculated.",
-            "You can choose genes manually or you can upload the gene list as a csv file. You can create csv file in spreadsheet software by providing your genes in the first column. Please only use gene symbols and ensure that you are using the correct capitalization."
+            "You can choose genes manually or you can upload the gene list as a xlsx/xls file. You can create xlsx/xls file in spreadsheet software by providing your genes in the first column. Please only use gene symbols and ensure that you are using the correct capitalization."
           ))
         )
         
@@ -494,8 +495,7 @@ gene_cor_pl_server <- function(id,Xproj) {
         
         req(input$corr_up)
         
-        glist <- read.table(input$corr_up$datapath, header = FALSE, sep = ",", quote = "\"'",
-                            dec = ".")
+        glist <- read.excel(input$corr_up$datapath, sheet = 1, col_names = F)
         
         colnames(glist)[1] <- "genes"
         

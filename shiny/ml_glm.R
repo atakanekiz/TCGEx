@@ -10,6 +10,7 @@ library(ggplot2)
 library(plotly)
 library(shinyjs)
 library(zstdlite)       #'[Let's try to go back to uncompressed data (more space available in the server)]
+library(readxl)
 
 
 
@@ -82,19 +83,19 @@ dataprepInputControl_UI <- function(id) {
                                     choices = c(""))
     ),
     conditionalPanel(condition = "input.response_prep_method == 'gene_list'", ns = ns,
-                     radioButtons(NS(id,"obtain_response"), "Select how to specify genes",c("Type gene names" = "gene_enter", "Upload TXT file" = "txt_upload")),
+                     radioButtons(NS(id,"obtain_response"), "Select how to specify genes",c("Type gene names" = "gene_enter", "Upload xlsx/xls file" = "txt_upload")),
                      conditionalPanel(condition = "input.obtain_response == 'gene_enter' ", ns = ns,
                                       selectizeInput(NS(id,"gene_list_response"),"Select gene(s)", choices = NULL, multiple = TRUE, options=list(placeholder = "CD8A, hsa.miR.935, etc. "))
                      ),
                      conditionalPanel(condition = "input.obtain_response == 'txt_upload' ", ns = ns,
                                       fileInput(NS(id,"response_set_file"), label = tags$span(
-                                        "Upload File",
+                                        "Upload xlsx/xls File",
                                         tags$i(
                                           class = "glyphicon glyphicon-info-sign", 
                                           style = "color:#0072B2;",
-                                          title = "The .csv or .txt file should contain a list of gene symbols. Neither matrix/dataframe structure nor named columns are required. If a matrix/dataframe provided, first column will be extracted as a gene list."
-                                        )
-                                      ), accept =  c(".txt","csv") 
+                                          title = "The xlsx/xls file should contain a list of gene symbols. Neither matrix/dataframe structure nor named columns are required. If a matrix/dataframe provided, first column will be extracted as a gene list."
+                                        )), 
+                                        accept =  c(".xls", ".xlsx") 
                                       )
                      )
                      
@@ -135,7 +136,7 @@ dataprepInputControl_UI <- function(id) {
     ),
     conditionalPanel(condition = "input.predictor_prep_method == 'gene_list' ", ns = ns,
                      radioButtons(NS(id,"obtain_predictor"), "Select how to specify genes",c("Type gene names" = "gene_enter",
-                                                                                             "Upload TXT file" = "txt_upload", 
+                                                                                             "Upload xlsx/xls file" = "txt_upload", 
                                                                                              "Use all mRNAs available on the selected data(!)" = "allmRNA_aspredictor",
                                                                                              "Use all miRNAs available on the selected data" = "allmiRNA_aspredictor")),
                      conditionalPanel(condition = "input.obtain_predictor == 'gene_enter' ", ns = ns,
@@ -143,13 +144,13 @@ dataprepInputControl_UI <- function(id) {
                      ),
                      conditionalPanel(condition = "input.obtain_predictor == 'txt_upload' ", ns = ns,
                                       fileInput(NS(id,"predictor_set_file"), label = tags$span(
-                                        "Upload File",
+                                        "Upload xlsx/xls File",
                                         tags$i(
                                           class = "glyphicon glyphicon-info-sign", 
                                           style = "color:#0072B2;",
-                                          title = "The .csv or .txt file should contain a list of gene symbols. Neither matrix/dataframe structure nor named columns are required. If a matrix/dataframe provided, first column will be extracted as a gene list." 
+                                          title = "The xlsx/xls file should contain a list of gene symbols. Neither matrix/dataframe structure nor named columns are required. If a matrix/dataframe provided, first column will be extracted as a gene list." 
                                         )
-                                      ), accept =  c(".txt","csv") 
+                                      ), accept =  c(".xls", ".xlsx") 
                                                 )
                                       
                                                                             
@@ -334,7 +335,7 @@ data_prep_ml_server <- function(id,Xproj) {
           
           "This slider allows you to eliminate genes that are expressed at low levels. The selection here specifies the maximum allowed percentage of zero expression in a given gene. For instance, if this number is set to 50, genes that are not expressed in 50% or more of the samples in the analysis. The default value of 100 indicates that there is no filtering applied.",  
           
-          "In this panel, you can specify response variables either by <b>i)</b> entering gene names manually, <b>ii)</b>using genes from MSigDB gene sets, or <b>iii)</b> selecting one of the previously calculated immune cell signatures. When multiple genes are entered or gene sets are selected, a single response variable is calculated by averaging the expression values. For manual gene selection, you can type gene names in the box, or upload a txt file containing gene names.",
+          "In this panel, you can specify response variables either by <b>i)</b> entering gene names manually, <b>ii)</b>using genes from MSigDB gene sets, or <b>iii)</b> selecting one of the previously calculated immune cell signatures. When multiple genes are entered or gene sets are selected, a single response variable is calculated by averaging the expression values. For manual gene selection, you can type gene names in the box, or upload a xlsx/xls file containing gene names.",
           
           "In this panel, you can enter predictor variables either by <b>i)</b> entering them manually (you can type or upload a file), or <b>ii)</b> using genes from MSigDB gene sets. The relationship of these predictor variables and the previously specified response variable will be examined in regularized regression models. After making your selections here, please continue to the regression tab."
           
@@ -459,8 +460,8 @@ data_prep_ml_server <- function(id,Xproj) {
           file <- input$response_set_file
           ext <- tools::file_ext(file$datapath)
           req(file)
-          validate(need(ext == "txt", "Please upload a txt file"))
-          list_r = read.table(file$datapath, header = TRUE, sep = "", dec = ".")
+          validate(need(ext == c("xls","xlsx"), "Please upload a xlsx/xls file"))
+          list_r = read_excel(file$datapath, sheet = 1, col_names = F)
         }
         
       } else if (input$response_prep_method == "cibersort") {
@@ -487,8 +488,8 @@ data_prep_ml_server <- function(id,Xproj) {
           file <- input$predictor_set_file
           ext <- tools::file_ext(file$datapath)
           req(file)
-          validate(need(ext == "txt", "Please upload a txt file"))
-          list_p <- read.table(file$datapath, header = FALSE, sep = "", dec = ".")
+          validate(need(ext == c("xls","xlsx"), "Please upload a xlsx/xls file"))
+          list_p <- read.excel(file$datapath,  sheet = 1, col_names = F)
           
         }
       }
@@ -762,10 +763,10 @@ ml_main_server <- function(id,regress_data,Xproj) {
     
     output$download_coef <- downloadHandler(
       filename <-  function() {
-        paste(input$lambda_for_coef, ".csv", sep = "")
+        paste(input$lambda_for_coef, ".xlsx", sep = "")
       },
       content <-  function(file) {
-        write.csv(coef_data(), file, row.names = FALSE)
+        write.xlsx(coef_data(), file, row.names = FALSE)
       }
     )
     
