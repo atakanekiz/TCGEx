@@ -15,6 +15,7 @@ library(gridExtra)
 library(plyr)
 library(openxlsx)
 library(grid)
+library(readxl)
 
 #Load Sources
 
@@ -127,8 +128,8 @@ gsea_ui <- function(id, label, choices) {
                       style = "color:#0072B2;",
                       title = "The csv file should contain two unnamed columns: the first column should contain the gene set name, and the second column should contain human gene names. Each gene should be associated with a gene set (ie. no missing data), and multiple gene sets can be provided in one file."
                     ),
-                    accept = c("text/csv", "text/comma-separated-values,text/plain",
-                               ".csv")),  
+                    accept = c(".xls", ".xlsx" # "text/csv", "text/comma-separated-values,text/plain", ".csv"
+                               )),  
           radioButtons(ns("individual_2"), "Show", choices = c("Top Pathways", "Specific Pathway"), selected = "Specific Pathway"),
           
           conditionalPanel(
@@ -320,8 +321,12 @@ gsea_server <- function(id,Xproj) {
       
       req(input$gset_up)
       
-      gene_s <- read.table(input$gset_up$datapath, header = FALSE, sep = ";", quote = "\"'",
-                           dec = ".")  
+      # gene_s <- read.table(input$gset_up$datapath, header = FALSE, sep = ";", quote = "\"'",
+      #                      dec = ".")  
+      
+      gene_s <- read_excel(input$gset_up$datapath, sheet = 1, col_names = F)
+      
+      
       gene_s <- gene_s[ , colSums(is.na(gene_s))==0]
       
       colnames(gene_s) <- c("geneset_name", "genes")
