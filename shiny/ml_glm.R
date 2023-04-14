@@ -548,9 +548,15 @@ data_prep_ml_server <- function(id,Xproj) {
     clean_predictor_set = reactive({
       missing_genes <- as.vector(predictor_missing())
       predictor_det <- predictor_det()
+      
+      #'[Can't we make this filter function nicer? !%in% would be better]
+      #'[################################################################]
       for (i in missing_genes) {
         predictor_det <- filter(predictor_det, gene_symbol != i)
       }
+      # predictor_det <- filter(predictor_det, ! gene_symbol %in% missing_genes)
+      #'[################################################################]
+      #'
       predictor_det
     })
     
