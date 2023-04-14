@@ -270,11 +270,9 @@ gene_vs_cat_server <- function(id,Xproj){
     
     sel_cols_cat_plotvar <- reactive({meta_cols_cat_plotvar()[unlist(lapply(Xproj$a()[, meta_cols_cat_plotvar(), with = FALSE], function(x) length(levels(x)))) < 10]})
     
-    numeric_cols <- reactive({unlist(lapply(Xproj$a()[, sel_cols_cat_plotvar(), with = FALSE], function(x) is.numeric(x)))})
+    numeric_cols_cat_plotvar <- reactive({unlist(lapply(Xproj$a()[, sel_cols_cat_plotvar(), with = FALSE], function(x) is.numeric(x)))})
     
-    # available_cols_cat_plotvar <- reactive({setdiff(sel_cols_cat_plotvar(), hidden_cols_cat_plotvar())})
-    
-    available_cols_cat_plotvar <- reactive({setdiff(sel_cols_cat_plotvar(), c(hidden_cols_cat_plotvar(), sel_cols_cat_plotvar()[numeric_cols()]))})
+    available_cols_cat_plotvar <- reactive({setdiff(sel_cols_cat_plotvar(), c(hidden_cols_cat_plotvar(), sel_cols_cat_plotvar()[numeric_cols_cat_plotvar()]))})
     
     #   # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
     observe({updateSelectizeInput(session,
