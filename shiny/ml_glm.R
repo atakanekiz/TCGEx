@@ -489,7 +489,7 @@ data_prep_ml_server <- function(id,Xproj) {
           ext <- tools::file_ext(file$datapath)
           req(file)
           validate(need(ext == c("xls","xlsx"), "Please upload a xlsx/xls file"))
-          list_p <- read.excel(file$datapath,  sheet = 1, col_names = F)
+          list_p <- read_excel(file$datapath,  sheet = 1, col_names = F)
           
         }
       }
