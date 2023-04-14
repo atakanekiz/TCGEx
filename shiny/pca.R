@@ -73,17 +73,26 @@ pca_ui <- function(id) {
         
         condition = 'input.data == "MSigDB Gene Sets"', ns = ns,
         
-        selectizeInput(ns("cat"), "Please select an MSigDB Collection", 
-                       choices = NULL,
-                       options=list(placeholder = "eg. CM - Cancer Modules")),
+        selectizeInput(ns("pca_cat"), "Please select an MSigDB Collection", choices = c("Hallmark gene sets (H)" = "H",
+                                                                                                  "Positional gene sets (C1)" = "C1",
+                                                                                                  "Curated gene sets (C2)" = "C2",
+                                                                                                  "Regulatory target gene sets (C3)" = "C3",
+                                                                                                  "Computational gene sets (C4)" = "C4",
+                                                                                                  "Ontology gene sets (C5)" = "C5" ,
+                                                                                                  "Oncogenic gene sets (C6)" = "C6",
+                                                                                                  "Immunologic gene sets (C7)" = "C7",
+                                                                                                  "Cell type signature gene sets (C8)" = "C8")),
+        conditionalPanel(condition = "input.pca_cat == 'C2'|input.msigdb_setnames_response =='C3'|
+                                      input.pca_cat =='C4'|
+                                      input.pca_cat =='C5'|
+                                      input.pca_cat =='C7' ", ns = ns, 
+                         selectizeInput(ns("pca_subcat"),"Please select a subcategory" ,choices = c(""))
+        ),
         
-        selectizeInput(ns("chosen_gs"), 
-                       "*Please select a pathway", 
-                       choices = NULL,
-                       options=list(placeholder = "eg. MODULE_1"))
+        selectizeInput(ns("pca_pathway"), 
+                       "Please select a pathway", 
+                       choices = c(""))),
         
-        
-      ),
       
       checkboxInput(ns("variance"), "Apply variance filtering", value = F),
       
@@ -145,6 +154,12 @@ pca_server <- function(id,Xproj) {
     id,
     function(input, output, session) {
       
+      # browser()
+      
+      ## msigdb_database reading
+      
+      msigdb_gene_sets =  reactive({readRDS(paste0("genesets/", "msigdb_collections", ".rds"))})
+      
       ## help section server
       
       ns <- session$ns
@@ -187,40 +202,22 @@ pca_server <- function(id,Xproj) {
       #inputs
       
       observe({updateSelectizeInput(session, "genecor_samp_2",choices = Xproj$a()[["meta.definition"]], server = T)})
-      observe(updateSelectizeInput(session, 'data', 
+      observe({updateSelectizeInput(session, 'data', 
                                    choices = c("All genes", "miRNA", "RNAseq", "MSigDB Gene Sets", "Custom gene set"),
                                    selected = "",
-                                   server = TRUE))
+                                   server = TRUE)})
       
-      observe(updateSelectizeInput(session, 'cat', 
-                                   choices = list(`Gene Sets` = list("H - Hallmark Gene Sets" = "H",
-                                                                     "C1 - Positional Gene Sets" = "C1",
-                                                                     "C6 - Oncogenic Signature Gene Sets" = "C6", 
-                                                                     "C8 - Cell Type Signature Gene Sets" = "C8"),
-                                                  `C2 - Curated Gene Sets` = list("CGP - Chemical and Genetic Perturbations" = "CGP", 
-                                                                                  "CP - Canonical Pathways" = "CP", 
-                                                                                  "BioCarta Pathway Subset of CP" = "CP:BIOCARTA", 
-                                                                                  "KEGG Pathway Subset of CP" = "CP:KEGG", 
-                                                                                  "PID Pathway Subset of CP" = "CP:PID", 
-                                                                                  "Reactome Pathway Subset of CP" = "CP:REACTOME", 
-                                                                                  "Wikipathways Pathway Subset of CP" = "CP:WIKIPATHWAYS"),
-                                                  `C3 - Regulatory Target Gene Sets` = list("MIR_Legacy Subset of microRNA Targets (MIR)" = "MIR:MIR_Legacy",
-                                                                                            "miRDB Subset of microRNA Targets (MIR)" = "MIR:MIRDB",
-                                                                                            "GTRD Subset of Transcription Factor Targets (TFT)" =  "TFT:GTRD", 
-                                                                                            "TFT_Legacy Subset of Transcription Factor Targets (TFT)" =  "TFT:TFT_Legacy"),
-                                                  `C4 - Computational Gene Sets` = list("CGN - Cancer Gene Neighborhoods" = "CGN", 
-                                                                                        "CM - Cancer Modules" =  "CM"),
-                                                  `C6 - Oncogenic Signature Gene Sets` = list("BP - Biological Process Subsets of Gene Ontology (GO)" = "GO:BP", 
-                                                                                              "CC - Cellular Component Subsets of Gene Ontology (GO)" = "GO:CC", 
-                                                                                              "MF - Molecular Function Subsets of Gene Ontology (GO)" = "GO:MF", 
-                                                                                              "HPO - Human Phenotype Ontology subsets of Gene Ontology (GO)" = "HPO"),
-                                                  `C7 - Immunological Signature Gene Sets` = list("ImmuneSigDB Subset of C7" = "IMMUNESIGDB", 
-                                                                                                  "VAX - Vaccine Response Gene Sets" =  "VAX")
-                                                  
-                                   ),
-                                   selected = "",
-                                   server = TRUE))
       
+      observe({
+        req(input$pca_cat)
+        
+        pc_subcat = names(msigdb_gene_sets()[[input$pca_cat]])
+        if (length(pc_subcat) > 1)  {
+          updateSelectizeInput(session,'pca_subcat', choices = pc_subcat , server = TRUE)
+        } 
+      })
+      
+
       observe(updateSelectizeInput(session, 'gene', 
                                    choices = colnames(Xproj$a()), 
                                    selected = "",
@@ -260,45 +257,52 @@ pca_server <- function(id,Xproj) {
       #'[##########################################################################################]
       #'[##########################################################################################]
       
-      observeEvent(input$cat,{
+
+      
+      pca_msigdb_selection <- reactive({
         
-        req(input$cat)
         
-        updateSelectizeInput(session, "chosen_gs", choices = gene_sets()[["gs_name"]],selected = "", server = TRUE)
+        ms = msigdb_gene_sets()
+        if(input$pca_cat %in% c("C2","C3","C4","C5","C7")) {
+          
+          pca_m = ms[[input$pca_cat]][[input$pca_subcat]]
+          
+          
+        } else {
+          pca_m = ms[[input$pca_cat]]
+        }
+        
+        pca_m
         
       })
       
-      ## PATHWAY SELECTION
-      # gene sets are downloaded via msigdbr package from the internet 
-      gene_sets <- reactive({ 
+      
+      observe({
+        if(input$pca_cat %in% c("C2","C3","C4","C5","C7")) {
+          
+          pca_path = names(table(pca_msigdb_selection()[["gs_name"]]))
+          updateSelectizeInput(session,'pca_pathway', choices = pca_path , server = TRUE)
+          
+          
+        } else {
         
-        if(input$cat %in% c("H", "C1", "C6", "C8")){
-          
-          return({
-            
-            gene_set_nonsub <- msigdbr(species = "human", category = input$cat)
-            
-            gene_set_nonsub
-            
-          })
-          
-          
-        } else if(input$cat %in% c("CGP", "CP", "CP:BIOCARTA", "CP:KEGG", "CP:PID", "CP:REACTOME", "CP:WIKIPATHWAYS",
-                                   "MIR:MIR_Legacy", "MIR:MIRDB", "TFT:GTRD", "TFT:TFT_Legacy",
-                                   "CGN", "CM",
-                                   "GO:BP", "GO:CC", "GO:MF", "HPO",
-                                   "IMMUNESIGDB", "VAX")){
-          
-          
-          return({
-            
-            gene_set_sub <- msigdbr(species = "human", category = NULL, subcategory = input$cat)
-            
-            gene_set_sub
-            
-          })}
+          pca_path = names(table(pca_msigdb_selection()[["gs_name"]]))
+          updateSelectizeInput(session,'pca_pathway', choices = pca_path , server = TRUE)
+        }
         
       })
+      
+      
+      
+      pca_msigdb_genes <- reactive({
+        
+        
+        pca_genes <- pca_msigdb_selection() %>% 
+                      filter(gs_name == input$pca_pathway) %>% select(gene_symbol)
+        
+        pca_genes
+        
+        })
       
       
       
@@ -374,16 +378,14 @@ pca_server <- function(id,Xproj) {
             
           })
           
-        }else if(input$data == "MSigDB Gene Sets" & input$did > 0) {
+        }else if(input$data == "MSigDB Gene Sets"){
           
-          
-          pathway <- reactive({filter(gene_sets(), gs_name == input$chosen_gs)})
-          df_pathway <- all_genes()[,intersect(pathway()[["human_gene_symbol"]], colnames(all_genes())),with=F]
+          df_pathway <- all_genes()[,intersect(pca_msigdb_genes()[["gene_symbol"]], colnames(all_genes())),with=F]
           
           df_pathway
           
-        }else if(input$data == "Custom gene set" & input$did > 0){
-          
+        }else if(input$data == "Custom gene set"){
+          # input$data == "Custom gene set" & input$did > 0
           
           
           df_created <-  all_genes()[,intersect(cre_gene()[["genes"]], colnames(all_genes())),with=F]
@@ -524,7 +526,7 @@ pca_server <- function(id,Xproj) {
           
         }else if(input$data == "MSigDB Gene Sets") {
           
-          return(paste("PCA using genes from", input$chosen_gs))
+          return(paste("PCA using genes from", input$pca_pathway))
           
         }else if(input$data == "Custom gene set") {
           
@@ -564,16 +566,10 @@ pca_server <- function(id,Xproj) {
               
             }
             
-            if (input$cat < 0  && input$data == "MSigDB Gene Sets" ) {
+            if (input$pca_cat < 0  && input$data == "MSigDB Gene Sets" ) {
               validate("Choose a gene set")
             }
             
-            if (input$chosen_gs < 0  && input$data == "MSigDB Gene Sets" ) {
-              validate("Choose a pathway")
-            }
-            
-            
-            # pc2<- prcomp(p_dat(), center = input$center, scale. = input$scale)
             
             pca <- fviz_pca_ind(pc2(), geom.ind = "point", pointshape = 19,
                                 fill.ind = fill(),
@@ -592,7 +588,7 @@ pca_server <- function(id,Xproj) {
             ) +
               ggtitle(tit_plot()) +
               labs(x = "PC1", y = "PC2")+
-              theme(plot.title = element_text(size = 15, hjust = 0.5))
+              theme(plot.title = element_text(size=11, hjust = 0.5))
             
             
             
