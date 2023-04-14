@@ -262,7 +262,7 @@ gene_vs_cat_server <- function(id,Xproj){
                                   choices = Xproj$a()$meta.definition,
                                   server = T)})
     
-    # Remove cols which is includinf more than 10 levels
+    # Remove cols which is including more than 10 levels and numeric
     
     hidden_cols_cat_plotvar<-reactive({"meta.definition"})
     
@@ -270,7 +270,11 @@ gene_vs_cat_server <- function(id,Xproj){
     
     sel_cols_cat_plotvar <- reactive({meta_cols_cat_plotvar()[unlist(lapply(Xproj$a()[, meta_cols_cat_plotvar(), with = FALSE], function(x) length(levels(x)))) < 10]})
     
-    available_cols_cat_plotvar <- reactive({setdiff(sel_cols_cat_plotvar(), hidden_cols_cat_plotvar())})
+    numeric_cols <- reactive({unlist(lapply(Xproj$a()[, sel_cols_cat_plotvar(), with = FALSE], function(x) is.numeric(x)))})
+    
+    # available_cols_cat_plotvar <- reactive({setdiff(sel_cols_cat_plotvar(), hidden_cols_cat_plotvar())})
+    
+    available_cols_cat_plotvar <- reactive({setdiff(sel_cols_cat_plotvar(), c(hidden_cols_cat_plotvar(), sel_cols_cat_plotvar()[numeric_cols()]))})
     
     #   # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
     observe({updateSelectizeInput(session,
