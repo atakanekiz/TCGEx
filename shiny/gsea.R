@@ -161,6 +161,9 @@ gsea_ui <- function(id, label, choices) {
         downloadButton(ns("g_downloadPlot"), "Download GSEA Plot", style="color: #eeeeee; background-color: #01303f; border-color: #01303f"),
         br(),
         br(),
+        downloadButton(ns("download_lead"), "Download Leading Edge Genes ", style="color: #eeeeee; background-color: #01303f; border-color: #01303f"),
+        br(),
+        br(),
         downloadButton(ns("downloadData"), "Download ranked data", style="color: #eeeeee; background-color: #01303f; border-color: #01303f"),
         br(),
         br(),
@@ -177,9 +180,6 @@ gsea_ui <- function(id, label, choices) {
         plotOutput(outputId = ns("gsea_plot")),
         
         DTOutput(ns("gene_text"))
-        
-        # tableOutput(ns("test"))
-        
         
       )
     )
@@ -319,17 +319,9 @@ gsea_server <- function(id,Xproj) {
     
     gdata <- reactive({
       
-      
-      
       req(input$gset_up)
       
-      # gene_s <- read.table(input$gset_up$datapath, header = FALSE, sep = ";", quote = "\"'",
-      #                      dec = ".")  
-      
-      gene_s <- read_excel(input$gset_up$datapath, sheet = 1, col_names = F)
-      
-      
-      gene_s <- gene_s[ , colSums(is.na(gene_s))==0]
+      gene_s <- read_excel(input$gset_up$datapath, sheet = 1, col_names = T)
       
       colnames(gene_s) <- c("geneset_name", "genes")
       
@@ -727,7 +719,61 @@ gsea_server <- function(id,Xproj) {
     })
     
     
-    
+    leading_genes <- reactive({
+      
+      if(input$individual == "Specific Pathway"  && input$gsea_gene_sets == 'MSigDB' ){
+        
+        dt <- res() %>% 
+          filter(pathway == input$path) %>% 
+          select(c("pathway", "leadingEdge")) 
+        
+        
+        dt <- unnest(dt, cols = c(leadingEdge)) 
+        
+        dt
+        
+      }else if(input$individual_2 == "Specific Pathway" && input$gsea_gene_sets == "Custom Gene Set" ){
+        
+        
+        
+        dt <- res() %>% 
+          filter(pathway == input$cre_path) %>% 
+          select(c("pathway", "leadingEdge")) 
+        
+        
+        dt <- unnest(dt, cols = c(leadingEdge)) 
+        
+        dt
+        
+      }else if(input$individual == "Top Pathways"  && input$gsea_gene_sets == 'MSigDB') {
+        
+        
+        
+        dt <- res() %>% 
+          select(c("pathway", "leadingEdge")) 
+        
+        
+        dt <- unnest(dt, cols = c(leadingEdge)) 
+        
+        dt
+        
+      }else if(input$individual_2 == "Top Pathways" && input$gsea_gene_sets == "Custom Gene Set") {
+        
+        
+        
+        dt <- res() %>% 
+          select(c("pathway", "leadingEdge")) 
+        
+        
+        dt <- unnest(dt, cols = c(leadingEdge)) 
+        
+        dt
+        
+      }
+      
+
+      
+    })
     
     
     # GSEA analysis plot and gene list
@@ -798,13 +844,18 @@ gsea_server <- function(id,Xproj) {
           }
           
           
-          ranked_data()
+          leading_genes()
+        
           
         })
         
       })
       
+      
+      
+      
       #download 
+      
       
       
       output$downloadData <- downloadHandler(
@@ -817,6 +868,15 @@ gsea_server <- function(id,Xproj) {
         } 
       )
       
+      output$download_lead <- downloadHandler(
+        filename = "leading_edge_genes.xlsx",
+        content = function(file) {
+          write.xlsx(leading_genes(), file, colnames = TRUE,
+                     rownames = F, append = FALSE, showNA = TRUE)
+          
+          
+        } 
+      )
       
       #plot 
       output$gsea_plot <- renderPlot({
