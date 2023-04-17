@@ -355,7 +355,7 @@ heatmap_server <- function(id,Xproj) {
           
           uploaded_heatmap_csv <- input$heatmap_csv
           
-          selected_csv <- read_excel(uploaded_heatmap_csv$datapath, sheet = 1, col_names = F)$V1
+          selected_csv <- as.data.frame(read_excel(uploaded_heatmap_csv$datapath, sheet = 1, col_names = F))$V1
           
           same_gene_names = intersect(selected_csv, colnames(daf))
           

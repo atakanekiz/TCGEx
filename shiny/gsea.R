@@ -321,7 +321,7 @@ gsea_server <- function(id,Xproj) {
       
       req(input$gset_up)
       
-      gene_s <- read_excel(input$gset_up$datapath, sheet = 1, col_names = T)
+      gene_s <- as.data.frame(read_excel(input$gset_up$datapath, sheet = 1, col_names = T))
       
       colnames(gene_s) <- c("geneset_name", "genes")
       

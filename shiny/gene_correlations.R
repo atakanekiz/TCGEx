@@ -495,7 +495,7 @@ gene_cor_pl_server <- function(id,Xproj) {
         
         req(input$corr_up)
         
-        glist <- read.excel(input$corr_up$datapath, sheet = 1, col_names = F)
+        glist <- as.data.frame(read_excel(input$corr_up$datapath, sheet = 1, col_names = F))
         
         colnames(glist)[1] <- "genes"
         

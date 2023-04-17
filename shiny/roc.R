@@ -340,7 +340,7 @@ roc_server <- function(id, Xproj) {
           
           uploaded_roc_csv <- input$roc_csv
           
-          selected_roc_csv <- read.excel(uploaded_roc_csv$datapath, sheet = 1, col_names = F)$V1
+          selected_roc_csv <- as.data.frame(read_excel(uploaded_roc_csv$datapath, sheet = 1, col_names = F))$V1
           
           roc_same_gene_names = intersect(selected_roc_csv, colnames(pre_df))
           
@@ -657,7 +657,7 @@ roc_server <- function(id, Xproj) {
             
             uploaded_roc_csv <- input$roc_csv
             
-            selected_roc_csv <- read.excel(uploaded_roc_csv$datapath, sheet = 1, col_names = F)$V1
+            selected_roc_csv <- as.data.frame(read_excel(uploaded_roc_csv$datapath, sheet = 1, col_names = F))$V1
             
             roc_same_gene_names = intersect(selected_roc_csv, colnames(pre_df()))
             

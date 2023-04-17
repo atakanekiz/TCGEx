@@ -343,7 +343,7 @@ pca_server <- function(id,Xproj) {
         
         req(input$pca_up)
         
-        c_gene <- read.excel(input$pca_up$datapath, sheet = 1, col_names = F)  
+        c_gene <- as.data.frame(read_excel(input$pca_up$datapath, sheet = 1, col_names = F))  
         
         colnames(c_gene)[1] <- "genes" 
         
