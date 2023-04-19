@@ -9,7 +9,7 @@ library(DT)
 library(ggplot2)
 library(plotly)
 library(shinyjs)
-library(zstdlite)       #'[Let's try to go back to uncompressed data (more space available in the server)]
+# library(zstdlite)       #'[Let's try to go back to uncompressed data (more space available in the server)]
 library(readxl)
 
 
