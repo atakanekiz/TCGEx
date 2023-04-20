@@ -104,44 +104,22 @@ roc_ui <- function(id, label, choices) {
       conditionalPanel(
         condition = "input.show_msigdb_gene_sets == true",
         ns = ns,
-        selectInput(ns("cate"), "Select an MSigDB collection", 
-                    choices = list(
-                      # `Gene Sets` = list("H - Hallmark Gene Sets" = "H",
-                      #                                 "C1 - Positional Gene Sets" = "C1",
-                      #                                 "C6 - Oncogenic Signature Gene Sets" = "C6", 
-                      #                                 "C8 - Cell Type Signature Gene Sets" = "C8"),
-                      #              `C2 Subcategories` = list("CGP - Chemical and Genetic Perturbations" = "CGP", 
-                      #                                        "CP - Canonical Pathways" = "CP", 
-                      #                                        "BioCarta Pathway Subset of CP" = "CP:BIOCARTA", 
-                      #                                        "KEGG Pathway Subset of CP" = "CP:KEGG", 
-                      #                                        "PID Pathway Subset of CP" = "CP:PID", 
-                      #                                        "Reactome Pathway Subset of CP" = "CP:REACTOME", 
-                      #                                        "Wikipathways Pathway Subset of CP" = "CP:WIKIPATHWAYS"),
-                      #              `C3 Subcategories` = list("MIR_Legacy Subset of microRNA Targets (MIR)" = "MIR:MIR_Legacy",
-                      #                                        "miRDB Subset of microRNA Targets (MIR)" = "MIR:MIRDB",
-                      #                                        "GTRD Subset of Transcription Factor Targets (TFT)" =  "TFT:GTRD", 
-                      #                                        "TFT_Legacy Subset of Transcription Factor Targets (TFT)" =  "TFT:TFT_Legacy"),
-                      #              `C4 Subcategories` = list("CGN - Cancer Gene Neighborhoods" = "CGN", 
-                      #                                        "CM - Cancer Modules" =  "CM"),
-                      #              `C5 Subcategories` = list("BP - Biological Process Subsets of Gene Ontology (GO)" = "GO:BP", 
-                      #                                        "CC - Cellular Component Subsets of Gene Ontology (GO)" = "GO:CC", 
-                      #                                        "MF - Molecular Function Subsets of Gene Ontology (GO)" = "GO:MF", 
-                      #                                        "HPO - Human Phenotype Ontology subsets of Gene Ontology (GO)" = "HPO"),
-                      #              `C7 Subcategories` = list("ImmuneSigDB Subset of C7" = "IMMUNESIGDB", 
-                      #                                        "VAX - Vaccine Response Gene Sets" =  "VAX")
-                      
-                      `H: HALLMARK gene sets` = list("H"), 
-                      `C1: Positional gene sets` = list("C1"),
-                      `C2: Curated gene sets` = list("CGP", "CP", "CP:BIOCARTA", "CP:KEGG", "CP:PID", "CP:REACTOME", "CP:WIKIPATHWAYS"),
-                      `C3: Regulatory target gene sets` = list("MIR:MIR_Legacy", "MIR:MIRDB", "TFT:GTRD", "TFT:TFT_Legacy"),
-                      `C4: Computational gene sets` = list("CGN", "CM"),
-                      `C5: Ontology gene sets` = list("GO:BP", "GO:CC", "GO:MF", "HPO"),
-                      `C6: Oncogenic gene sets` = list("C6"),
-                      `C7: Immunologic gene sets` = list("IMMUNESIGDB", "VAX"),
-                      `C8: Cell type signature gene sets` = list("C8")
-                      
-                    )),
-        selectizeInput(ns("chosen_gs"), #Automatically updates to show subset.
+        selectizeInput(ns("cate"), "Please select an MSigDB Collection", choices = c("Hallmark gene sets (H)" = "H",
+                                                                                        "Positional gene sets (C1)" = "C1",
+                                                                                        "Curated gene sets (C2)" = "C2",
+                                                                                        "Regulatory target gene sets (C3)" = "C3",
+                                                                                        "Computational gene sets (C4)" = "C4",
+                                                                                        "Ontology gene sets (C5)" = "C5" ,
+                                                                                        "Oncogenic gene sets (C6)" = "C6",
+                                                                                        "Immunologic gene sets (C7)" = "C7",
+                                                                                        "Cell type signature gene sets (C8)" = "C8")),
+        conditionalPanel(condition = "input.cate == 'C2'|input.msigdb_setnames_response =='C3'|
+                                      input.cate =='C4'|
+                                      input.cate =='C5'|
+                                      input.cate =='C7' ", ns = ns, 
+                         selectizeInput(ns("roc_subcat"),"Please select a subcategory" ,choices = c(""))
+        ),
+        selectizeInput(ns("roc_chosen_pathway"), #Automatically updates to show subset.
                        "Select a specific gene set", 
                        choices = NULL)
       ),
@@ -190,7 +168,7 @@ roc_server <- function(id, Xproj) {
               
               data.frame(
                 
-                element = paste0("#", session$ns(c(NA, "roc_definition_sel + .selectize-control", "selectore + .selectize-control", "one_gene + .selectize-control ", "hi_cutoff_covar", "lo_cutoff_covar",  "genesss + .selectize-control ", "cate + .selectize-control ", "chosen_gs + .selectize-control "))),
+                element = paste0("#", session$ns(c(NA, "roc_definition_sel + .selectize-control", "selectore + .selectize-control", "one_gene + .selectize-control ", "hi_cutoff_covar", "lo_cutoff_covar",  "genesss + .selectize-control ", "cate + .selectize-control ", "roc_chosen_pathway + .selectize-control "))),
                 
                 intro = paste(c(
                   "This is the ROC (receiver operating characteristic) analysis module. In this module, you can binarize samples based on gene expression or categorical meta data and test the predictive power of a custom variable. ROC plots show True Positive Rate (TPR) and False Positive Rate (FPR) along the y- and x-axes, respectively. A completely random classifier would appear along the diagonal line in the graph and would have Area Under the Curve (AUC) of 0.5. The curve for a good positive predictor appears in the top half of the plot (AUC > 0.5), and the curve for a good negative predictor appears in the bottom half (AUC < 0.5). Continue the tutorial to learn how to use this module.",
@@ -210,7 +188,7 @@ roc_server <- function(id, Xproj) {
               
               data.frame(
                 
-                element = paste0("#", session$ns(c(NA, "roc_definition_sel + .selectize-control", "selectore + .selectize-control", "one_gene + .selectize-control ", "hi_cutoff_covar", "lo_cutoff_covar",  "roc_csv + .selectize-control ", "cate + .selectize-control ", "chosen_gs + .selectize-control "))),
+                element = paste0("#", session$ns(c(NA, "roc_definition_sel + .selectize-control", "selectore + .selectize-control", "one_gene + .selectize-control ", "hi_cutoff_covar", "lo_cutoff_covar",  "roc_csv + .selectize-control ", "cate + .selectize-control ", "roc_chosen_pathway + .selectize-control "))),
                 
                 intro = paste(c(
                   "This is the ROC (receiver operating characteristic) analysis module. In this module, you can binarize samples based on gene expression or categorical meta data and test the predictive power of a custom variable. ROC plots show True Positive Rate (TPR) and False Positive Rate (FPR) along the y- and x-axes, respectively. A completely random classifier would appear along the diagonal line in the graph and would have Area Under the Curve (AUC) of 0.5. The curve for a good positive predictor appears in the top half of the plot (AUC > 0.5), and the curve for a good negative predictor appears in the bottom half (AUC < 0.5). Continue the tutorial to learn how to use this module.",
@@ -234,7 +212,7 @@ roc_server <- function(id, Xproj) {
               
               data.frame(
                 
-                element = paste0("#", session$ns(c(NA, "roc_definition_sel + .selectize-control", "selectore + .selectize-control", "binaryone + .selectize-control ", "binarytwo + .selectize-control ", "binarythree + .selectize-control ", "genesss + .selectize-control ", "cate + .selectize-control ", "chosen_gs + .selectize-control "))),
+                element = paste0("#", session$ns(c(NA, "roc_definition_sel + .selectize-control", "selectore + .selectize-control", "binaryone + .selectize-control ", "binarytwo + .selectize-control ", "binarythree + .selectize-control ", "genesss + .selectize-control ", "cate + .selectize-control ", "roc_chosen_pathway + .selectize-control "))),
                 
                 intro = paste(c(
                   "This is the ROC (receiver operating characteristic) analysis module. In this module, you can binarize samples based on gene expression or categorical meta data and test the predictive power of a custom variable. ROC plots show True Positive Rate (TPR) and False Positive Rate (FPR) along the y- and x-axes, respectively. A completely random classifier would appear along the diagonal line in the graph and would have Area Under the Curve (AUC) of 0.5. The curve for a good positive predictor appears in the top half of the plot (AUC > 0.5), and the curve for a good negative predictor appears in the bottom half (AUC < 0.5). Continue the tutorial to learn how to use this module.",
@@ -253,7 +231,7 @@ roc_server <- function(id, Xproj) {
               
               data.frame(
                 
-                element = paste0("#", session$ns(c(NA, "roc_definition_sel + .selectize-control", "selectore + .selectize-control", "binaryone + .selectize-control ", "binarytwo + .selectize-control ", "binarythree + .selectize-control ", "genesss + .selectize-control ", "cate + .selectize-control ", "chosen_gs + .selectize-control "))),
+                element = paste0("#", session$ns(c(NA, "roc_definition_sel + .selectize-control", "selectore + .selectize-control", "binaryone + .selectize-control ", "binarytwo + .selectize-control ", "binarythree + .selectize-control ", "genesss + .selectize-control ", "cate + .selectize-control ", "roc_chosen_pathway + .selectize-control "))),
                 
                 intro = paste(c(
                   "This is the ROC (receiver operating characteristic) analysis module. In this module, you can binarize samples based on gene expression or categorical meta data and test the predictive power of a custom variable. ROC plots show True Positive Rate (TPR) and False Positive Rate (FPR) along the y- and x-axes, respectively. A completely random classifier would appear along the diagonal line in the graph and would have Area Under the Curve (AUC) of 0.5. The curve for a good positive predictor appears in the top half of the plot (AUC > 0.5), and the curve for a good negative predictor appears in the bottom half (AUC < 0.5). Continue the tutorial to learn how to use this module.",
@@ -306,14 +284,14 @@ roc_server <- function(id, Xproj) {
       observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "binaryone", choices = colnames(Xproj$a()[, lapply(Xproj$a(), is.factor) == TRUE, with = FALSE]), selected = "meta.definition", server = TRUE)})
       observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "genesss", choices = colnames(Xproj$a()), server = TRUE)})
       observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "roc_definition_sel", choices = c(Xproj$a()$meta.definition), selected = character(0), server = TRUE)})
-      
-      observeEvent(input$cate,{
-        
+    
+      observe({
         req(input$cate)
-        req(df_gene_sets())
         
-        updateSelectizeInput(session = getDefaultReactiveDomain(),"chosen_gs", choices = df_gene_sets()$gs_name, selected = character(0) ,server = TRUE)
-        
+        roc_subcat = names(roc_df_msigdb()[[input$cate]])
+        if (length(roc_subcat) > 1)  {
+          updateSelectizeInput(session,'roc_subcat', choices = roc_subcat , server = TRUE)
+        } 
       })
       
       pre_df <- eventReactive(input$roc_run,{
@@ -369,38 +347,27 @@ roc_server <- function(id, Xproj) {
         }
       })
       
+      roc_df_msigdb <- reactive({df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))})
       
       df_gene_sets <- reactive({ 
         
+        req(roc_df_msigdb())
+        
+        #Preparation of Human MSigDB genesets.
+        
+        df_msigdb <- roc_df_msigdb()
+        
         if(input$show_msigdb_gene_sets == TRUE){
           
-          #Preparation of Human MSigDB genesets.
+            if(input$cate %in% c("C2","C3","C4","C5","C7")) {
+              
+              df_msigdb2 = df_msigdb[[input$cate]][[input$roc_subcat]]
+              
+            } else {
+              df_msigdb2 = df_msigdb[[input$cate]]
+            }
+          return(df_msigdb2)
           
-          if(input$cate %in% c("H", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8")){
-            
-            return({
-              
-              df_msigdb <- msigdbr(species = "human", category = input$cate)
-              
-              df_msigdb
-              
-            })
-            
-            
-          } else if(input$cate %in% c("CGP", "CP", "CP:BIOCARTA", "CP:KEGG", "CP:PID", "CP:REACTOME", "CP:WIKIPATHWAYS",
-                                      "MIR:MIR_Legacy", "MIR:MIRDB", "TFT:GTRD", "TFT:TFT_Legacy",
-                                      "CGN", "CM",
-                                      "GO:BP", "GO:CC", "GO:MF", "HPO",
-                                      "IMMUNESIGDB", "VAX")){
-            
-            
-            return({
-              
-              df_msigdb2 <- msigdbr(species = "human", category = NULL, subcategory = input$cate)
-              
-              df_msigdb2
-              
-            })}
         } else if(input$show_msigdb_gene_sets == FALSE){
           
           return({
@@ -408,8 +375,27 @@ roc_server <- function(id, Xproj) {
           })
         }
       })
-      
-      
+
+      observe({
+        
+        req(roc_df_msigdb())
+        
+        req(df_gene_sets())
+        
+        if(input$cate %in% c("C2","C3","C4","C5","C7")) {
+          
+          
+          roc_path = names(df_gene_sets())
+          updateSelectizeInput(session,'roc_chosen_pathway', choices = roc_path , server = TRUE)
+          
+        } else {
+          
+          roc_path = names(df_gene_sets()[[1]])
+          updateSelectizeInput(session,'roc_chosen_pathway', choices = roc_path , server = TRUE)
+        }
+        
+      })
+
       df_final_data <- eventReactive(input$roc_run,{
         
         #Preparation of final data.
@@ -418,19 +404,26 @@ roc_server <- function(id, Xproj) {
         
         if(input$show_msigdb_gene_sets == TRUE){
           
-          req(input$chosen_gs)
+          df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))
           
+          if(input$cate %in% c("C2","C3","C4","C5","C7")) {
+            
+            roc_msigdb_genes <- df_msigdb[[input$cate]][[input$roc_subcat]][[input$roc_chosen_pathway]]
+            
+          } else {
+            
+            roc_msigdb_genes <- df_msigdb[[input$cate]][[]][[input$roc_chosen_pathway]]
+          }
+
           #Take the subset of chosen Human MsigDB geneset.
           
-          df_final_gene_sets <- df_gene_sets()
-          
-          df_final_gene_sets <- setDT(df_final_gene_sets, key = 'gs_name')[J(input$chosen_gs)]
-          
+          df_final_gene_sets <- roc_msigdb_genes
+
           # Drop and the Human MsigDB genes which are not in our data.
           
           df_unfiltered <- pre_df()
           
-          same_hallmarks_names = intersect(df_final_gene_sets$gene_symbol, colnames(df_unfiltered))
+          same_hallmarks_names = intersect(df_final_gene_sets, colnames(df_unfiltered))
           
           df_unfiltered[, selected_msigdb_gene_set := rowMeans(.SD, na.rm = TRUE), .SDcols = same_hallmarks_names]  
           
@@ -446,33 +439,34 @@ roc_server <- function(id, Xproj) {
       })
       
       df_gene_set_table_calc <- eventReactive(input$roc_run, {
-        
+
         if(input$show_msigdb_gene_sets == TRUE){
           
-          #Preparation of Human MSigDB geneset table.
+          df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))
           
-          req(df_gene_sets())
+          if(input$cate %in% c("C2","C3","C4","C5","C7")) {
+            
+            roc_msigdb_genes <- df_msigdb[[input$cate]][[input$roc_subcat]][[input$roc_chosen_pathway]]
+            
+          } else {
+            
+            roc_msigdb_genes <- df_msigdb[[input$cate]][[]][[input$roc_chosen_pathway]]
+          }
           
-          req(input$chosen_gs)
+          #Take the subset of chosen Human MsigDB geneset.
           
-          #Filter Human MSigDB genesets.
+          df_final_gene_sets <- roc_msigdb_genes
           
-          df_final_gene_sets <- df_gene_sets()
+          # Drop and the Human MsigDB genes which are not in our data.
           
-          df_final_gene_sets <- setDT(df_final_gene_sets, key = 'gs_name')[J(input$chosen_gs)]
+          same_hallmarks_names = intersect(df_final_gene_sets, colnames(pre_df()))
           
-          #Choose columns to be kept and shown in the Human MSigDB geneset table.
+          df_same_hallmarks_names <- as.data.frame(same_hallmarks_names)
+
+          colnames(df_same_hallmarks_names)[which(names(df_same_hallmarks_names) == "same_hallmarks_names")] <- "Intersected genes between MSigDB gene sets and chosen cancer data"
           
-          imp_cols <- c("gs_cat",
-                        "gs_name",
-                        "gene_symbol",
-                        "ensembl_gene",
-                        "entrez_gene")
-          
-          df_final_gene_sets <- df_final_gene_sets[,..imp_cols]
-          
-          df_final_gene_sets
-          
+          df_same_hallmarks_names <- as.data.frame(df_same_hallmarks_names)
+
         } else if(input$show_msigdb_gene_sets == FALSE){
           
           df_final_gene_sets <- df_gene_sets()
@@ -496,7 +490,7 @@ roc_server <- function(id, Xproj) {
             #Calculation of plot with the chosen multiple genes.
             
             validate(need(input$roc_definition_sel, "Please select a sample type"))
-            validate(need(input$chosen_gs, "Please select an MSigDB gene set"))
+            validate(need(input$roc_chosen_pathway, "Please select an MSigDB gene set"))
             
             if(input$roc_gene_selector == "Manually enter gene names"){
 
@@ -557,7 +551,7 @@ roc_server <- function(id, Xproj) {
           if(input$show_msigdb_gene_sets == TRUE){
             
             #Calculation of plot with the chosen multiple genes.
-            validate(need(input$chosen_gs, "Please select an MSigDB gene set"))
+            validate(need(input$roc_chosen_pathway, "Please select an MSigDB gene set"))
             
             longtest <- melt_roc(df_final_data(), "roccurve", c("custom_gene_set", "selected_msigdb_gene_set"))
             multiplot2 <- ggplot(longtest, aes(d = D, m = M, color = name)) + geom_roc() + style_roc() + theme(legend.text = element_text(size = 18)) + geom_abline(slope = 1, intercept = 0, linetype = 2, color = "grey50") 
