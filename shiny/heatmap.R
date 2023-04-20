@@ -347,7 +347,6 @@ heatmap_server <- function(id,Xproj) {
           
         } else if(input$selectors == "Upload a xlsx/xls file"){
           
-          req(input$heatmap_csv)
           
           daf <- as.data.frame(pre_data())
           
@@ -355,9 +354,11 @@ heatmap_server <- function(id,Xproj) {
           
           uploaded_heatmap_csv <- input$heatmap_csv
           
-          selected_csv <- as.data.frame(read_excel(uploaded_heatmap_csv$datapath, sheet = 1, col_names = F))$V1
+          selected_csv <- as.data.frame(read_excel(uploaded_heatmap_csv$datapath, sheet = 1, col_names = F))
           
-          same_gene_names = intersect(selected_csv, colnames(daf))
+          colnames(selected_csv)[1] <- "Genes" 
+          
+          same_gene_names = intersect(selected_csv[["Genes"]], colnames(daf))
           
           selected_cols <- c(same_gene_names)
           

@@ -338,11 +338,14 @@ roc_server <- function(id, Xproj) {
           
         } else if (input$roc_gene_selector ==  "Upload a xlsx/xls file") {
           
+          
           uploaded_roc_csv <- input$roc_csv
           
-          selected_roc_csv <- as.data.frame(read_excel(uploaded_roc_csv$datapath, sheet = 1, col_names = F))$V1
+          selected_roc_csv <- as.data.frame(read_excel(uploaded_roc_csv$datapath, sheet = 1, col_names = F))
           
-          roc_same_gene_names = intersect(selected_roc_csv, colnames(pre_df))
+          colnames(selected_roc_csv)[1] <- "Genes" 
+          
+          roc_same_gene_names = intersect(selected_roc_csv[["Genes"]], colnames(pre_df))
           
           roc_csv_selected_cols <- c(roc_same_gene_names)
           
@@ -650,22 +653,25 @@ roc_server <- function(id, Xproj) {
           if(input$roc_gene_selector ==  "Upload a xlsx/xls file"){
             
             req(pre_df())
-
+            
             validate(need(input$roc_csv, "Please upload a xlsx/xls file to create a custom predictor (multiple genes will be averaged)"))
-
+            
             req(input$roc_definition_sel)
             
             uploaded_roc_csv <- input$roc_csv
             
-            selected_roc_csv <- as.data.frame(read_excel(uploaded_roc_csv$datapath, sheet = 1, col_names = F))$V1
+            selected_roc_csv <- as.data.frame(read_excel(uploaded_roc_csv$datapath, sheet = 1, col_names = F))
             
-            roc_same_gene_names = intersect(selected_roc_csv, colnames(pre_df()))
+            colnames(selected_roc_csv)[1] <- "Genes" 
+            
+            roc_same_gene_names = intersect(selected_roc_csv[["Genes"]], colnames(pre_df()))
             
             intersect_data_frame <- as.data.frame(roc_same_gene_names)
             
             colnames(intersect_data_frame)[which(names(intersect_data_frame) == "roc_same_gene_names")] <- "Intersected genes between xlsx/xls file and chosen cancer data"
             
             intersect_data_frame <- as.data.frame(intersect_data_frame)
+            
           }
           
         })
