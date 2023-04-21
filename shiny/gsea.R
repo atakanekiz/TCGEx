@@ -145,7 +145,7 @@ gsea_ui <- function(id, label, choices) {
                     )),
                     accept = c(".xls", ".xlsx" # "text/csv", "text/comma-separated-values,text/plain", ".csv"
                                )),  
-          radioButtons(ns("individual_2"), "Show", choices = c("Top Pathways", "Specific Pathway"), selected = "Specific Pathway"),
+          radioButtons(ns("individual_2"), "Show", choices = c("Top Pathways", "Specific Pathway"), selected = "Top Pathways"),
           
           conditionalPanel(
             
@@ -174,9 +174,9 @@ gsea_ui <- function(id, label, choices) {
         downloadButton(ns("g_downloadPlot"), "Download GSEA Plot", style="color: #eeeeee; background-color: #01303f; border-color: #01303f"),
         br(),
         br(),
-        # downloadButton(ns("download_lead"), "Download Leading Edge Genes ", style="color: #eeeeee; background-color: #01303f; border-color: #01303f"),
-        # br(),
-        # br(),
+        downloadButton(ns("download_lead"), "Download Leading Edge Genes ", style="color: #eeeeee; background-color: #01303f; border-color: #01303f"),
+        br(),
+        br(),
         downloadButton(ns("downloadData"), "Download ranked data", style="color: #eeeeee; background-color: #01303f; border-color: #01303f"),
         br(),
         br(),
@@ -301,7 +301,18 @@ gsea_server <- function(id,Xproj) {
       
       gene_s <- as.data.frame(read_excel(input$gset_up$datapath, sheet = 1, col_names = F))
       
+
+      validate(
+        need(
+          {if(length(colnames(gene_s))== 2) TRUE else FALSE},
+          "This file does not contain the appropriate number of columns.Please ensure that the first column contains gene set name and the second column contains gene names"))
+      
       colnames(gene_s) <- c("geneset_name", "genes")
+      
+      validate(
+        need(
+          {if(class(gene_s$geneset_name) == "character" & class(gene_s$genes) == "character")TRUE else FALSE}, 
+          "The columns must contain only character inputs.Please ensure that the first column contains gene set names and the second column contains gene names"))
       
       custom_sets <- unique(gene_s$geneset_name)
       
@@ -531,11 +542,20 @@ gsea_server <- function(id,Xproj) {
     
     ranked_data <- reactive({
       
+      
       df <- ldply (preranked_genes(), data.table)
       
       colnames(df)<- c("Genes", "Ranks")
       
-      df <- df %>% mutate_if(is.numeric, signif, digits=3)
+      df <- df %>% 
+        mutate_if(is.numeric, signif, digits=3) %>% 
+          mutate(Gene_Order = seq_along(df$Ranks)) %>% 
+               relocate(Gene_Order) %>% 
+                  select(c("Gene_Order", "Genes"))
+      
+      
+      df
+      
       
     })
     
@@ -708,144 +728,140 @@ gsea_server <- function(id,Xproj) {
     })
     
     
-    # leading_genes <- reactive({
-    # 
-    #   browser()
-    # 
-    #   if(input$individual == "Specific Pathway"  && input$gsea_gene_sets == 'MSigDB' ){
-    # 
-    #     dt <- res() %>%
-    #       filter(pathway == input$gsea_pathway) %>%
-    #       select(c("pathway", "leadingEdge"))
-    # 
-    # 
-    #     dt <- unnest(dt, cols = c(leadingEdge))
-    # 
-    #     dt
-    # 
-    #   }else if(input$individual_2 == "Specific Pathway" && input$gsea_gene_sets == "Custom Gene Set" ){
-    # 
-    #     dt <- res() %>%
-    #       filter(pathway == input$cre_path) %>%
-    #       select(c("pathway", "leadingEdge"))
-    # 
-    # 
-    #     dt <- unnest(dt, cols = c(leadingEdge))
-    # 
-    #     dt
-    # 
-    #   }else if(input$individual == "Top Pathways"  && input$gsea_gene_sets == 'MSigDB') {
-    # 
-    #     high_enrich <- res() %>%
-    #         arrange(desc(NES)) %>%
-    #         head(n= 5)
-    # 
-    #     low_enrich <- res() %>%
-    #       arrange(desc(NES)) %>%
-    #       tail(n= 5)
-    # 
-    #     dt <- rbind(high_enrich, low_enrich)
-    # 
-    #     dt <- select(dt, c("pathway", "leadingEdge"))
-    # 
-    # 
-    #     dt <- unnest(dt, cols = c(leadingEdge))
-    # 
-    #     dt
-    # 
-    #   }else if(input$individual_2 == "Top Pathways" && input$gsea_gene_sets == "Custom Gene Set") {
-    # 
-    # 
-    # 
-    #     dt <- res() %>%
-    #       select(c("pathway", "leadingEdge"))
-    # 
-    # 
-    #     dt <- unnest(dt, cols = c(leadingEdge))
-    # 
-    #     dt
-    # 
-    #   }
-    # 
-    # 
-    # 
-    # })
+    
+    ind <- reactive(input$individual)
+    ind_2 <- reactive(input$individual_2)
+    ges <- reactive(input$gsea_gene_sets)
+    
+    leading_genes <- reactive({
+
+      if(ind() == "Specific Pathway"  && ges() == 'MSigDB' ){
+
+        dt <- res() %>%
+          filter(pathway == input$gsea_pathway) %>%
+          select(c("pathway", "leadingEdge"))
+
+
+        dt <- unnest(dt, cols = c(leadingEdge))
+
+        dt
+
+      }else if(ind_2() == "Specific Pathway" && ges() == "Custom Gene Set" ){
+
+        dt <- res() %>%
+          filter(pathway == input$cre_path) %>%
+          select(c("pathway", "leadingEdge"))
+
+
+        dt <- unnest(dt, cols = c(leadingEdge))
+
+        dt
+
+      }else if(ind() == "Top Pathways"  && ges() == 'MSigDB') {
+
+        high_enrich <- res() %>%
+            arrange(desc(NES)) %>%
+            head(n= 5)
+
+        low_enrich <- res() %>%
+          arrange(desc(NES)) %>%
+          tail(n= 5)
+
+        dt <- rbind(high_enrich, low_enrich)
+
+        dt <- select(dt, c("pathway", "leadingEdge"))
+
+
+        dt <- unnest(dt, cols = c(leadingEdge))
+
+        dt
+
+      }else if(ind_2() == "Top Pathways" && ges() == "Custom Gene Set") {
+
+
+
+        dt <- res() %>%
+          select(c("pathway", "leadingEdge"))
+
+
+        dt <- unnest(dt, cols = c(leadingEdge))
+
+        dt
+
+      }
+
+
+
+    })
+
+   
 
     
     # GSEA analysis plot and gene list
     
     observeEvent(input$gsea_run, {
 
-      # #gene list
-# 
-#       output$gene_text <- renderDT({
-# 
-#         req(input$gsea_run)
-#         input$gsea_run
-# 
-#         isolate({
-# 
-#           req(iv$is_valid())
-# 
-#           validate(
-# 
-#             need(input$gsea_samptyp, ''),
-#             need(input$gsea_feat, ''),
-#             need(input$nperm, '')
-#           )
-# 
-# 
-#           if(input$gsea_feat %in% colnames(con_dat())){
-# 
-#             validate(
-# 
-#               need(input$gsea_sel_feat_meta_groups, ''),
-#               need(input$gsea_sel_feat_meta_groups2, '')
-# 
-#             )
-# 
-#           }
-# 
-#           if(input$gsea_feat %in% colnames(con_dat2())){
-# 
-#             validate(
-#               need(input$gsea_high_cutoff, ""),
-#               need(input$gsea_low_cutoff, '')
-#             )
-#           }
-# 
-# 
-#           if(input$gsea_gene_sets == 'MSigDB'){
-# 
-#             validate(
-#               need(input$gsea_cat, '')
-#             )
-#             if (input$individual == "Specific Pathway") {
-#               validate(
-#                 need(input$path, ""))
-#             }
-# 
-#           }
-# 
-# 
-#           if(input$gsea_gene_sets == "Custom Gene Set"){
-# 
-#             validate(need(input$gset_up, ""))
-# 
-#             if (input$individual_2 == "Specific Pathway") {
-#               validate(
-#                 need(input$cre_path, ""))
-#             }
-# 
-#           }
-# 
-# 
-#           leading_genes()
-# 
-# 
-#         })
-# 
-#       })
+     #gene list
+
+      output$gene_text <- renderDT({
+
+        req(input$gsea_run)
+        input$gsea_run
+
+        isolate({
+
+          req(iv$is_valid())
+          req(input$gsea_samptyp)
+          req(input$gsea_feat)
+          req(input$nperm)
+
+          if(input$gsea_feat %in% colnames(con_dat())){
+              req(input$gsea_sel_feat_meta_groups)
+              req(input$gsea_sel_feat_meta_groups2)
+          }
+
+          if(input$gsea_feat %in% colnames(con_dat2())){
+              req(input$gsea_high_cutoff)
+              req(input$gsea_low_cutoff)
+          }
+
+          if(input$gsea_gene_sets == "Custom Gene Set"){
+            
+            req(input$gset_up)
+            
+            if (input$individual_2 == "Specific Pathway") {
+          
+              req(input$cre_path)
+            }
+          }
+            
+            if(input$gsea_gene_sets == 'MSigDB'){
+      
+            req(input$gsea_cat)
+              
+            if(input$gsea_cat %in% c("C2","C3","C4","C5","C7")) {
+                
+                req(input$gsea_subcat)
+                
+              }
+            
+            if (input$individual == "Specific Pathway") {
+
+              req(input$gsea_pathway)
+              
+            }
+            
+          }
+        
+
+          leading_genes()
+          
+
+
+
+        })
+
+      })
 
       
       
@@ -864,15 +880,15 @@ gsea_server <- function(id,Xproj) {
         } 
       )
       
-      # output$download_lead <- downloadHandler(
-      #   filename = "leading_edge_genes.xlsx",
-      #   content = function(file) {
-      #     write.xlsx(leading_genes(), file, colnames = TRUE,
-      #                rownames = F, append = FALSE, showNA = TRUE)
-      # 
-      # 
-      #   }
-      # )
+      output$download_lead <- downloadHandler(
+        filename = "leading_edge_genes.xlsx",
+        content = function(file) {
+          write.xlsx(leading_genes(), file, colnames = TRUE,
+                     rownames = F, append = FALSE, showNA = TRUE)
+
+
+        }
+      )
       
       #plot 
       output$gsea_plot <- renderPlot({
@@ -890,6 +906,8 @@ gsea_server <- function(id,Xproj) {
             need(input$gsea_feat, 'Feature choice is required'),
             need(input$nperm, 'nPerm Value is required')
           )
+          
+          
           
           if(input$gsea_feat %in% colnames(con_dat())){
             
@@ -914,10 +932,12 @@ gsea_server <- function(id,Xproj) {
           if(input$gsea_gene_sets == "Custom Gene Set"){
             
             validate(need(input$gset_up, "Don't forget to upload your xlsx/xls file"))
-            
-            if (input$individual_2 == "Specific Pathway") {
+  
+           
+             if (input$individual_2 == "Specific Pathway") {
               validate(
-                need(input$cre_path, "Pathway choice is required"))
+                need(input$cre_path, "Pathway choice is required")
+                )
             }
           }
           
@@ -925,9 +945,17 @@ gsea_server <- function(id,Xproj) {
             
             validate(need(input$gsea_cat, 'Please select gene set'))
             
+            if(input$gsea_cat %in% c("C2","C3","C4","C5","C7")) {
+              
+              validate(
+                need(input$gsea_subcat, "Subcategory choice is needed"))
+              
+            }
+            
             if (input$individual == "Specific Pathway") {
               validate(
                 need(input$gsea_pathway, "Pathway choice is needed"))
+              
             }
             
           }
