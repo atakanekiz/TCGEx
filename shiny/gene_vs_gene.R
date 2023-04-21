@@ -165,6 +165,23 @@ gene_vs_gene_server <- function(id,Xproj) {
       
       ## input choices for gene selection
       
+    gen_dat <- reactive({
+      
+      Xproj$a() %>%
+        select(!starts_with("meta.")) %>%
+        select(where(is.numeric))
+      
+    })
+      
+    
+    meta_dat <- reactive({
+      
+      Xproj$a() %>%
+        select(starts_with("meta.")) %>%
+        select(where(is.numeric))
+      
+    })
+      
      gvar_x <- reactive(input$gvar_cat_x)
      gvar_y <- reactive(input$gvar_cat_y)
       
@@ -172,15 +189,11 @@ gene_vs_gene_server <- function(id,Xproj) {
         
         if(gvar_x() == "Gene") {
           
-          DF <- Xproj$a() %>%
-            select(!starts_with("meta.")) %>%
-            select(where(is.numeric))
+          DF <- gen_dat()
      
        }else if(gvar_x() == "Meta"){
          
-         DF <- Xproj$a() %>%
-            select(starts_with("meta.")) %>%
-            select(where(is.numeric))
+         DF <- meta_dat()
           
        }
         
@@ -194,16 +207,12 @@ gene_vs_gene_server <- function(id,Xproj) {
         
         if(gvar_y() == "Gene"){
           
-          DF <- Xproj$a() %>%
-            select(!starts_with("meta.")) %>%
-            select(where(is.numeric))
+          DF <- gen_dat()
           
           
         }else if (gvar_y() == "Meta") {
           
-          DF <- Xproj$a() %>%
-            select(starts_with("meta.")) %>%
-            select(where(is.numeric))
+          DF <- meta_dat()
           
         }
         
