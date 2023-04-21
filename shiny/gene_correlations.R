@@ -377,14 +377,22 @@ gene_cor_tb_server <- function(id,Xproj) {
           isolate({
             
             req(iv$is_valid())
+            req(input$genecor_samp2)
+            req(input$p_gene)
+            req(input$top_high)
+            req(input$top_low)
             
-            validate(
-              need(input$genecor_samp2, ''),
-              need(input$p_gene, ''),
-              need(input$top_high, ''),
-              need(input$top_low, '')
-            )
+            # validate(
+            #   need(input$genecor_samp2, ''),
+            #   need(input$p_gene, ''),
+            #   need(input$top_high, ''),
+            #   need(input$top_low, '')
+            # )
+
+       
+             
             
+
             sum(pre_data()[[input$p_gene]] == 0, na.rm = T)})
           
         })
@@ -404,13 +412,18 @@ gene_cor_tb_server <- function(id,Xproj) {
           
           isolate({
             req(iv$is_valid())
-            validate(
-              need(input$genecor_samp2, ''),
-              need(input$p_gene, ''),
-              need(input$top_high, ''),
-              need(input$top_low, '')
-            )
+            req(input$genecor_samp2)
+            req(input$p_gene)
+            req(input$top_high)
+            req(input$top_low)
             
+            # validate(
+            #   need(input$genecor_samp2, ''),
+            #   need(input$p_gene, ''),
+            #   need(input$top_high, ''),
+            #   need(input$top_low, '')
+            # )
+
             "Number of samples where the chosen gene is not expressed"
           })
           
@@ -497,7 +510,17 @@ gene_cor_pl_server <- function(id,Xproj) {
         
         glist <- as.data.frame(read_excel(input$corr_up$datapath, sheet = 1, col_names = F))
         
+        validate(
+          need(
+            {if(length(colnames(glist))== 1) TRUE else FALSE},
+            "This file contains more than 1 columns.Please ensure that your file contains a single column with human gene names"))
+        
         colnames(glist)[1] <- "genes"
+        
+        validate(
+          need(
+            {if(class(glist$genes) == "character")TRUE else FALSE}, 
+            "The column must contain only character input.Please ensure that the column contains only human gene names"))
         
         glist
         

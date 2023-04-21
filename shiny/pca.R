@@ -345,7 +345,17 @@ pca_server <- function(id,Xproj) {
         
         c_gene <- as.data.frame(read_excel(input$pca_up$datapath, sheet = 1, col_names = F))  
         
+        validate(
+          need(
+            {if(length(colnames(c_gene))== 1) TRUE else FALSE},
+            "This file contains more than 1 columns.Please ensure that your file contains a single column with human gene names"))
+        
         colnames(c_gene)[1] <- "genes" 
+        
+        validate(
+          need(
+            {if(class(c_gene$genes) == "character")TRUE else FALSE}, 
+            "The column must contain only character input.Please ensure that the column contains only human gene names"))
         
         c_gene
         
