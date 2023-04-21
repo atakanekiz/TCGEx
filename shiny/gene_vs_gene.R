@@ -32,19 +32,24 @@ gene_vs_gene_ui <- function(id) {
                      choices=NULL,
                      options=list(placeholder = "eg. Primary solid tumor")),
       
-      selectizeInput(
+     radioButtons(ns("gvar_cat_x"), "Please select x variable category", choices = c("Gene", "Meta"), selected = "Gene"),
+      
+       selectizeInput(
         inputId = ns("Gene1"),
-        label = "*Please select Gene-1",
+        label = "*Please select the x axis variable",
         choices = NULL,
-        options=list(placeholder = "eg. TSPAN6")
+        options=list(placeholder = "eg. TSPAN6 or meta.gender")
         
       ),
       
-      selectizeInput(
+     radioButtons(ns("gvar_cat_y"), "Please select y variable category", choices = c("Gene", "Meta"), selected = "Gene"),
+      
+     
+     selectizeInput(
         inputId = ns("Gene2"),
-        label = "*Please select Gene-2",
+        label = "*Please select the x axis variable",
         choices = NULL,
-        options=list(placeholder = "eg. TOX"),
+        options=list(placeholder = "eg. TOX or meta.Histology"),
         
       ),
       
@@ -109,13 +114,15 @@ gene_vs_gene_server <- function(id,Xproj) {
         
         data.frame(
           
-          element = paste0("#", session$ns(c(NA, "genecor_samp + .selectize-control", "Gene1 + .selectize-control ", "Gene2+ .selectize-control ", "notification","genecor_regline", "facet", "formula"))),
+          element = paste0("#", session$ns(c(NA, "genecor_samp + .selectize-control", "gvar_cat_x","Gene1 + .selectize-control ", "gvar_cat_y","Gene2+ .selectize-control ", "notification","genecor_regline", "facet", "formula"))),
           
           intro = paste(c(
             "This is the gene-to-gene visualization module. You can calculate the correlation between two genes and generate scatter plots. Continue with the tutorial to learn features of the module.",
             "You can select the sample type here (eg. primary and/or metastatic). Only the selected subset(s) will be used in the analysis",
-            "Choose a gene for the x-axis of the plot.",
-            "Choose a gene for the y-axis of the plot.",
+            "You can use gene expression data or meta data for x axis of the plot ",
+            "Choose a variable for the x-axis of the plot.",
+            "You can use gene expression data or meta data for y axis of the plot ",
+            "Choose a variable for the y-axis of the plot.",
             "Here, you can select whether or not to show associated metadata when you hover the mouse cursor over data points",
             "You can show or hide the best-fitting line to the data points",
             "Enter a covariate here to plot the correlations in different data subsets (eg. male and female patients).",
@@ -136,31 +143,74 @@ gene_vs_gene_server <- function(id,Xproj) {
       
       
       observe({updateSelectizeInput(session, "genecor_samp",choices = Xproj$a()[["meta.definition"]], server = T)})
-      observe({updateSelectizeInput(session, 'Gene1', choices = colnames(gene_choice()), server = TRUE, selected = "")})
-      observe({updateSelectizeInput(session, 'Gene2', choices = colnames(gene_choice()), server = TRUE, selected = "" )})
-      observe({updateSelectizeInput(session, 'Facet', choices = colnames(facet_choice()), server = TRUE, selected = "")})
+      observe({updateSelectizeInput(session, 'Gene1', choices = gene_choice(), server = TRUE, selected = "")})
+      observe({updateSelectizeInput(session, 'Gene2', choices = gene_choice_2(), server = TRUE, selected = "" )})
+      observe({updateSelectizeInput(session, 'Facet', choices = available_cols_gplot(), server = TRUE, selected = "")})
       
+      ## input choices for facet variable selection 
       
-      ## input choices for facet category selection 
+      # Remove cols which is including more than 10 levels and numeric
       
-      facet_choice <- reactive({
-        
-        Xproj$a() %>% 
-          select(starts_with("meta.")) %>% 
-          select(where(is.factor))
-        
-      })
+      hidden_cols_gplot<-reactive({"meta.definition"})
+
+      meta_cols_gplot <- reactive({colnames(Xproj$a())[grep("^meta\\.", colnames(Xproj$a()))]})
+
+      sel_cols_gplot <- reactive({meta_cols_gplot()[unlist(lapply(Xproj$a()[, meta_cols_gplot(), with = FALSE], function(x) length(levels(x)))) < 10]})
+
+      numeric_cols_gplot <- reactive({unlist(lapply(Xproj$a()[, sel_cols_gplot(), with = FALSE], function(x) is.numeric(x)))})
+
+      available_cols_gplot <- reactive({setdiff(sel_cols_gplot(), c(hidden_cols_gplot(), sel_cols_gplot()[numeric_cols_gplot()]))})
+      
       
       
       ## input choices for gene selection
       
+     gvar_x <- reactive(input$gvar_cat_x)
+     gvar_y <- reactive(input$gvar_cat_y)
+      
       gene_choice <- reactive({
         
-        Xproj$a() %>%
-          select(!starts_with("meta.")) %>% 
-          select(where(is.numeric))
+        if(gvar_x() == "Gene") {
+          
+          DF <- Xproj$a() %>%
+            select(!starts_with("meta.")) %>%
+            select(where(is.numeric))
+     
+       }else if(gvar_x() == "Meta"){
+         
+         DF <- Xproj$a() %>%
+            select(starts_with("meta.")) %>%
+            select(where(is.numeric))
+          
+       }
+        
+          colnames(DF)
         
       })
+      
+      
+      
+      gene_choice_2 <- reactive({
+        
+        if(gvar_y() == "Gene"){
+          
+          DF <- Xproj$a() %>%
+            select(!starts_with("meta.")) %>%
+            select(where(is.numeric))
+          
+          
+        }else if (gvar_y() == "Meta") {
+          
+          DF <- Xproj$a() %>%
+            select(starts_with("meta.")) %>%
+            select(where(is.numeric))
+          
+        }
+        
+        colnames(DF)
+        
+      })
+      
       
       
       
@@ -169,8 +219,6 @@ gene_vs_gene_server <- function(id,Xproj) {
           filter(!is.na(input$Gene1)) %>% 
           filter(!is.na(input$Gene2))
       })
-      
-      
       
       ## to make reactive facet_grid function 
       
@@ -196,8 +244,8 @@ gene_vs_gene_server <- function(id,Xproj) {
             
             validate(
               need(input$genecor_samp, "Choose at least one sample type"),
-              need(input$Gene1, "Choose the first gene"),
-              need(input$Gene2, "Choose the second gene"),
+              need(input$Gene1, "Don't forget to choose a variable for x-axis"),
+              need(input$Gene2, "Don't forget to choose a variable for y-axis"),
             )
             
             if (input$Facet < 0  && input$facet == T ) {
@@ -215,7 +263,7 @@ gene_vs_gene_server <- function(id,Xproj) {
             
             
             
-            {if(input$notification == F) p <- p + geom_point_interactive(aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]))}       
+            {if(input$notification == F) p <- p + geom_point_interactive(aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), color= "blue")}       
             
             
             {if(input$formula) p <- p + stat_cor(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), family = "Arial", size = 7, color = "black", geom = "label")}        

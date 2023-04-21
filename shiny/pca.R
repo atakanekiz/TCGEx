@@ -154,11 +154,9 @@ pca_server <- function(id,Xproj) {
     id,
     function(input, output, session) {
       
-      # browser()
-      
       ## msigdb_database reading
       
-      msigdb_gene_sets =  reactive({readRDS(paste0("genesets/", "msigdb_collections", ".rds"))})
+      msigdb_gene_sets =  reactive({readRDS(paste0("genesets/", "msigdb_long", ".rds"))})
       
       ## help section server
       
@@ -257,36 +255,17 @@ pca_server <- function(id,Xproj) {
       #'[##########################################################################################]
       #'[##########################################################################################]
       
-
-      
-      pca_msigdb_selection <- reactive({
-        
-        
-        ms = msigdb_gene_sets()
-        if(input$pca_cat %in% c("C2","C3","C4","C5","C7")) {
-          
-          pca_m = ms[[input$pca_cat]][[input$pca_subcat]]
-          
-          
-        } else {
-          pca_m = ms[[input$pca_cat]]
-        }
-        
-        pca_m
-        
-      })
-      
       
       observe({
         if(input$pca_cat %in% c("C2","C3","C4","C5","C7")) {
           
-          pca_path = names(table(pca_msigdb_selection()[["gs_name"]]))
+          pca_path = names(msigdb_gene_sets()[[input$pca_cat]][[input$pca_subcat]])
           updateSelectizeInput(session,'pca_pathway', choices = pca_path , server = TRUE)
           
           
         } else {
-        
-          pca_path = names(table(pca_msigdb_selection()[["gs_name"]]))
+          
+          pca_path = names(msigdb_gene_sets()[[input$pca_cat]][[]])
           updateSelectizeInput(session,'pca_pathway', choices = pca_path , server = TRUE)
         }
         
@@ -296,11 +275,18 @@ pca_server <- function(id,Xproj) {
       
       pca_msigdb_genes <- reactive({
         
+        ms = msigdb_gene_sets()
+        if(input$pca_cat %in% c("C2","C3","C4","C5","C7")) {
+          
+          pca_m = data.frame(gene_symbol = ms[[input$pca_cat]][[input$pca_subcat]][[input$pca_pathway]])
+          
+        } else {
+          
+          pca_m = data.frame(gene_symbol = ms[[input$pca_cat]][[]][[input$pca_pathway]])
+          
+        }
         
-        pca_genes <- pca_msigdb_selection() %>% 
-                      filter(gs_name == input$pca_pathway) %>% select(gene_symbol)
-        
-        pca_genes
+        pca_m
         
         })
       
