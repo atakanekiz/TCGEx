@@ -113,7 +113,7 @@ roc_ui <- function(id, label, choices) {
                                                                                         "Oncogenic gene sets (C6)" = "C6",
                                                                                         "Immunologic gene sets (C7)" = "C7",
                                                                                         "Cell type signature gene sets (C8)" = "C8")),
-        conditionalPanel(condition = "input.cate == 'C2'|input.msigdb_setnames_response =='C3'|
+        conditionalPanel(condition = "input.cate == 'C2'|input.cate =='C3'|
                                       input.cate =='C4'|
                                       input.cate =='C5'|
                                       input.cate =='C7' ", ns = ns, 

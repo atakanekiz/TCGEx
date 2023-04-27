@@ -47,20 +47,23 @@ heatmap_ui <- function(id, label, choices) {
       conditionalPanel(
         condition= "input.selectors == 'MSigDB gene sets'",
         ns=ns,
-        selectInput(ns("cat"), "3. Select an MSigDB Collection", 
-                    choices = list(`H: HALLMARK gene sets` = list("H"), 
-                                   `C1: Positional gene sets` = list("C1"),
-                                   `C2: Curated gene sets` = list("CGP", "CP", "CP:BIOCARTA", "CP:KEGG", "CP:PID", "CP:REACTOME", "CP:WIKIPATHWAYS"),
-                                   `C3: Regulatory target gene sets` = list("MIR:MIR_Legacy", "MIR:MIRDB", "TFT:GTRD", "TFT:TFT_Legacy"),
-                                   `C4: Computational gene sets` = list("CGN", "CM"),
-                                   `C5: Ontology gene sets` = list("GO:BP", "GO:CC", "GO:MF", "HPO"),
-                                   `C6: Oncogenic gene sets` = list("C6"),
-                                   `C7: Immunologic gene sets` = list("IMMUNESIGDB", "VAX"),
-                                   `C8: Cell type signature gene sets` = list("C8")
-                                   
-                    )),
-        selectizeInput(ns("chosen_gse"), 
-                       "3.1 Please select a specific gene set", 
+        selectizeInput(ns("cat"), "Please select an MSigDB Collection", choices = c("Hallmark gene sets (H)" = "H",
+                                                                                        "Positional gene sets (C1)" = "C1",
+                                                                                        "Curated gene sets (C2)" = "C2",
+                                                                                        "Regulatory target gene sets (C3)" = "C3",
+                                                                                        "Computational gene sets (C4)" = "C4",
+                                                                                        "Ontology gene sets (C5)" = "C5" ,
+                                                                                        "Oncogenic gene sets (C6)" = "C6",
+                                                                                        "Immunologic gene sets (C7)" = "C7",
+                                                                                        "Cell type signature gene sets (C8)" = "C8")),
+        conditionalPanel(condition = "input.cat == 'C2'|input.cat =='C3'|
+                                      input.cat =='C4'|
+                                      input.cat =='C5'|
+                                      input.cat =='C7' ", ns = ns, 
+                         selectizeInput(ns("heatmap_subcat"),"Please select a subcategory" ,choices = c(""))
+        ),
+        selectizeInput(ns("chosen_gse"), #Automatically updates to show subset.
+                       "Select a specific gene set", 
                        choices = NULL)
       ),
       conditionalPanel(
@@ -240,12 +243,13 @@ heatmap_server <- function(id,Xproj) {
       
       # Reactive selectboxes
       
-      observeEvent(input$cat,{
+      observe({
         req(input$cat)
-        if(length(as.vector(input$selectors)) == "Manually enter gene names"){
-          return()
-        }
-        updateSelectizeInput(session = getDefaultReactiveDomain(),"chosen_gse", choices = gene_sets()$gs_name, selected = character(0) ,server = TRUE)
+        
+        heatmap_subcat = names(heatmap_df_msigdb()[[input$cat]])
+        if (length(heatmap_subcat) > 1)  {
+          updateSelectizeInput(session,'heatmap_subcat', choices = heatmap_subcat , server = TRUE)
+        } 
       })
       
       # observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "selectors", choices = c("Manually enter gene names", "MSigDB gene sets", "Upload a xlsx/xls file"), server = TRUE)})
@@ -255,39 +259,57 @@ heatmap_server <- function(id,Xproj) {
       observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "hm_categorized_gene", choices = colnames(Xproj$a()[, lapply(Xproj$a(), is.numeric) == TRUE, with = FALSE]), selected = character(0), server = TRUE)})
       observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "hm_definition_sel", choices = c(Xproj$a()$meta.definition), selected = character(0), server = TRUE)})
       
-      gene_sets <- reactive({ 
+      heatmap_df_msigdb <- reactive({heatmap_df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))})
+      
+      hm_gene_sets <- reactive({ 
         
-        # Downloading the MSigDB datasets if selected.
+        req(heatmap_df_msigdb())
         
-        if(input$cat %in% c("H", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8")){
+        #Preparation of Human MSigDB genesets.
+        
+        df_msigdb <- heatmap_df_msigdb()
+        
+        if(input$selectors == 'MSigDB gene sets'){
+          
+          if(input$cat %in% c("C2","C3","C4","C5","C7")) {
+            
+            df_msigdb2 = df_msigdb[[input$cat]][[input$heatmap_subcat]]
+            
+          } else {
+            df_msigdb2 = df_msigdb[[input$cat]]
+          }
+          return(df_msigdb2)
+          
+        } else {
           
           return({
-            
-            genset2 <- msigdbr(species = "human", category = input$cat)
-            
-            genset2
-            
+            df_msigdb3 <- NULL
           })
-          
-          
-        } else if(input$cat %in% c("CGP", "CP", "CP:BIOCARTA", "CP:KEGG", "CP:PID", "CP:REACTOME", "CP:WIKIPATHWAYS",
-                                   "MIR:MIR_Legacy", "MIR:MIRDB", "TFT:GTRD", "TFT:TFT_Legacy",
-                                   "CGN", "CM",
-                                   "GO:BP", "GO:CC", "GO:MF", "HPO",
-                                   "IMMUNESIGDB", "VAX")){
-          
-          
-          return({
-            
-            genset3 <- msigdbr(species = "human", category = NULL, subcategory = input$cat)
-            
-            genset3
-            
-          })}
+        }
         
       })
       
       
+      observe({
+        
+        req(heatmap_df_msigdb())
+        
+        req(hm_gene_sets())
+        
+        if(input$cat %in% c("C2","C3","C4","C5","C7")) {
+          
+          
+          heatmap_path = names(hm_gene_sets())
+          updateSelectizeInput(session,'chosen_gse', choices = heatmap_path , server = TRUE)
+          
+        } else {
+          
+          heatmap_path = names(hm_gene_sets()[[1]])
+          updateSelectizeInput(session,'chosen_gse', choices = heatmap_path , server = TRUE)
+        }
+        
+      })
+
       pre_data <- eventReactive(input$heatmap_run, {
         
         # Preparing the preliminary data.
@@ -298,7 +320,7 @@ heatmap_server <- function(id,Xproj) {
             daf1 <- setDT(daf1, key = 'meta.definition')[J(input$hm_definition_sel)]
             daf1
           })
-        } else if (length(as.vector(input$hm_hm_definition_sel)) == 0){
+        } else if (length(as.vector(input$hm_definition_sel)) == 0){
           return({
             daf2 <- Xproj$a()
             daf2
@@ -315,24 +337,37 @@ heatmap_server <- function(id,Xproj) {
         
         if(input$selectors == "MSigDB gene sets"){
           
-          req(gene_sets())
+          req(hm_gene_sets())
           
           req(input$chosen_gse)
+
+          heatmap_df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))
           
-          final_gene_sets <- gene_sets()
+          if(input$cat %in% c("C2","C3","C4","C5","C7")) {
+            
+            heatmap_msigdb_genes <- heatmap_df_msigdb[[input$cat]][[input$heatmap_subcat]][[input$chosen_gse]]
+            
+          } else {
+            
+            heatmap_msigdb_genes <- heatmap_df_msigdb[[input$cat]][[]][[input$chosen_gse]]
+          }
           
-          final_gene_sets <- setDT(final_gene_sets, key = 'gs_name')[J(input$chosen_gse)]
+          #Take the subset of chosen Human MsigDB geneset.
+          
+          final_gene_sets <- heatmap_msigdb_genes
+          
+          # Drop and the Human MsigDB genes which are not in our data.
           
           daf <- as.data.frame(pre_data())
           
           rownames(daf) <- daf$meta.barcode
           
-          same_hallmarks_names = intersect(final_gene_sets$gene_symbol, colnames(daf))
+          same_hallmarks_names = intersect(final_gene_sets, colnames(daf))
           
           selected_cols <- c(same_hallmarks_names)
           
           daf <- daf[,selected_cols]  
-          
+
         } else if(input$selectors == "Manually enter gene names"){
           
           req(input$genes)
