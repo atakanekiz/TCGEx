@@ -733,7 +733,7 @@ km_server <- function(id,Xproj) {
       },
       content = function(file) {
         
-        png(file)
+        png(file, width = 800, height = 600)
         print(val2$pl2)
         dev.off()
         
