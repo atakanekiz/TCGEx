@@ -159,28 +159,28 @@ ui <- dashboardPage(skin = "black",
 
 server <- function(input, output, session) {
   
-  # User React
-  lastInteractionTime <- reactiveVal(NULL)
-  
-  # Update last interaction
-  observeEvent(input, {
-    lastInteractionTime(Sys.time())
-  })
-  
-  # Close app after 5 min without interaction
-  autoCloseApp <- function() {
-    if (!is.null(lastInteractionTime())) {
-      if (as.numeric(difftime(Sys.time(), lastInteractionTime(), units = "secs")) >= 300) {
-        session$close()
-      }
-    }
-  }
-  
-  # Start the timer and constantly check the interaction time  
-  observe({
-    invalidateLater(1000) # Start the timer every 1 second
-    autoCloseApp() # Check Auto Close
-  })
+  # # User React
+  # lastInteractionTime <- reactiveVal(NULL)
+  # 
+  # # Update last interaction
+  # observeEvent(input, {
+  #   lastInteractionTime(Sys.time())
+  # })
+  # 
+  # # Close app after 5 min without interaction
+  # autoCloseApp <- function() {
+  #   if (!is.null(lastInteractionTime())) {
+  #     if (as.numeric(difftime(Sys.time(), lastInteractionTime(), units = "secs")) >= 300) {
+  #       session$close()
+  #     }
+  #   }
+  # }
+  # 
+  # # Start the timer and constantly check the interaction time  
+  # observe({
+  #   invalidateLater(1000) # Start the timer every 1 second
+  #   autoCloseApp() # Check Auto Close
+  # })
   
   Xproj<-reactiveValues()
   
