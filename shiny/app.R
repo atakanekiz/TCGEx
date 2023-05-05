@@ -14,6 +14,9 @@ source("gene_correlations.R")
 
 #Library and Theme
 
+library(tcltk2)
+library(R.utils)
+library(processx)
 library(shinydashboardPlus)
 library(fresh)
 
@@ -52,7 +55,7 @@ ui <- dashboardPage(skin = "black",
                         menuItem("DATA SELECTION",icon = icon("dna"),tabName="select_data"),
                         menuItem("META DATA ANALYSIS",icon = icon("chart-bar"),tabName="gene_vs_cat"),
                         menuItem("KAPLAN-MEIER",icon = icon("disease"),tabName="km"),
-                        menuItem("GENE-GENE CORRELATION",icon = icon("chart-line"),tabName="gene_vs_gene"),
+                        menuItem("CORRELATION ANALYSIS",icon = icon("chart-line"),tabName="gene_vs_gene"),
                         menuItem("HEATMAP",icon = icon("microscope"),tabName="heatmap"),
                         menuItem("CORRELATED GENE TABLE",icon = icon("magnifying-glass"),tabName="gene_cor"),                        
                         menuItem("COXPH",icon = icon("biohazard"),tabName="cox"),
@@ -120,7 +123,7 @@ ui <- dashboardPage(skin = "black",
                                             fluidPage(h1("Receiver Operating Characteristic (ROC) Analysis "),
                                                       roc_ui("module"))),
                                     tabItem(tabName="gene_vs_gene",
-                                            fluidPage(h1("Gene-Gene Correlation Analysis"),
+                                            fluidPage(h1("Correlation Analysis"),
                                                       gene_vs_gene_ui("module"))),
                                     tabItem(tabName="cox",
                                             fluidPage(h1("Cox Proportional Hazards Survival Analysis"),
@@ -159,6 +162,11 @@ ui <- dashboardPage(skin = "black",
 
 server <- function(input, output, session) {
   
+<<<<<<< Updated upstream
+=======
+  
+  
+>>>>>>> Stashed changes
   # # User React
   # lastInteractionTime <- reactiveVal(NULL)
   # 
@@ -176,7 +184,11 @@ server <- function(input, output, session) {
   #   }
   # }
   # 
+<<<<<<< Updated upstream
   # # Start the timer and constantly check the interaction time  
+=======
+  # # Start the timer and constantly check the interaction time
+>>>>>>> Stashed changes
   # observe({
   #   invalidateLater(1000) # Start the timer every 1 second
   #   autoCloseApp() # Check Auto Close
