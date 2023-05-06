@@ -14,9 +14,7 @@ source("gene_correlations.R")
 
 #Library and Theme
 
-library(tcltk2)
-library(R.utils)
-library(processx)
+library(shinyjs)
 library(shinydashboardPlus)
 library(fresh)
 
@@ -70,8 +68,7 @@ ui <- dashboardPage(skin = "black",
                         
                       )
                     ),
-                    dashboardBody(
-                                  tags$head(
+                    dashboardBody(tags$head(
                                     tags$script(src = "https://www.googletagmanager.com/gtag/js?id=G-HWCPP52NZ2"),
                                     tags$script(
                                       HTML(
@@ -153,7 +150,7 @@ ui <- dashboardPage(skin = "black",
                                    ),
                                   dashboardFooter(
                                       includeHTML("footer.html")
-                                      ) 
+                                      )
                                   
                                     
                                   ))
@@ -162,11 +159,6 @@ ui <- dashboardPage(skin = "black",
 
 server <- function(input, output, session) {
   
-<<<<<<< Updated upstream
-=======
-  
-  
->>>>>>> Stashed changes
   # # User React
   # lastInteractionTime <- reactiveVal(NULL)
   # 
@@ -184,11 +176,7 @@ server <- function(input, output, session) {
   #   }
   # }
   # 
-<<<<<<< Updated upstream
   # # Start the timer and constantly check the interaction time  
-=======
-  # # Start the timer and constantly check the interaction time
->>>>>>> Stashed changes
   # observe({
   #   invalidateLater(1000) # Start the timer every 1 second
   #   autoCloseApp() # Check Auto Close
