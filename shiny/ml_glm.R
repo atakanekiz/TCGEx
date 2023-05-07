@@ -204,8 +204,15 @@ regression_sidecontrols <- function(id) {
              )
       )
     ),
+    conditionalPanel(
+      condition = "input.regression_workflow == 'create_model' ", ns = ns,
+      actionButton(ns("run_train"), "Train the model")
+    ),
+    conditionalPanel(
+      condition = "input.regression_workflow == 'ctest_model' ", ns = ns,
+      actionButton(ns("run_traintest"), "Train and test the model")
+    ),
     
-    actionButton(ns("run"), "Run"),
     downloadButton(NS(id,"download_coef"),"Download Coefficients")
     
   )
@@ -214,7 +221,24 @@ regression_sidecontrols <- function(id) {
 ml_ui <- function(id) {
   ns <- NS(id)
   navbarPage(
-    "TCGExplorer ML",
+    HTML("<i class='fas fa-atom'></i> TCGEx ML"),
+    tags$style(HTML("
+  .navbar-default {
+    background-color: #80a1c0; /* Custom blue background color for navbar */
+  }
+  .navbar-default .navbar-brand {
+    color: white; /* White text color for navbarPage title */
+    pointer-events: none; /* Disable all cursor interactions with the title element */
+    margin-right: 24px; /* Add some space between the title and the icon */
+  }
+  .navbar-default .navbar-brand i {
+    float: right; /* Float the icon to the right */
+    margin-left: 10px; /* Add some space between the icon and the title */
+  }
+  .nav.navbar-nav > li > a {
+    color: white; /* White text color for navbar items */
+  }
+")),
     tabPanel(
       "Variable selection",
       sidebarPanel(
@@ -254,7 +278,7 @@ ml_ui <- function(id) {
         width = "60px"),
       
       sidebarPanel(
-        regression_sidecontrols("ml"),          #'[Very smart way of using a function here!!!]
+        regression_sidecontrols("ml"),          
         introjsUI(),
         actionButton(ns("mlregression_help"), "Tutorial"),
         width = 3
@@ -280,7 +304,7 @@ ml_ui <- function(id) {
                  
           ),
           column(3,
-                 dataTableOutput(NS(id,"coef_data"))
+                 DTOutput(NS(id,"coef_data"))
                  
           ),
           column(6,
@@ -308,22 +332,13 @@ ml_ui <- function(id) {
 data_prep_ml_server <- function(id,Xproj) {
   moduleServer(id,function(input,output,session){
     
-    #Response, obtain from msigdb
+   
     ##################
     # msigdb_gene_sets =  reactive({readRDS(paste0("projects/", "msigdb_gene_sets", ".rds"))})
     
     
-    #'[Let's revert back to non-compressed version. We have more space in the server]
-    #'[Please try to see if the gene set object here can be consistent with the other modules (ie using individiual rda's?)]
-    #'[#########################################################################################################################]
-    #'[#########################################################################################################################]
-    #'[#########################################################################################################################]
+    
     msigdb_gene_sets =  reactive({readRDS(paste0("genesets/", "msigdb_collections", ".rds"))})
-    #'[#########################################################################################################################]
-    #'[#########################################################################################################################]
-    #'[#########################################################################################################################]
-    
-    
     
     help_dataprep = reactive({
       
@@ -380,7 +395,7 @@ data_prep_ml_server <- function(id,Xproj) {
       filter(response_msigdb_handler(), gs_name == input$msigdb_gene_set_response ) %>% select(gene_symbol)
     })
     
-    ########################################################3
+    ########################################################
     observe({
       subcat_predictor = names(msigdb_gene_sets()[[input$msigdb_setnames_predictor]])
       if (length(subcat_predictor) > 1)  {
@@ -434,17 +449,7 @@ data_prep_ml_server <- function(id,Xproj) {
         updateSelectizeInput(session,'cibersort_response_var', choices = cibersort_metrics, server = TRUE)
       }
     })
-    
-    
-    
-    #'[#################################################################################################################]      
-    #'[#################################################################################################################]     
-    #'[#################################################################################################################] 
-    
-    
-    
-    
-    
+
     gene_list_selected_df_response <- reactive({as.data.frame(input$gene_list_response)})
     cibersort_list <- reactive({as.data.frame(input$cibersort_response_var)})
     gene_list_selected_df_predictor <- reactive({as.data.frame(input$gene_list_predictor)})
@@ -598,6 +603,8 @@ data_prep_ml_server <- function(id,Xproj) {
 ml_main_server <- function(id,regress_data,Xproj) {
   moduleServer(id,function(input,output,session) {
     
+    #############################################################
+    #################################################HELP(INTRO.)
     help_regression = reactive({
       
       if (input$regression_workflow == "create_model") {
@@ -643,8 +650,11 @@ ml_main_server <- function(id,regress_data,Xproj) {
     observeEvent(input$mlregression_help, {
       introjs(session, options = list(steps = help_regression() ) )
     })
+    #############################################################
     
-    trows <- eventReactive(input$run, {
+    ##########################################################################
+    ################################################################REGRESSION
+    trows <- eventReactive(input$run_traintest, {
       if (input$regression_workflow == "ctest_model") {
         nrowd <- nrow(regress_data())
         set.seed(30)
@@ -652,26 +662,33 @@ ml_main_server <- function(id,regress_data,Xproj) {
         trowsx
       } else {
         NULL
-        
+
       }
     })
     
     
-    cvfit <- eventReactive(input$run, {
+    cvfit <- eventReactive(c(input$run_train, input$run_traintest), {
+      if (input$run_train == 0 && input$run_traintest == 0) {
+        return(NULL) # Do not execute the function if neither button has been clicked
+      }
       if (input$regression_workflow == "create_model") {
         response_var <- as.matrix(select(regress_data(), response)) 
-        predictor_var <-  as.matrix(select(regress_data(), -c("response"))) 
+        predictor_var <-  as.matrix(select(regress_data(), -c("response")))
+        set.seed(7)
         foldid <- sample(1:10,size = length(response_var), replace = TRUE)
-        fitty <- cv.glmnet(predictor_var, response_var, foldid = foldid, alpha = input$user_alpha)
+        fitty <- cv.glmnet(predictor_var, response_var,weights = NULL, foldid = foldid, alpha = input$user_alpha)
       } else if (input$regression_workflow == "ctest_model") {
         train_regress_data <- regress_data()[trows(),]
-        response_var_train <- as.matrix(select(train_regress_data, response)) 
-        predictor_var_train <-  as.matrix(select(train_regress_data, -c("response"))) 
+        response_var_train <- as.matrix(select(train_regress_data, response))
+        predictor_var_train <-  as.matrix(select(train_regress_data, -c("response")))
+        set.seed(7)
         foldid <- sample(1:10,size = length(response_var_train), replace = TRUE)
         fitty <- cv.glmnet(predictor_var_train, response_var_train, foldid = foldid, alpha = input$user_alpha)
-      }
+      } 
       fitty
     })
+    
+    
     
     
     prediction_error <- eventReactive(input$run_prediction, {
@@ -701,58 +718,69 @@ ml_main_server <- function(id,regress_data,Xproj) {
       } else {
         NULL
       }
-    })
+    }) #returns a dataframe
+    #########################################################################
     
     
+    
+    #############################################################
+    ######################################################OUTPUTS
     output$lambda_error_plot <- renderPlot({plot(cvfit(),xvar = "lambda", label = TRUE)})
     
+    
+    #------------------------------------------------------
+
     output$coef_lambda_plot <- renderPlotly({
-      
       fit <- cvfit()$glmnet.fit
       l1se <- cvfit()$lambda.1se
       lmin <- cvfit()$lambda.min
       
-      lam <- fit$lambda %>%
-        as.data.frame() %>%
-        mutate(penalty = fit$a0 %>% names()) %>%
-        dplyr:: rename(lambda = ".")
-      results <- fit$beta %>%
-        as.matrix() %>%
-        as.data.frame() %>%
-        rownames_to_column() %>%
-        gather(penalty, coefficients, -rowname) %>%
-        left_join(lam)
+      lambda_df <- data.frame(lambda = fit$lambda, penalty = names(fit$a0))
       
-      result_labels <- results %>%
-        filter(lambda == min(lambda))
-      g=ggplot() +
-        geom_line(data = results, aes(lambda, coefficients, group = rowname, color = rowname), show.legend = FALSE) +
+      
+      results <- cbind(
+        Transcript = rownames(fit$beta),
+        as.data.frame(as.matrix(fit$beta))
+      ) %>%
+        tidyr::gather(penalty, coefficients, -Transcript) %>%
+        inner_join(lambda_df) 
+      
+      #results = filter(results, Transcript == selected_transcripts)
+      num_groups <- length(unique(results$Transcript))
+
+      # Generate a color palette with the required number of colors using 'Dark2' color scheme
+      color_palette <- colorRampPalette(brewer.pal(8, "Paired"))(num_groups)
+
+      g <- ggplot() +
+        geom_line(data = results, aes(lambda, coefficients, color = Transcript), show.legend = TRUE) +
         scale_x_log10() +
-        geom_text(data = result_labels, aes(lambda, coefficients, label = rowname, color = rowname), nudge_x = .15,nudge_y = 0.0035,
-                  show.legend = FALSE)+
         geom_vline(xintercept = lmin) +
-        geom_vline(xintercept = l1se) 
+        geom_vline(xintercept = l1se) +
+        theme(legend.title = element_blank(), legend.position = 'none') +
+        scale_color_manual(values = color_palette)
       
-      g <- g + theme(legend.title = element_blank())
-      g <- g + theme(legend.position='none')
-      
-      
-      ggplotly(g)
-      
+      plotly::ggplotly(g)
     })
     
-    output$coef_data <- renderDataTable({
+    output$coef_data <- renderDT({
       if(is.null(coef_data())) {
         hide("output")
       } else {
         show("output")
-        return(coef_data())
+        return(
+          datatable(coef_data())
+          
+          )
       }
       
     })
+
     
+    
+    #------------------------------------------------------    
     output$lambda_value_min <- renderText({
-      paste("lambda.min: ", cvfit()$lambda.min) })
+      paste("lambda.min: ", cvfit()$lambda.min)
+      })
     
     output$lambda_value_1se <- renderText({
       paste("lambda.1se: ", cvfit()$lambda.1se)})
@@ -775,6 +803,6 @@ ml_main_server <- function(id,regress_data,Xproj) {
         write.xlsx(coef_data(), file, row.names = TRUE)
       }
     )
-    
+    #############################################################
   })
 }
