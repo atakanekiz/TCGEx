@@ -291,31 +291,95 @@ pca_server <- function(id,Xproj) {
         })
       
       
+      ##NA number
+      
+      gene_cols <- reactive({
+        
+        Xproj$a() %>%
+          select(!starts_with("meta.")) %>%
+          select(where(is.numeric))
+        
+      })
+        
+
+      
+      na_number <- reactive({
+        
+        NA_number <- data.frame(colSums(is.na(gene_cols())))
+        
+        na_miRNA <- NA_number %>% filter(grepl('hsa.', rownames(NA_number)))
+        
+        colnames(na_miRNA)[1] <- "na_numbers"
+        
+        if (length(unique(na_miRNA$na_numbers)) == 1) {
+          
+          na_num = unique(na_miRNA$na_numbers)
+          
+        }else if (length(unique(na_miRNA$na_numbers)) > 1) {
+          
+          na_num = max(unique(na_miRNA$na_numbers))
+          
+        }
+        
+        
+      })
+     
+
+      
       
       ### DATA SELECTION PART
       
       pca_df <- reactive({
         
+        # browser()
+        
+        validate(
+          need(
+            {if(na_number()/nrow(gene_cols())*100 > 15 && input$data %in% c("miRNA", "All genes")) FALSE else TRUE},
+            "There is no enough miRNA data for this project, so please select another option apart from miRNA or All genes"))
         
         
-        gene_cols <- Xproj$a() %>%
-          select(!starts_with("meta.")) %>%
-          select(where(is.numeric))
-        gene_names <- colnames(gene_cols)
         
-        pre_d <- Xproj$a()[meta.definition %in% input$genecor_samp_2, ]
+         pre_d <- Xproj$a()[meta.definition %in% input$genecor_samp_2, ]
         
         # sel_cols <- apply(select(pre_d, all_of(gene_names)), 2, sum)
         
-        pre_d <- pre_d %>% 
-          select(!(any_of(gene_names)& where(~ any(is.na(.x)))))
+         gene_names <- colnames(gene_cols())
        
+        miRNA <- select(gene_cols(),starts_with("hsa.") )
+        
+        RNAseq <- select(gene_cols(),-starts_with("hsa.") )
+        
+        if(input$data == "All genes" ){
+          
+            pre_d <- drop_na(pre_d, colnames(miRNA))%>%
+              select(!(any_of(colnames(RNAseq))& where(~ any(is.na(.x)))))
+          
+          
+        }else if(input$data == "miRNA"){
+          
+          pre_d <- drop_na(pre_d, colnames(miRNA))
+          
+          
+        }else if(input$data == "RNAseq"){
+          
+          pre_d <- drop_na(pre_d, colnames(RNAseq))
+          
+        }
+        
         
         pre_d
+        
+       
+
+        
+        
         
       })
       
       all_genes <- reactive({
+        
+        # req(pca_df())
         
         pc_df <-  pca_df() %>% 
           select(!starts_with("meta.")) %>%
@@ -326,6 +390,8 @@ pca_server <- function(id,Xproj) {
       })
       
       cre_gene <- reactive({
+        
+        # browser()
         
         req(input$pca_up)
         
@@ -343,53 +409,73 @@ pca_server <- function(id,Xproj) {
             {if(class(c_gene$genes) == "character")TRUE else FALSE}, 
             "The column must contain only character input.Please ensure that the column contains only human gene names"))
         
+        
+        control_minumb <- filter(c_gene, grepl("hsa.", genes))
+
+        validate(
+          need(
+            {if(na_number()/nrow(gene_cols())*100 > 15 && nrow(control_minumb)!= 0) FALSE else TRUE},
+            "There is no enough miRNA data for this project, so please remove the genes that starts with 'hsa.'"))
+
         c_gene
         
       })
       
       int_dat <- reactive({
         
+        
+        # req(all_genes())
+        
         if(input$data == "All genes" ){
           
-          return(all_genes())
+           df_pc <- all_genes()
+           
+           
           
         }else if(input$data == "miRNA"){
           
-          return({
+          
             
-            df_mirna <- select(all_genes(), starts_with("hsa."))
+            df_pc <- select(all_genes(), starts_with("hsa."))
             
             
-            df_mirna
-          })
+            
+        
           
           
         }else if(input$data == "RNAseq"){
           
-          return({
+          
             
-            df_rna <- select(all_genes(), !starts_with("hsa."))
+            df_pc <- select(all_genes(), !starts_with("hsa."))
             
-            df_rna
             
-          })
+            
+        
           
         }else if(input$data == "MSigDB Gene Sets"){
           
-          df_pathway <- all_genes()[,intersect(pca_msigdb_genes()[["gene_symbol"]], colnames(all_genes())),with=F]
+          df_pc <- all_genes()[,intersect(pca_msigdb_genes()[["gene_symbol"]], colnames(all_genes())),with=F]
           
-          df_pathway
+          
           
         }else if(input$data == "Custom gene set"){
           # input$data == "Custom gene set" & input$did > 0
           
           
-          df_created <-  all_genes()[,intersect(cre_gene()[["genes"]], colnames(all_genes())),with=F]
+          df_pc <-  all_genes()[,intersect(cre_gene()[["genes"]], colnames(all_genes())),with=F]
           
           
         }
         
+        df_pc
+        
+        
       })
+      
+      
+
+      
       
       ## keep highly variant genes
       
@@ -556,6 +642,7 @@ pca_server <- function(id,Xproj) {
               need(input$palette, 'Please select a color palette'),
             )
             
+            
             if(input$data == "Custom gene set"){
               
               validate(need(input$pca_up, "Please upload your xlsx/xls file"))
@@ -566,6 +653,14 @@ pca_server <- function(id,Xproj) {
               validate("Choose a gene set")
             }
             
+            
+            req(int_dat())
+
+            validate(
+
+              need(
+                {if(nrow(int_dat()) < 2) FALSE else TRUE},
+                "There isn't enough data related to your choice , so please change sample type or try another project"))
             
             pca <- fviz_pca_ind(pc2(), geom.ind = "point", pointshape = 19,
                                 fill.ind = fill(),
