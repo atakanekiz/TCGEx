@@ -9,12 +9,14 @@ library(DT)
 library(ggplot2)
 library(plotly)
 library(shinyjs)
-# library(zstdlite)       #'[Let's try to go back to uncompressed data (more space available in the server)]
 library(readxl)
-
-
-
-
+library(shinyjs) 
+library(shinydashboardPlus) 
+library(fresh) 
+library(RColorBrewer) 
+library(rintrojs)  
+library(shinybusy) 
+# library(zstdlite)
 #Functions
 
 zero_adjuster <-  function(mdata, max_zero_percent, subgroup = "") {
@@ -44,7 +46,9 @@ zero_adjuster <-  function(mdata, max_zero_percent, subgroup = "") {
 dataprepInputControl_UI <- function(id) {
   ns <- NS(id)
   tagList(
-    
+    tags$style(type = 'text/css',
+               ".selectize-input { word-wrap : break-word;} .selectize-input { word-break: break-word;} .selectize-dropdown {word-wrap : break-word;} "
+    ),
     h3("Set up variables for analysis"),
     
     
@@ -69,7 +73,7 @@ dataprepInputControl_UI <- function(id) {
                                                                                                                "Oncogenic gene sets (C6)" = "C6",
                                                                                                                "Immunologic gene sets (C7)" = "C7",
                                                                                                                "Cell type signature gene sets (C8)" = "C8"
-                                                                                                               )),
+                     )),
                      conditionalPanel(condition = "input.msigdb_setnames_response == 'C2'|input.msigdb_setnames_response =='C3'|
                                       input.msigdb_setnames_response =='C4'|
                                       input.msigdb_setnames_response =='C5'|
@@ -112,14 +116,14 @@ dataprepInputControl_UI <- function(id) {
     ),
     conditionalPanel(condition = "input.predictor_prep_method == 'msigdb' ", ns = ns,
                      selectizeInput(NS(id,"msigdb_setnames_predictor"), "MSigDB Human Collections", choices = c("Hallmark gene sets (H1)" = "H",
-                                                                                                               "Positional gene sets (C1)" = "C1",
-                                                                                                               "Curated gene sets (C2)" = "C2",
-                                                                                                               "Regulatory target gene sets (C3)" = "C3",
-                                                                                                               "Computational gene sets (C4)" = "C4",
-                                                                                                               "Ontology gene sets (C5)" = "C5" ,
-                                                                                                               "Oncogenic gene sets (C6)" = "C6",
-                                                                                                               "Immunologic gene sets (C7)" = "C7",
-                                                                                                               "Cell type signature gene sets (C8)" = "C8"
+                                                                                                                "Positional gene sets (C1)" = "C1",
+                                                                                                                "Curated gene sets (C2)" = "C2",
+                                                                                                                "Regulatory target gene sets (C3)" = "C3",
+                                                                                                                "Computational gene sets (C4)" = "C4",
+                                                                                                                "Ontology gene sets (C5)" = "C5" ,
+                                                                                                                "Oncogenic gene sets (C6)" = "C6",
+                                                                                                                "Immunologic gene sets (C7)" = "C7",
+                                                                                                                "Cell type signature gene sets (C8)" = "C8"
                      )),
                      conditionalPanel(condition = "input.msigdb_setnames_predictor == 'C2'|input.msigdb_setnames_predictor =='C3'|
                                       input.msigdb_setnames_predictor =='C4'|
@@ -151,9 +155,9 @@ dataprepInputControl_UI <- function(id) {
                                           title = "The xlsx/xls file should contain a list of gene symbols. Neither matrix/dataframe structure nor named columns are required. If a matrix/dataframe provided, first column will be extracted as a gene list." 
                                         )
                                       ), accept =  c(".xls", ".xlsx") 
-                                                )
+                                      )
                                       
-                                                                            
+                                      
                                       
                      )
     ),
@@ -332,7 +336,7 @@ ml_ui <- function(id) {
 data_prep_ml_server <- function(id,Xproj) {
   moduleServer(id,function(input,output,session){
     
-   
+    
     ##################
     # msigdb_gene_sets =  reactive({readRDS(paste0("projects/", "msigdb_gene_sets", ".rds"))})
     
@@ -379,10 +383,10 @@ data_prep_ml_server <- function(id,Xproj) {
         
         response_m = ms[[input$msigdb_setnames_response]][[input$msigdb_subc_response]]
         gene_sets = names(table(response_m$gs_name))
-
+        
         updateSelectizeInput(session,'msigdb_gene_set_response', choices = gene_sets , server = TRUE)
         response_m
-
+        
       } else {
         response_m = ms[[input$msigdb_setnames_response]]
         gene_sets = names(table(response_m$gs_name))
@@ -449,7 +453,7 @@ data_prep_ml_server <- function(id,Xproj) {
         updateSelectizeInput(session,'cibersort_response_var', choices = cibersort_metrics, server = TRUE)
       }
     })
-
+    
     gene_list_selected_df_response <- reactive({as.data.frame(input$gene_list_response)})
     cibersort_list <- reactive({as.data.frame(input$cibersort_response_var)})
     gene_list_selected_df_predictor <- reactive({as.data.frame(input$gene_list_predictor)})
@@ -566,21 +570,27 @@ data_prep_ml_server <- function(id,Xproj) {
     })
     
     output$response_set <- renderPrint({
-      if(is.null(clean_response_set()$gene_symbol)) {
-        hide("output")
-      } else {
-        show("output")
-        return(clean_response_set()$gene_symbol)
-      }
+      validate(need(clean_response_set()$gene_symbol, "Select response set."))
+      return(clean_response_set()$gene_symbol)
+      
+      # if(is.null(clean_response_set()$gene_symbol)) {
+      #   hide("output")
+      # } else {
+      #   show("output")
+      #   return(clean_response_set()$gene_symbol)
+      # }
     }) 
     
     output$predictor_set <- renderPrint({
-      if(is.null(clean_predictor_set()$gene_symbol)) {
-        hide("output")
-      } else {
-        show("output")
-        return(clean_predictor_set()$gene_symbol)
-      }
+      validate(need(clean_predictor_set()$gene_symbol, "Select predictor set."))
+      return(clean_predictor_set()$gene_symbol)
+      
+      # if(is.null(clean_predictor_set()$gene_symbol)) {
+      #   hide("output")
+      # } else {
+      #   show("output")
+      #   return(clean_predictor_set()$gene_symbol)
+      # }
       
       
     })
@@ -603,7 +613,7 @@ data_prep_ml_server <- function(id,Xproj) {
 ml_main_server <- function(id,regress_data,Xproj) {
   moduleServer(id,function(input,output,session) {
     
-    #############################################################
+    
     #################################################HELP(INTRO.)
     help_regression = reactive({
       
@@ -652,7 +662,7 @@ ml_main_server <- function(id,regress_data,Xproj) {
     })
     #############################################################
     
-    ##########################################################################
+    
     ################################################################REGRESSION
     trows <- eventReactive(input$run_traintest, {
       if (input$regression_workflow == "ctest_model") {
@@ -662,14 +672,14 @@ ml_main_server <- function(id,regress_data,Xproj) {
         trowsx
       } else {
         NULL
-
+        
       }
     })
     
     
     cvfit <- eventReactive(c(input$run_train, input$run_traintest), {
       if (input$run_train == 0 && input$run_traintest == 0) {
-        return(NULL) # Do not execute the function if neither button has been clicked
+        return(NULL) 
       }
       if (input$regression_workflow == "create_model") {
         response_var <- as.matrix(select(regress_data(), response)) 
@@ -718,49 +728,22 @@ ml_main_server <- function(id,regress_data,Xproj) {
       } else {
         NULL
       }
-    }) #returns a dataframe
+    }) 
     #########################################################################
     
     
     
-    #############################################################
+    
     ######################################################OUTPUTS
-    output$lambda_error_plot <- renderPlot({plot(cvfit(),xvar = "lambda", label = TRUE)})
-    
-    
-    #------------------------------------------------------
-
-    output$coef_lambda_plot <- renderPlotly({
-      fit <- cvfit()$glmnet.fit
-      l1se <- cvfit()$lambda.1se
-      lmin <- cvfit()$lambda.min
+    output$lambda_error_plot <- renderPlot({
+      validate(
+        need(input$sample_type_reg, "Choose at least one sample type.")
+      )
+      if(!is.null(cvfit())) {
+        plot(cvfit(),xvar = "lambda", label = TRUE)
+      }
       
-      lambda_df <- data.frame(lambda = fit$lambda, penalty = names(fit$a0))
-      
-      
-      results <- cbind(
-        Transcript = rownames(fit$beta),
-        as.data.frame(as.matrix(fit$beta))
-      ) %>%
-        tidyr::gather(penalty, coefficients, -Transcript) %>%
-        inner_join(lambda_df) 
-      
-      #results = filter(results, Transcript == selected_transcripts)
-      num_groups <- length(unique(results$Transcript))
-
-      # Generate a color palette with the required number of colors using 'Dark2' color scheme
-      color_palette <- colorRampPalette(brewer.pal(8, "Paired"))(num_groups)
-
-      g <- ggplot() +
-        geom_line(data = results, aes(lambda, coefficients, color = Transcript), show.legend = TRUE) +
-        scale_x_log10() +
-        geom_vline(xintercept = lmin) +
-        geom_vline(xintercept = l1se) +
-        theme(legend.title = element_blank(), legend.position = 'none') +
-        scale_color_manual(values = color_palette)
-      
-      plotly::ggplotly(g)
-    })
+      })
     
     output$coef_data <- renderDT({
       if(is.null(coef_data())) {
@@ -770,17 +753,78 @@ ml_main_server <- function(id,regress_data,Xproj) {
         return(
           datatable(coef_data())
           
-          )
+        )
       }
       
     })
-
+    coefholder <- reactive({
+      indexes = input$coef_data_rows_selected
+      pl = rownames(coef_data())
+      coefsel = pl[c(indexes)]
+      coefsel
+      
+    }) 
     
+    ggplot_all_coefs <- reactive({
+      fit <- cvfit()$glmnet.fit
+      lambda_df <- data.frame(lambda = fit$lambda, penalty = names(fit$a0))
+      l1se <- cvfit()$lambda.1se
+      lmin <- cvfit()$lambda.min
+      
+      results <- cbind(
+        Transcript = rownames(fit$beta),
+        as.data.frame(as.matrix(fit$beta))
+      ) %>%
+        tidyr::gather(penalty, coefficients, -Transcript) %>%
+        inner_join(lambda_df)
+      
+      num_groups <- length(unique(results$Transcript))
+      color_palette <- colorRampPalette(brewer.pal(8, "Paired"))(num_groups)
+      
+      g <- ggplot() +
+        geom_line(data = results, aes(log(lambda), coefficients, color = Transcript), show.legend = TRUE) +
+        geom_vline(xintercept = log(lmin)) +
+        geom_vline(xintercept = log(l1se)) +
+        theme(legend.title = element_blank(), legend.position = 'none') +
+        scale_color_manual(values = color_palette)
+      
+      
+      return(list(g = g, results = results))
+    })
     
-    #------------------------------------------------------    
+    output$coef_lambda_plot <- renderPlotly({
+      validate(
+        need(input$sample_type_reg, "Choose at least one sample type.")
+      )
+      if(!is.null(cvfit())) {
+        cfh = coefholder()
+        if (length(cfh) > 0) {
+          
+          results = ggplot_all_coefs()$results
+          r <- results[results$Transcript %in% coefholder(), ]
+          
+          l1se <- cvfit()$lambda.1se
+          lmin <- cvfit()$lambda.min
+          
+          num_groups <- length(unique(r$Transcript))
+          color_palette <- colorRampPalette(brewer.pal(8, "Paired"))(num_groups)
+          g <- ggplot() +
+            geom_line(data = r, aes(log(lambda), coefficients, color = Transcript), show.legend = TRUE) +
+            geom_vline(xintercept = log(lmin)) +
+            geom_vline(xintercept = log(l1se)) +
+            theme(legend.title = element_blank(), legend.position = 'none') +
+            scale_color_manual(values = color_palette)
+          return(plotly::ggplotly(g))
+        }
+        
+        g = ggplot_all_coefs()$g 
+        return(plotly::ggplotly(g))
+      }
+    })
+    
     output$lambda_value_min <- renderText({
       paste("lambda.min: ", cvfit()$lambda.min)
-      })
+    })
     
     output$lambda_value_1se <- renderText({
       paste("lambda.1se: ", cvfit()$lambda.1se)})

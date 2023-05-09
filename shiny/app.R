@@ -111,7 +111,7 @@ ui <- dashboardPage(skin = "black",
                                             fluidPage(h1("Heatmap Analysis "),
                                                       heatmap_ui("module"))),
                                     tabItem(tabName="ml",
-                                            fluidPage(h1("Machine Learning Analysis"),
+                                            fluidPage(
                                                       ml_ui("ml"))),
                                     tabItem(tabName="pca",
                                             fluidPage(h1("Principal Compenent Analysis (PCA)"),
