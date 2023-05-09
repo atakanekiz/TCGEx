@@ -379,6 +379,8 @@ pca_server <- function(id,Xproj) {
       
       all_genes <- reactive({
         
+        browser()
+        
         # req(pca_df())
         
         pc_df <-  pca_df() %>% 
