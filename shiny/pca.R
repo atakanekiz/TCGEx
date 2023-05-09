@@ -333,12 +333,6 @@ pca_server <- function(id,Xproj) {
         
         # browser()
         
-        validate(
-          need(
-            {if(na_number()/nrow(gene_cols())*100 > 15 && input$data %in% c("miRNA", "All genes")) FALSE else TRUE},
-            "There is no enough miRNA data for this project, so please select another option apart from miRNA or All genes"))
-        
-        
         
          pre_d <- Xproj$a()[meta.definition %in% input$genecor_samp_2, ]
         
@@ -381,7 +375,7 @@ pca_server <- function(id,Xproj) {
         
         browser()
         
-        # req(pca_df())
+        req(pca_df())
         
         pc_df <-  pca_df() %>% 
           select(!starts_with("meta.")) %>%
@@ -655,6 +649,10 @@ pca_server <- function(id,Xproj) {
               validate("Choose a gene set")
             }
             
+            validate(
+              need(
+                {if(na_number()/nrow(gene_cols())*100 > 15 && input$data %in% c("miRNA", "All genes")) FALSE else TRUE},
+                "There is no enough miRNA data for this project, so please select another option apart from miRNA or All genes"))
             
             req(int_dat())
 
