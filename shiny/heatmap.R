@@ -576,11 +576,15 @@ heatmap_server <- function(id,Xproj) {
               distfun_col = function(x) as.dist(1 - cor(t(x), method = input$clustering_distance_columns))
             }else{
               distfun_col =  function(x) stats::dist(x, method = input$clustering_distance_columns)}
+
+            mat_data <- mat()
+            
+            mat_data <- mat_data[ , colSums(is.na(mat_data))==0]
             
             hclustfun_row = function(x) stats::hclust(x, method = input$clustering_method_rows)
             hclustfun_col = function(x) stats::hclust(x, method = input$clustering_method_columns)
             
-            heatmap_obj <- heatmaply(mat(), 
+            heatmap_obj <- heatmaply(mat_data, 
                                        fontsize_row = 9 , 
                                        colors = rev(brewer.pal(n= 10, "RdBu")) , 
                                        showticklabels = c(FALSE, TRUE) ,
@@ -614,10 +618,14 @@ heatmap_server <- function(id,Xproj) {
           }else{
             distfun_col =  function(x) stats::dist(x, method = input$clustering_distance_columns)}
           
+          mat_data <- mat()
+          
+          mat_data <- mat_data[ , colSums(is.na(mat_data))==0]
+          
           hclustfun_row = function(x) stats::hclust(x, method = input$clustering_method_rows)
           hclustfun_col = function(x) stats::hclust(x, method = input$clustering_method_columns)
           
-          heatmap_obj <- heatmaply(mat(), 
+          heatmap_obj <- heatmaply(mat_data, 
                                      fontsize_row = 9 , 
                                      col_side_colors = meta(),
                                      colors = rev(brewer.pal(n= 10, "RdBu")) , 
