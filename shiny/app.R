@@ -1,5 +1,4 @@
 #Source
-
 source("select_data.R")
 source("heatmap.R")
 source("ml_glm.R")
@@ -51,15 +50,15 @@ ui <- dashboardPage(skin = "black",
                       sidebarMenu(
                         menuItem("HOMEPAGE",icon = icon("home"),tabName="home"),
                         menuItem("DATA SELECTION",icon = icon("dna"),tabName="select_data"),
-                        menuItem("META DATA ANALYSIS",icon = icon("chart-bar"),tabName="gene_vs_cat"),
                         menuItem("KAPLAN-MEIER",icon = icon("disease"),tabName="km"),
+                        menuItem("COX-PH",icon = icon("biohazard"),tabName="cox"),
+                        menuItem("METADATA ANALYSIS",icon = icon("chart-bar"),tabName="gene_vs_cat"),
                         menuItem("CORRELATION ANALYSIS",icon = icon("chart-line"),tabName="gene_vs_gene"),
-                        menuItem("HEATMAP",icon = icon("microscope"),tabName="heatmap"),
                         menuItem("CORRELATED GENE TABLE",icon = icon("magnifying-glass"),tabName="gene_cor"),                        
-                        menuItem("COXPH",icon = icon("biohazard"),tabName="cox"),
+                        menuItem("HEATMAP",icon = icon("microscope"),tabName="heatmap"),
+                        menuItem("GSEA",icon = icon("chart-line"),tabName="gsea"),
                         menuItem("ROC",icon = icon("capsules"),tabName="roc"),
                         menuItem("PCA",icon = icon("circle-nodes"),tabName="pca"),
-                        menuItem("GSEA",icon = icon("chart-line"),tabName="gsea"),
                         menuItem("MACHINE LEARNING",icon = icon("atom"),tabName="ml"),
                         menuItem("ABOUT",icon = icon("address-card"),tabName="about")
                         
@@ -105,13 +104,13 @@ ui <- dashboardPage(skin = "black",
                                             includeHTML("about.html"),
                                             shinyjs::useShinyjs()),
                                     tabItem(tabName="select_data",
-                                            fluidPage(h1("Please select data"),
+                                            fluidPage(h1("Please select the cancer data"),
                                                       select_data_ui("module"))),
                                     tabItem(tabName="heatmap",
                                             fluidPage(h1("Heatmap Analysis "),
                                                       heatmap_ui("module"))),
                                     tabItem(tabName="ml",
-                                            fluidPage(h1("Machine Learning Analysis"),
+                                            fluidPage(
                                                       ml_ui("ml"))),
                                     tabItem(tabName="pca",
                                             fluidPage(h1("Principal Compenent Analysis (PCA)"),
