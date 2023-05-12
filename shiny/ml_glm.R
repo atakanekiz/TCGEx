@@ -358,6 +358,7 @@ ml_ui <- function(id) {
           ),
           column(3,
                  DTOutput(NS(id,"coef_data")),
+                 hr(),
                  materialSwitch(
                    NS(id,"plot_setting"),
                    label = "Plot selected coefficient(s)",
@@ -752,6 +753,7 @@ ml_main_server <- function(id,regress_data,Xproj) {
     
     
     cvfit <- eventReactive(c(input$run_train, input$run_traintest), {
+      validate(need(input$sample_type_reg, "Choose at least one sample type."))
       if (input$run_train == 0 && input$run_traintest == 0) {
         return(NULL) 
       }
