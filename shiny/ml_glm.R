@@ -1,3 +1,4 @@
+###########
 library(dplyr)
 library(edgeR)
 library(tidyverse)
@@ -16,9 +17,10 @@ library(fresh)
 library(RColorBrewer) 
 library(rintrojs)  
 library(shinybusy) 
+library(shinyWidgets)
 # library(zstdlite)
+############
 #Functions
-
 zero_adjuster <-  function(mdata, max_zero_percent, subgroup = "") {
   
   if (subgroup == "alltranscripts") {
@@ -40,6 +42,58 @@ zero_adjuster <-  function(mdata, max_zero_percent, subgroup = "") {
     available <- names(zerofreq_list[zerofreq_list[] < max_zero_percent])
   } 
   return(as.data.frame(available))
+}
+ggplot_ml_coefvlambda = function(cvfit_glm, all ,predictor_name) {
+  fit <- cvfit_glm$glmnet.fit
+  l1se <- cvfit_glm$lambda.1se
+  lmin <- cvfit_glm$lambda.min
+  
+  lambda_df <- data.frame(lambda = fit$lambda, penalty = names(fit$a0))
+  if (all == TRUE) {
+    
+    results <- cbind(
+      Transcript = rownames(fit$beta),
+      as.data.frame(as.matrix(fit$beta))
+    ) %>%
+      tidyr::gather(penalty, coefficients, -Transcript) %>%
+      inner_join(lambda_df) 
+    
+  } else {
+    results <- cbind(
+      Transcript = rownames(fit$beta),
+      as.data.frame(as.matrix(fit$beta))
+    ) %>%
+      tidyr::gather(penalty, coefficients, -Transcript) %>%
+      inner_join(lambda_df) %>% filter(Transcript %in% c(predictor_name))
+    
+  }
+  num_groups <- length(unique(results$Transcript))
+  
+  color_palette <- colorRampPalette(brewer.pal(8, "Paired"))(num_groups)
+  g <- ggplot() +
+    geom_line(data = results, aes(log(lambda), coefficients, color = Transcript), show.legend = TRUE) +
+    geom_vline(xintercept = log(lmin)) +
+    geom_vline(xintercept = log(l1se)) +
+    theme(legend.title = element_blank(), legend.position = 'none') +
+    scale_color_manual(values = color_palette)
+  
+  return(list('plot' = g))
+}
+ggplot_boxplot_variables <- function(transcript_list, pre_data) {
+  transcript_list = c(transcript_list, "response")
+  predata_melt <- pre_data %>%
+    select(all_of(transcript_list)) %>%
+    gather(key = "Gene", value = "Expression")
+  num_groups <- length(unique(predata_melt$Gene))
+  color_palette <- colorRampPalette(brewer.pal(8, "Paired"))(num_groups)
+  
+  p <- ggplot(predata_melt, aes(x = Gene, y = Expression, fill = Gene)) +
+    geom_boxplot() +
+    stat_summary(fun = mean, geom = "text", label = "*", size = 6, color = "black") +
+    theme_minimal() +
+    theme(legend.position = "none") +
+    scale_fill_manual(values = color_palette)
+  return(p)
 }
 
 #UI 
@@ -140,8 +194,7 @@ dataprepInputControl_UI <- function(id) {
     ),
     conditionalPanel(condition = "input.predictor_prep_method == 'gene_list' ", ns = ns,
                      radioButtons(NS(id,"obtain_predictor"), "Select how to specify genes",c("Type gene names" = "gene_enter",
-                                                                                             "Upload xlsx/xls file" = "txt_upload", 
-                                                                                             "Use all mRNAs available on the selected data(!)" = "allmRNA_aspredictor",
+                                                                                             "Upload xlsx/xls file" = "txt_upload",
                                                                                              "Use all miRNAs available on the selected data" = "allmiRNA_aspredictor")),
                      conditionalPanel(condition = "input.obtain_predictor == 'gene_enter' ", ns = ns,
                                       selectizeInput(NS(id,"gene_list_predictor"),"Select gene(s)", choices = c(""), multiple = TRUE, options=list(placeholder = "FGR, hsa.miR.107, etc. "))
@@ -169,9 +222,6 @@ dataprepInputControl_UI <- function(id) {
   )
 }
 
-#'[Very smart way to set this up as a function!]
-#'[#########################################################################################################################]
-#'   
 regression_sidecontrols <- function(id) {  
   ns <- NS(id)
   tagList(
@@ -222,6 +272,7 @@ regression_sidecontrols <- function(id) {
   )
   
 }
+
 ml_ui <- function(id) {
   ns <- NS(id)
   navbarPage(
@@ -304,17 +355,30 @@ ml_ui <- function(id) {
                    textOutput(NS(id,"model_error"))
                    
                  )
-                 
-                 
           ),
           column(3,
-                 DTOutput(NS(id,"coef_data"))
-                 
+                 DTOutput(NS(id,"coef_data")),
+                 materialSwitch(
+                   NS(id,"plot_setting"),
+                   label = "Plot selected coefficient(s)",
+                   value = TRUE,
+                   status = "primary"
+                 )
           ),
           column(6,
-                 plotlyOutput(NS(id,"coef_lambda_plot")),
+                 conditionalPanel(
+                   condition = "input.plot_setting == true ", ns = ns, 
+                   plotlyOutput(NS(id,"coef_lambda_plot"))
+                   
+                 ),
+                 conditionalPanel(
+                   condition = "input.plot_setting == false ", ns = ns,
+                   plotlyOutput(NS(id,"coef_lambda_plot_some"))
+                   
+                 )
                  
-                 plotOutput(NS(id,"lambda_error_plot"))
+                 
+                 
                  
                  
           )
@@ -322,7 +386,17 @@ ml_ui <- function(id) {
           
           
         ),
-        width = 9
+        fluidRow(
+          column(6,
+                 conditionalPanel(
+                   condition = "input.plot_setting == false ", ns = ns,
+                   plotlyOutput(NS(id,"coef_box_plot"))
+                   
+                 )),
+          column(6, 
+                 plotOutput(NS(id,"lambda_error_plot")))
+        )
+        
         
       )
     )
@@ -330,20 +404,17 @@ ml_ui <- function(id) {
   )
 }
 
-
 #Server Modules
 
 data_prep_ml_server <- function(id,Xproj) {
   moduleServer(id,function(input,output,session){
     
     
-    ##################
-    # msigdb_gene_sets =  reactive({readRDS(paste0("projects/", "msigdb_gene_sets", ".rds"))})
-    
-    
     
     msigdb_gene_sets =  reactive({readRDS(paste0("genesets/", "msigdb_collections", ".rds"))})
     
+    
+    #Help
     help_dataprep = reactive({
       
       data.frame(
@@ -369,12 +440,39 @@ data_prep_ml_server <- function(id,Xproj) {
       introjs(session, options = list(steps = help_dataprep() ) )
     })
     
+    
+    #########Gene names from TCGA data
+    available_genelist <- reactive({zero_adjuster(mdata = Xproj$a(),max_zero_percent = input$max_zero_percent, subgroup = "alltranscripts")})
+    available_cibersort <- reactive({
+      
+      zero_adjuster(mdata = Xproj$a(),max_zero_percent = input$max_zero_percent, subgroup = "cibersort")})
+    #Observers
     observe({
       subcat_response = names(msigdb_gene_sets()[[input$msigdb_setnames_response]])
       if (length(subcat_response) > 1)  {
         updateSelectizeInput(session,'msigdb_subc_response', choices = subcat_response , server = TRUE)
       } 
+      
     })
+    observe({
+      subcat_predictor = names(msigdb_gene_sets()[[input$msigdb_setnames_predictor]])
+      if (length(subcat_predictor) > 1)  {
+        updateSelectizeInput(session,'msigdb_subc_predictor', choices = subcat_predictor , server = TRUE)
+      }
+    })
+    observe({
+      if (!is.null(Xproj$a())) {
+        
+        updateSelectizeInput(session,'sample_type_reg', choices = names(table(Xproj$a()$meta.sample_type)),selected = "", server = TRUE)
+        cibersort_metrics <- available_cibersort()$available
+        genelist <- available_genelist()$available
+        updateSelectizeInput(session,'gene_list_response', choices = genelist, selected = "", server = TRUE)
+        updateSelectizeInput(session, 'gene_list_predictor', choices = genelist,selected = "",server = TRUE)
+        updateSelectizeInput(session,'cibersort_response_var', choices = cibersort_metrics, server = TRUE)
+      }
+    })
+    
+    #msigdb
     
     response_msigdb_handler <- reactive({
       ms = msigdb_gene_sets()
@@ -396,15 +494,9 @@ data_prep_ml_server <- function(id,Xproj) {
     })
     
     response_msigdb_genes <- reactive({
-      filter(response_msigdb_handler(), gs_name == input$msigdb_gene_set_response ) %>% select(gene_symbol)
-    })
-    
-    ########################################################
-    observe({
-      subcat_predictor = names(msigdb_gene_sets()[[input$msigdb_setnames_predictor]])
-      if (length(subcat_predictor) > 1)  {
-        updateSelectizeInput(session,'msigdb_subc_predictor', choices = subcat_predictor , server = TRUE)
-      } 
+      if (!is.null(response_msigdb_handler())) {
+        filter(response_msigdb_handler(), gs_name == input$msigdb_gene_set_response ) %>% select(gene_symbol)
+      }
     })
     
     predictor_msigdb_handler <- reactive({
@@ -427,32 +519,11 @@ data_prep_ml_server <- function(id,Xproj) {
     })
     
     predictor_msigdb_genes <- reactive({
-      filter(predictor_msigdb_handler(), gs_name == input$msigdb_gene_set_predictor ) %>% select(gene_symbol)
-    })
-    
-    
-    # create a list.
-    
-    available_genelist <- reactive({zero_adjuster(mdata = Xproj$a(),max_zero_percent = input$max_zero_percent, subgroup = "alltranscripts")})
-    available_cibersort <- reactive({
-      
-      zero_adjuster(mdata = Xproj$a(),max_zero_percent = input$max_zero_percent, subgroup = "cibersort")}
-      
-    )
-    
-    
-    
-    observe({
-      if (!is.null(Xproj$a())) {
-        
-        updateSelectizeInput(session,'sample_type_reg', choices = names(table(Xproj$a()$meta.sample_type)),selected = "", server = TRUE)
-        cibersort_metrics <- available_cibersort()$available
-        genelist <- available_genelist()$available
-        updateSelectizeInput(session,'gene_list_response', choices = genelist, selected = "", server = TRUE)
-        updateSelectizeInput(session, 'gene_list_predictor', choices = genelist,selected = "",server = TRUE)
-        updateSelectizeInput(session,'cibersort_response_var', choices = cibersort_metrics, server = TRUE)
+      if (!is.null(predictor_msigdb_handler())) {
+        filter(predictor_msigdb_handler(), gs_name == input$msigdb_gene_set_predictor ) %>% select(gene_symbol)
       }
     })
+    
     
     gene_list_selected_df_response <- reactive({as.data.frame(input$gene_list_response)})
     cibersort_list <- reactive({as.data.frame(input$cibersort_response_var)})
@@ -478,19 +549,63 @@ data_prep_ml_server <- function(id,Xproj) {
       }
       if (length(list_r) > 0) {
         colnames(list_r) = "gene_symbol"
+        
       }
-      unique(list_r)
+      
+      list_r = unique(list_r)
+      ########################################
+      
+      genelist <- list_r$gene_symbol
+      is.exist <- genelist %in% colnames(Xproj$a())
+      response_missing <- list_r[which(is.exist == "FALSE"),]
+      
+      if (input$response_prep_method == "cibersort") {
+        clean_response_set <- list_r
+      } else {
+        missing_genes <-  as.vector(response_missing)
+        clean_response_set <- list_r
+        for (i in missing_genes) {
+          clean_response_set <- filter(clean_response_set, gene_symbol != i)
+        }
+      }
+      return(list(c = clean_response_set, r = response_missing))
     })
     
+    output$response_set <- renderPrint({
+      validate(need(response_det()$c$gene_symbol, "Select response set."))
+      
+      clean_response_set = response_det()$c  
+      return(clean_response_set$gene_symbol)
+      
+      # if(is.null(clean_response_set()$gene_symbol)) {
+      #   hide("output")
+      # } else {
+      #   show("output")
+      #   return(clean_response_set()$gene_symbol)
+      # }
+    }) 
     
+    output$validation_message_response <- renderText({
+      response_missing = response_det()$r
+      if (length(response_missing) > 0) {
+        paste("Listed genes are not present in the data and they are removed from the response list:\n",
+              paste(response_missing, collapse = ","))
+      } else {
+        hide("output")
+      }
+    })
+    
+    #
     predictor_det <- reactive({
+      
       if (input$predictor_prep_method == "msigdb") {
         list_p <- predictor_msigdb_genes()
       } else if (input$predictor_prep_method == "gene_list") {
         if (input$obtain_predictor == "gene_enter") {
           list_p <- gene_list_selected_df_predictor()
         } else if (input$obtain_predictor == "allmiRNA_aspredictor") {
-          mir_list <- colnames(select(Xproj$a(),starts_with("hsa")))
+          
+          mir_list <-  available_genelist() %>% filter(startsWith(available,"hsa."))
           list_p <- as.data.frame(mir_list)
           
         } else {
@@ -505,73 +620,29 @@ data_prep_ml_server <- function(id,Xproj) {
       if (length(list_p) > 0) {
         colnames(list_p) <- "gene_symbol"
       }
-      unique(list_p)
-    })
-    
-    predictor_missing <- reactive({
-      genelist <- predictor_det()$gene_symbol
+      list_p = unique(list_p)
+      
+      genelist <- list_p$gene_symbol
       is.exist <- genelist %in% colnames(Xproj$a())
-      predictor_missing <- predictor_det()[which(is.exist == "FALSE"),]
-      predictor_missing
-    })
-    
-    response_missing <- reactive({
-      genelist <- response_det()$gene_symbol
-      is.exist <- genelist %in% colnames(Xproj$a())
-      response_missing <- response_det()[which(is.exist == "FALSE"),]
-      response_missing
-    })
-    output$validation_message_response <- renderText({
-      if (length(response_missing()) > 0) {
-        paste("Listed genes are not present in the data and they are removed from the predictor list:\n",
-              paste(response_missing(), collapse = ","))
+      predictor_missing <- list_p[which(is.exist == "FALSE"),]
+      
+      if (input$predictor_prep_method == "cibersort") {
+        clean_predictor_set <- list_p
       } else {
-        hide("output")
-      }
-    })
-    
-    
-    output$validation_message_predictor <- renderText({
-      if (length(predictor_missing()) > 0) {
-        paste("Listed genes are not present in the data and they are removed from the predictor list:\n",
-              paste(predictor_missing(), collapse = ","))
-      } else {
-        hide("output")
-      }
-    })
-    
-    
-    clean_response_set = reactive({
-      if (input$response_prep_method == "cibersort") {
-        response_det <- response_det()
-      } else {
-        missing_genes <-  as.vector(response_missing())
-        response_det <- response_det()
+        missing_genes <-  as.vector(predictor_missing)
+        clean_predictor_set <- list_p
         for (i in missing_genes) {
-          response_det <- filter(response_det, gene_symbol != i)
+          clean_predictor_set <- filter(clean_predictor_set, gene_symbol != i)
         }
       }
-      response_det
+      return(list(c = clean_predictor_set, r = predictor_missing))
     })
     
-    clean_predictor_set = reactive({
-      missing_genes <- as.vector(predictor_missing())
-      predictor_det <- predictor_det()
+    output$predictor_set <- renderPrint({
+      validate(need(predictor_det()$c$gene_symbol, "Select predictor set."))
       
-      #'[Can't we make this filter function nicer? !%in% would be better]
-      #'[################################################################]
-      for (i in missing_genes) {
-        predictor_det <- filter(predictor_det, gene_symbol != i)
-      }
-      # predictor_det <- filter(predictor_det, ! gene_symbol %in% missing_genes)
-      #'[################################################################]
-      #'
-      predictor_det
-    })
-    
-    output$response_set <- renderPrint({
-      validate(need(clean_response_set()$gene_symbol, "Select response set."))
-      return(clean_response_set()$gene_symbol)
+      clean_predictor_set = predictor_det()$c  
+      return(clean_predictor_set$gene_symbol)
       
       # if(is.null(clean_response_set()$gene_symbol)) {
       #   hide("output")
@@ -581,28 +652,32 @@ data_prep_ml_server <- function(id,Xproj) {
       # }
     }) 
     
-    output$predictor_set <- renderPrint({
-      validate(need(clean_predictor_set()$gene_symbol, "Select predictor set."))
-      return(clean_predictor_set()$gene_symbol)
-      
-      # if(is.null(clean_predictor_set()$gene_symbol)) {
-      #   hide("output")
-      # } else {
-      #   show("output")
-      #   return(clean_predictor_set()$gene_symbol)
-      # }
-      
-      
+    output$validation_message_predictor <- renderText({
+      predictor_missing = predictor_det()$r
+      if (length(predictor_missing) > 0) {
+        paste("Listed genes are not present in the data and they are removed from the predictor list:\n",
+              paste(predictor_missing, collapse = ","))
+      } else {
+        hide("output")
+      }
     })
     
+    
+    
+    
+    
+    #
     reg_data <- reactive({
+      
+      clean_response_set = response_det()$c
+      clean_predictor_set = predictor_det()$c
       
       filtered_data = Xproj$a() %>% filter(meta.sample_type %in% input$sample_type_reg)
       
-      select(filtered_data, clean_response_set()[,1], clean_predictor_set()[,1]) %>%
+      select(filtered_data, clean_response_set[,1], clean_predictor_set[,1]) %>%
         
-        mutate(response = select(., clean_response_set()[,1]) %>% rowMeans()) %>%
-        select(response, clean_predictor_set()[,1]) %>% 
+        mutate(response = select(., clean_response_set[,1]) %>% rowMeans()) %>%
+        select(response, clean_predictor_set[,1]) %>% 
         na.omit()
     })
     
@@ -610,6 +685,7 @@ data_prep_ml_server <- function(id,Xproj) {
     return(reg_data)
   } )
 }
+
 ml_main_server <- function(id,regress_data,Xproj) {
   moduleServer(id,function(input,output,session) {
     
@@ -660,8 +736,6 @@ ml_main_server <- function(id,regress_data,Xproj) {
     observeEvent(input$mlregression_help, {
       introjs(session, options = list(steps = help_regression() ) )
     })
-    #############################################################
-    
     
     ################################################################REGRESSION
     trows <- eventReactive(input$run_traintest, {
@@ -729,21 +803,9 @@ ml_main_server <- function(id,regress_data,Xproj) {
         NULL
       }
     }) 
-    #########################################################################
-    
-    
     
     
     ######################################################OUTPUTS
-    output$lambda_error_plot <- renderPlot({
-      validate(
-        need(input$sample_type_reg, "Choose at least one sample type.")
-      )
-      if(!is.null(cvfit())) {
-        plot(cvfit(),xvar = "lambda", label = TRUE)
-      }
-      
-      })
     
     output$coef_data <- renderDT({
       if(is.null(coef_data())) {
@@ -765,61 +827,49 @@ ml_main_server <- function(id,regress_data,Xproj) {
       
     }) 
     
-    ggplot_all_coefs <- reactive({
-      fit <- cvfit()$glmnet.fit
-      lambda_df <- data.frame(lambda = fit$lambda, penalty = names(fit$a0))
-      l1se <- cvfit()$lambda.1se
-      lmin <- cvfit()$lambda.min
+    
+    coef_lambda_all = reactive({
+      ggplot_ml_coefvlambda(cvfit_glm = cvfit(),all = TRUE)$plot
+    })
+    coef_lambda_some = reactive({
       
-      results <- cbind(
-        Transcript = rownames(fit$beta),
-        as.data.frame(as.matrix(fit$beta))
-      ) %>%
-        tidyr::gather(penalty, coefficients, -Transcript) %>%
-        inner_join(lambda_df)
-      
-      num_groups <- length(unique(results$Transcript))
-      color_palette <- colorRampPalette(brewer.pal(8, "Paired"))(num_groups)
-      
-      g <- ggplot() +
-        geom_line(data = results, aes(log(lambda), coefficients, color = Transcript), show.legend = TRUE) +
-        geom_vline(xintercept = log(lmin)) +
-        geom_vline(xintercept = log(l1se)) +
-        theme(legend.title = element_blank(), legend.position = 'none') +
-        scale_color_manual(values = color_palette)
-      
-      
-      return(list(g = g, results = results))
+      if (length(coefholder() >0)) {
+        ggplot_ml_coefvlambda(cvfit_glm = cvfit(),all = FALSE,predictor_name = coefholder())$plot
+      }
     })
     
+    output$coef_lambda_plot_some <- renderPlotly({
+      validate(
+        need(input$sample_type_reg, "Choose at least one sample type."),
+        need(cvfit(), "Run the analysis.")
+        
+      )
+      coef_lambda_some()
+    })
     output$coef_lambda_plot <- renderPlotly({
+      validate(
+        need(input$sample_type_reg, "Choose at least one sample type."),
+        need(cvfit(), "Run the analysis.")
+        
+      )
+      coef_lambda_all()
+      
+    })
+    
+    output$coef_box_plot = renderPlotly({
+      ggplot_boxplot_variables(coefholder(),regress_data())
+    })
+    
+    
+    ############################################################
+    output$lambda_error_plot <- renderPlot({
       validate(
         need(input$sample_type_reg, "Choose at least one sample type.")
       )
       if(!is.null(cvfit())) {
-        cfh = coefholder()
-        if (length(cfh) > 0) {
-          
-          results = ggplot_all_coefs()$results
-          r <- results[results$Transcript %in% coefholder(), ]
-          
-          l1se <- cvfit()$lambda.1se
-          lmin <- cvfit()$lambda.min
-          
-          num_groups <- length(unique(r$Transcript))
-          color_palette <- colorRampPalette(brewer.pal(8, "Paired"))(num_groups)
-          g <- ggplot() +
-            geom_line(data = r, aes(log(lambda), coefficients, color = Transcript), show.legend = TRUE) +
-            geom_vline(xintercept = log(lmin)) +
-            geom_vline(xintercept = log(l1se)) +
-            theme(legend.title = element_blank(), legend.position = 'none') +
-            scale_color_manual(values = color_palette)
-          return(plotly::ggplotly(g))
-        }
-        
-        g = ggplot_all_coefs()$g 
-        return(plotly::ggplotly(g))
+        plot(cvfit(),xvar = "lambda", label = TRUE)
       }
+      
     })
     
     output$lambda_value_min <- renderText({
