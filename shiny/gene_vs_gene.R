@@ -10,6 +10,7 @@ library(extrafont)
 library(rintrojs)
 library(shinyvalidate)
 library(shinyWidgets)
+library(colourpicker)
 
 gene_vs_gene_ui <- function(id) {
   ns <- NS(id)
@@ -47,27 +48,51 @@ gene_vs_gene_ui <- function(id) {
      
      selectizeInput(
         inputId = ns("Gene2"),
-        label = "*Please select the x axis variable",
+        label = "*Please select the y axis variable",
         choices = NULL,
         options=list(placeholder = "eg. TOX or meta.Histology"),
         
       ),
       
-      conditionalPanel(
-        
-        condition = "input.facet", ns=ns,
-        
-        selectizeInput(
-          inputId = ns("Facet"),
-          label = "Please select faceting variable",
-          choices = NULL,
-          options=list(placeholder = "eg. meta.gender"))
-        
-      ),
+      
+     colourInput(
+       ns("col"), "Please select a color for points of the plot", "black",
+       returnName = TRUE, 
+       palette = "limited",
+       closeOnClick = TRUE), 
+     
+
+     numericInput(inputId = ns("gene_width"), "Choose the width of the plot", min = 1, step = 1, value = 15),
+     numericInput(inputId = ns("gene_height"), "Choose the height of the plot", min = 1, step = 1, value = 9),
+     numericInput(inputId = ns("text_punto"), "Choose the punto of the axis titles", min = 1, step = 1, value = 30),
+    
       
       checkboxInput(ns("notification"), "Show patient information", value = T),
       checkboxInput(ns("genecor_regline"), "Show regression line", value = F),
+      conditionalPanel(
+       
+       condition = "input.genecor_regline", ns=ns,
+       
+       colourInput(
+         ns("col2"), "Please select a color for the regression line", "darkorange1",
+         returnName = TRUE, 
+         palette = "limited",
+         closeOnClick = TRUE)
+       
+     ),
       checkboxInput(ns("facet"), "Add faceting variable", value = F),
+      conditionalPanel(
+       
+       condition = "input.facet", ns=ns,
+       
+       selectizeInput(
+         inputId = ns("Facet"),
+         label = "Please select faceting variable",
+         choices = NULL,
+         options=list(placeholder = "eg. meta.gender"))
+       
+     ),
+     
       checkboxInput(ns("formula"), "Show statistics", value = F),
       actionBttn(inputId = ns("do"), 
                  label = "Generate Correlation Plot",
@@ -75,6 +100,7 @@ gene_vs_gene_ui <- function(id) {
                  block = TRUE,
                  color = "primary"),
       br(),
+     
       #help section UI
       
       introjsUI(),
@@ -140,6 +166,12 @@ gene_vs_gene_server <- function(id,Xproj) {
         
       })
       
+      
+      iv <- InputValidator$new()
+      iv$add_rule("gene_width", ~ if (input$gene_width == 0 & !anyNA(input$gene_width)) "The number must be greater than 0")
+      iv$add_rule("gene_height", ~ if (input$gene_height == 0 & !anyNA(input$gene_height)) "The number must be greater than 0")
+      iv$add_rule("text_punto", ~ if (input$text_punto == 0 & !anyNA(input$text_punto)) "The number must be greater than 0")
+      iv$enable()
       
       
       observe({updateSelectizeInput(session, "genecor_samp",choices = Xproj$a()[["meta.definition"]], server = T)})
@@ -233,9 +265,54 @@ gene_vs_gene_server <- function(id,Xproj) {
       
       facet_cat <- reactive({paste("~", input$Facet)})
       
+      down_width <- reactive({paste(".", input$download_width)})
+      
+      
+      
       
       ## ggiraph package is used to form interactive graph from ggplot 2 
       
+      
+      gene_graph <- reactive({
+        
+        dataset = df()
+        
+        p = ggplot(data = dataset) 
+        
+        {if(input$notification == T) p <- p + geom_point_interactive(aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), color= input$col,
+                                                                     tooltip = paste0( "Gender: ",dataset[["meta.gender"]] , "<br/>",
+                                                                                       "Patient ID: ", dataset[["meta.patient"]], "<br/>",
+                                                                                       "Race: ", dataset[["meta.race"]]))}
+        
+        
+        
+        {if(input$notification == F) p <- p + geom_point_interactive(aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), color= input$col)}       
+        
+        
+        {if(input$formula) p <- p + stat_cor(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), family = "Arial", size = 7, color = input$col, geom = "label")}        
+        
+        {if(input$genecor_regline) p <- p + stat_smooth(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), method = "lm", color = input$col2)}   
+        
+        {if(input$facet) p <- p + facet_wrap(facet_cat(), labeller = as_labeller(dataset, default=label_wrap_gen(16)), scales = "free_y")+ 
+            
+            theme(aspect.ratio = 1)}   
+        
+        p <- p + theme_bw(base_size = 16)
+        
+        p <- p + theme(text=element_text(family="Arial", face="bold", size=input$text_punto))
+        
+        girafe(ggobj = p, 
+               width_svg = input$gene_width , height_svg = input$gene_height,
+               options = list(
+                 opts_sizing(rescale = TRUE, width = 0.15),
+                 opts_hover_inv(css = "opacity:0.1;"),
+                 opts_zoom(max = 5)
+               )
+               
+        )
+        
+        
+      })
       
       
       observeEvent(input$do, {
@@ -251,58 +328,28 @@ gene_vs_gene_server <- function(id,Xproj) {
           
           isolate({
             
+            req(iv$is_valid())
+            
             validate(
               need(input$genecor_samp, "Choose at least one sample type"),
               need(input$Gene1, "Don't forget to choose a variable for x-axis"),
               need(input$Gene2, "Don't forget to choose a variable for y-axis"),
+              need(input$gene_width, "Don't forget to choose the width of the plot"),
+              need(input$gene_height, "Don't forget to choose the height of the plot"),
+              need(input$text_punto, "Don't forget to choose the punto of the axis titles")
             )
             
             if (input$Facet < 0  && input$facet == T ) {
               validate("Choose a faceting parameter")
             }
             
-            dataset = df()
-            
-            p = ggplot(data = dataset) 
-            
-            {if(input$notification == T) p <- p + geom_point_interactive(aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]),
-                                                                         tooltip = paste0( "Gender: ",dataset[["meta.gender"]] , "<br/>",
-                                                                                           "Patient ID: ", dataset[["meta.patient"]], "<br/>",
-                                                                                           "Race: ", dataset[["meta.race"]]))}
-            
-            
-            
-            {if(input$notification == F) p <- p + geom_point_interactive(aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), color= "blue")}       
-            
-            
-            {if(input$formula) p <- p + stat_cor(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), family = "Arial", size = 7, color = "black", geom = "label")}        
-            
-            {if(input$genecor_regline) p <- p + stat_smooth(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), method = "lm", color = "#ff5317")}   
-            
-            {if(input$facet) p <- p + facet_wrap(facet_cat(), labeller = as_labeller(dataset, default=label_wrap_gen(16)), scales = "free_y")+ 
-                
-                theme(aspect.ratio = 1)}   
-            
-            p <- p + theme_bw(base_size = 16)
-            
-            p <- p + theme(text=element_text(family="Arial", face="bold", size=30),
-                           plot.title = element_text(color="black", face="bold.italic", hjust = 0.5),
-                           strip.text.x = element_text(size = 20))
-            
-            girafe(ggobj = p, 
-                   width_svg = 15 , height_svg = 9,
-                   options = list(
-                     opts_sizing(rescale = TRUE, width = .15),
-                     opts_hover_inv(css = "opacity:0.1;"),
-                     
-                     opts_zoom(max = 5)
-                   )
-                   
-            )
+            gene_graph()
             
           })
           
         })
+        
+
         
       })
       

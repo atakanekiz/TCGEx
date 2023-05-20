@@ -163,6 +163,8 @@ gsea_ui <- function(id, label, choices) {
           
         ),
         
+        numericInput(inputId = ns("gsea_width"), "Choose the width of the plot to download", min = 100, step = 10, value = 480),
+        numericInput(inputId = ns("gsea_height"), "Choose the height of the plot to download", min = 100, step = 10, value = 480),
         
         
         actionBttn(inputId = ns("gsea_run"), 
@@ -276,6 +278,7 @@ gsea_server <- function(id,Xproj) {
     
     nperm_iv <- InputValidator$new()
     nperm_iv$add_rule("nperm", ~ if (input$nperm < 1000 & !anyNA(input$nperm)) "nPerm Value must be greater than or equal to 1000")
+    
     
     iv <- InputValidator$new()
     iv$add_validator(panel_iv)
@@ -814,6 +817,8 @@ gsea_server <- function(id,Xproj) {
           req(input$gsea_samptyp)
           req(input$gsea_feat)
           req(input$nperm)
+          req(input$gsea_width)
+          req(input$gsea_height)
 
           if(input$gsea_feat %in% colnames(con_dat())){
               req(input$gsea_sel_feat_meta_groups)
@@ -904,7 +909,9 @@ gsea_server <- function(id,Xproj) {
             
             need(input$gsea_samptyp, 'Please select at least one sample type'),
             need(input$gsea_feat, 'Feature choice is required'),
-            need(input$nperm, 'nPerm Value is required')
+            need(input$nperm, 'nPerm Value is required'), 
+            need(input$gsea_width, 'Please pick a number although you will not download the plot'),
+            need(input$gsea_height, 'Please pick a number although you will not download the plot')
           )
           
           
@@ -975,7 +982,7 @@ gsea_server <- function(id,Xproj) {
         },
         content = function(file) {
           
-          png(file)
+          png(file, width = input$gsea_width, height = input$gsea_height)
           print(gsea_plot())
           dev.off()
           

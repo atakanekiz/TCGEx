@@ -406,12 +406,20 @@ pca_server <- function(id,Xproj) {
             "The column must contain only character input.Please ensure that the column contains only human gene names"))
         
         
-        control_minumb <- filter(c_gene, grepl("hsa.", genes))
-
-        validate(
-          need(
-            {if(na_number()/nrow(gene_cols())*100 > 15 && nrow(control_minumb)!= 0) FALSE else TRUE},
-            "There is no enough miRNA data for this project, so please remove the genes that starts with 'hsa.'"))
+        if(na_number()/nrow(gene_cols())*100 > 15) {
+          
+          c_gene <- filter(c_gene, !grepl("hsa.", genes))
+          
+        }
+        
+        if(na_number()/nrow(gene_cols())*100 > 15) {
+          
+          showNotification("genes which starts with 'hsa.' were removed because there is no enough miRNA data ", 
+                           duration = 7, 
+                           closeButton = T, 
+                           type= "message")
+          
+        }
 
         c_gene
         
@@ -419,6 +427,7 @@ pca_server <- function(id,Xproj) {
       
       int_dat <- reactive({
         
+        browser()
         
         # req(all_genes())
         
@@ -616,7 +625,10 @@ pca_server <- function(id,Xproj) {
       
       #prcomp
       
-      pc2<- reactive(prcomp(p_dat(), center = input$center, scale. = input$scale))
+      pc2<- reactive({
+        browser()
+        a <- prcomp(p_dat(), center = input$center, scale. = input$scale)
+        a })
       
       #scatting plot 
       
@@ -655,7 +667,7 @@ pca_server <- function(id,Xproj) {
 
               need(
                 {if(nrow(int_dat()) < 2) FALSE else TRUE},
-                "There isn't enough data related to your choice , so please change sample type or try another project"))
+                "There isn't enough data related to your choice , so please change input genes, sample type or try another project"))
             
             pca <- fviz_pca_ind(pc2(), geom.ind = "point", pointshape = 19,
                                 fill.ind = fill(),
