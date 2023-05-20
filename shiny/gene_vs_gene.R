@@ -64,7 +64,7 @@ gene_vs_gene_ui <- function(id) {
 
      numericInput(inputId = ns("gene_width"), "Choose the width of the plot", min = 1, step = 1, value = 15),
      numericInput(inputId = ns("gene_height"), "Choose the height of the plot", min = 1, step = 1, value = 9),
-     numericInput(inputId = ns("text_punto"), "Choose the punto of the axis titles", min = 1, step = 1, value = 30),
+     numericInput(inputId = ns("text_size"), "Choose the size of the axis titles", min = 1, step = 1, value = 30),
     
       
       checkboxInput(ns("notification"), "Show patient information", value = T),
@@ -170,7 +170,7 @@ gene_vs_gene_server <- function(id,Xproj) {
       iv <- InputValidator$new()
       iv$add_rule("gene_width", ~ if (input$gene_width == 0 & !anyNA(input$gene_width)) "The number must be greater than 0")
       iv$add_rule("gene_height", ~ if (input$gene_height == 0 & !anyNA(input$gene_height)) "The number must be greater than 0")
-      iv$add_rule("text_punto", ~ if (input$text_punto == 0 & !anyNA(input$text_punto)) "The number must be greater than 0")
+      iv$add_rule("text_size", ~ if (input$text_size == 0 & !anyNA(input$text_size)) "The number must be greater than 0")
       iv$enable()
       
       
@@ -299,7 +299,7 @@ gene_vs_gene_server <- function(id,Xproj) {
         
         p <- p + theme_bw(base_size = 16)
         
-        p <- p + theme(text=element_text(family="Arial", face="bold", size=input$text_punto))
+        p <- p + theme(text=element_text(family="Arial", face="bold", size=input$text_size))
         
         girafe(ggobj = p, 
                width_svg = input$gene_width , height_svg = input$gene_height,
@@ -336,7 +336,7 @@ gene_vs_gene_server <- function(id,Xproj) {
               need(input$Gene2, "Don't forget to choose a variable for y-axis"),
               need(input$gene_width, "Don't forget to choose the width of the plot"),
               need(input$gene_height, "Don't forget to choose the height of the plot"),
-              need(input$text_punto, "Don't forget to choose the punto of the axis titles")
+              need(input$text_size, "Don't forget to choose the size of the axis titles")
             )
             
             if (input$Facet < 0  && input$facet == T ) {
