@@ -427,7 +427,6 @@ pca_server <- function(id,Xproj) {
       
       int_dat <- reactive({
         
-        browser()
         
         # req(all_genes())
         
@@ -625,10 +624,7 @@ pca_server <- function(id,Xproj) {
       
       #prcomp
       
-      pc2<- reactive({
-        browser()
-        a <- prcomp(p_dat(), center = input$center, scale. = input$scale)
-        a })
+      pc2<- reactive({prcomp(p_dat(), center = input$center, scale. = input$scale)})
       
       #scatting plot 
       
