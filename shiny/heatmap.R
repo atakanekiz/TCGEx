@@ -1,5 +1,4 @@
 # Load the packages
-
 library(pheatmap)
 library(shiny)
 library(RColorBrewer)
@@ -28,18 +27,18 @@ heatmap_ui <- function(id, label, choices) {
     sidebarPanel(
       selectizeInput(inputId =ns("hm_definition_sel"), 
                      multiple=T,
-                     label = "1. Select sample types",
+                     label = "Select sample types",
                      choices=NULL, # will be updated dynamically
                      options=list(placeholder = "eg. Primary solid tumor")),
       selectizeInput(inputId = ns("selectors"),
-                     label= "2. Choose how you would like to select genes to be shown",
+                     label= "Choose how you would like to select genes to be shown",
                      choices = c("Manually enter gene names", "MSigDB gene sets", "Upload a xlsx/xls file"),
                      multiple = FALSE),
       conditionalPanel(
         condition = "input.selectors == 'Manually enter gene names'",
         ns=ns,
         selectizeInput(inputId = ns("genes"),
-                       label= "3. Type gene names",
+                       label= "Type gene names",
                        choices = NULL,
                        multiple = TRUE,
                        options=list(placeholder = "eg. TSPAN6, TNMD etc."))
@@ -48,14 +47,14 @@ heatmap_ui <- function(id, label, choices) {
         condition= "input.selectors == 'MSigDB gene sets'",
         ns=ns,
         selectizeInput(ns("cat"), "Please select an MSigDB Collection", choices = c("Hallmark gene sets (H)" = "H",
-                                                                                        "Positional gene sets (C1)" = "C1",
-                                                                                        "Curated gene sets (C2)" = "C2",
-                                                                                        "Regulatory target gene sets (C3)" = "C3",
-                                                                                        "Computational gene sets (C4)" = "C4",
-                                                                                        "Ontology gene sets (C5)" = "C5" ,
-                                                                                        "Oncogenic gene sets (C6)" = "C6",
-                                                                                        "Immunologic gene sets (C7)" = "C7",
-                                                                                        "Cell type signature gene sets (C8)" = "C8")),
+                                                                                    "Positional gene sets (C1)" = "C1",
+                                                                                    "Curated gene sets (C2)" = "C2",
+                                                                                    "Regulatory target gene sets (C3)" = "C3",
+                                                                                    "Computational gene sets (C4)" = "C4",
+                                                                                    "Ontology gene sets (C5)" = "C5" ,
+                                                                                    "Oncogenic gene sets (C6)" = "C6",
+                                                                                    "Immunologic gene sets (C7)" = "C7",
+                                                                                    "Cell type signature gene sets (C8)" = "C8")),
         conditionalPanel(condition = "input.cat == 'C2'|input.cat =='C3'|
                                       input.cat =='C4'|
                                       input.cat =='C5'|
@@ -71,7 +70,7 @@ heatmap_ui <- function(id, label, choices) {
         ns=ns,
         fileInput(ns("heatmap_csv"), 
                   label = tags$span(
-                    "3. Please upload your xlsx/xls file.", 
+                    "Please upload your xlsx/xls file.", 
                     tags$i(
                       class = "glyphicon glyphicon-info-sign", 
                       style = "color:#0072B2;",
@@ -80,7 +79,12 @@ heatmap_ui <- function(id, label, choices) {
                   accept = c(".xls", ".xlsx"),
                   multiple = FALSE)
       ),
-      
+      radioButtons(inputId = ns("scale_by_row_column"),
+                   label = "Scale by row or column",
+                   c("Row" = "row", 
+                     "Column" = "column",
+                     "None" = "none"),
+                   selected = "none"),
       sliderInput(inputId = ns("variable"),
                   label = "Variation filter (Keep top n% variable genes)",
                   min = 0, max = 100, value = 100
@@ -89,17 +93,22 @@ heatmap_ui <- function(id, label, choices) {
       span(style="color:#3382FF",
            
            selectizeInput(ns("annotation"), 
-                          "4. Please select annotation variables (optional)", 
+                          "Please select annotation variables (optional)", 
                           choices = NULL,
                           multiple = TRUE,
                           options=list(placeholder = "eg. meta.definition, meta.LYMPHOCYTE.SCORE etc.")),
            selectizeInput(ns("hm_categorized_gene"), 
-                          "5. Please select a gene/genes to be categorized as high/low (optional)", 
+                          "Please select a gene/genes to be categorized as high/low (optional)", 
                           choices = NULL,
                           multiple = TRUE,
                           options=list(placeholder = "eg. TSPAN6, TNMD etc."))
            
       ),
+      radioButtons(inputId = ns("hm_gene_categorization_button"),
+                   label = "Choose if you would like to categorize genes as high/low separately or by taking the median.",
+                   c("Take the median of of all genes and calculate high/low values" = "take_median",
+                     "Calculate as high/low separately" = "take_separately"),
+                   selected = "take_separately"),
       
       selectizeInput(inputId = ns("clustering_distance_rows"), 
                      multiple=F,
@@ -309,7 +318,7 @@ heatmap_server <- function(id,Xproj) {
         }
         
       })
-
+      
       pre_data <- eventReactive(input$heatmap_run, {
         
         # Preparing the preliminary data.
@@ -340,7 +349,7 @@ heatmap_server <- function(id,Xproj) {
           req(hm_gene_sets())
           
           req(input$chosen_gse)
-
+          
           heatmap_df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))
           
           if(input$cat %in% c("C2","C3","C4","C5","C7")) {
@@ -367,7 +376,7 @@ heatmap_server <- function(id,Xproj) {
           selected_cols <- c(same_hallmarks_names)
           
           daf <- daf[,selected_cols]  
-
+          
         } else if(input$selectors == "Manually enter gene names"){
           
           req(input$genes)
@@ -426,12 +435,21 @@ heatmap_server <- function(id,Xproj) {
         
         # When you have several variables to examine over multiple scales, the scale() function makes more sense. 
         # One variable, for example, is of magnitude 100, whereas another is of magnitude 1000.
-        
-        daf <- scale(daf, scale = FALSE)
+        # if(input$scale_by_row == TRUE){
+        #   
+        # daf <- scale(daf, scale = FALSE)
+        ## scaling will be done in heatmaply from now on, scale function is not needed anymore
         
         daf <- as.matrix(daf)
         
         daf <- t(daf)
+        
+        # } else if (input$scale_by_row == FALSE){
+        #   
+        #   daf <- as.matrix(daf)
+        # 
+        # daf <- t(daf)
+        # }
       })
       
       meta <- eventReactive(input$heatmap_run, {
@@ -460,20 +478,45 @@ heatmap_server <- function(id,Xproj) {
             
             meta <- as.data.table(meta)
             
-            meta <- meta[, hm_categorized_gene_means := rowMeans(.SD, na.rm = TRUE), .SDcols = c(hm_categorized_gene)]  
-            
-            cat_gene_median <-  median(meta$hm_categorized_gene_means, na.rm = TRUE)
-            
-            meta <- meta[,c(hm_categorized_gene):=NULL]
-            
-            meta <- as.data.frame(meta)
-            
-            meta <- meta %>% 
-              mutate(hm_categorized_gene_high_low = case_when(
-                meta$hm_categorized_gene_means > cat_gene_median ~ "high",
-                meta$hm_categorized_gene_means < cat_gene_median ~ "low"
-              )) %>% 
-              select(-hm_categorized_gene_means)
+            if (input$hm_gene_categorization_button == "take_median"){
+              
+              if (length(as.vector(input$hm_categorized_gene)) == 1){
+                
+                setnames(meta, "meta", "hm_categorized_gene_means")
+                
+              } else {
+                
+                meta <- meta[, hm_categorized_gene_means := rowMeans(.SD, na.rm = TRUE), .SDcols = c(hm_categorized_gene)]  
+                
+              }
+              
+              
+              cat_gene_median <-  median(meta$hm_categorized_gene_means, na.rm = TRUE)
+              
+              meta <- meta[,c(hm_categorized_gene):=NULL]
+              
+              meta <- as.data.frame(meta)
+              
+              meta <- meta %>% 
+                mutate(hm_categorized_gene_high_low = case_when(
+                  meta$hm_categorized_gene_means > cat_gene_median ~ "high",
+                  meta$hm_categorized_gene_means < cat_gene_median ~ "low"
+                )) %>% 
+                select(-hm_categorized_gene_means)
+              
+            } else if (input$hm_gene_categorization_button == "take_separately"){
+              
+              dat <- meta
+              
+              for (i in input$hm_categorized_gene) {
+                
+                meta[, (i) := ifelse(dat[[i]] >= median(dat[[i]], na.rm = T), "high", ifelse(dat[[i]] < median(dat[[i]], na.rm = T), "low", "mid"))]
+                
+              }
+              
+              return(meta <- as.data.frame(meta))
+              
+            }
             
           })} else if (length(as.vector(input$annotation)) > 0 & length(as.vector(input$hm_categorized_gene)) == 0){
             
@@ -511,29 +554,65 @@ heatmap_server <- function(id,Xproj) {
               
               meta <- as.data.table(meta)
               
-              if (length(as.vector(input$hm_categorized_gene)) == 1){
+              if (input$hm_gene_categorization_button == "take_median"){
                 
-                setnames(meta, "meta", "hm_categorized_gene_means")
+                if (length(as.vector(input$hm_categorized_gene)) == 1){
+                  
+                  setnames(meta, "meta", "hm_categorized_gene_means")
+                  
+                } else {
+                  
+                  meta <- meta[, hm_categorized_gene_means := rowMeans(.SD, na.rm = TRUE), .SDcols = c(hm_categorized_gene)]  
+                  
+                }
                 
-              } else {
                 
-                meta <- meta[, hm_categorized_gene_means := rowMeans(.SD, na.rm = TRUE), .SDcols = c(hm_categorized_gene)]  
+                cat_gene_median <-  median(meta$hm_categorized_gene_means, na.rm = TRUE)
                 
+                meta <- meta[,c(hm_categorized_gene):=NULL]
+                
+                meta <- as.data.frame(meta)
+                
+                meta <- meta %>% 
+                  mutate(hm_categorized_gene_high_low = case_when(
+                    meta$hm_categorized_gene_means > cat_gene_median ~ "high",
+                    meta$hm_categorized_gene_means < cat_gene_median ~ "low"
+                  )) %>% 
+                  select(-hm_categorized_gene_means)
+                
+              } else if (input$hm_gene_categorization_button == "take_separately"){
+                
+                if (length(as.vector(input$hm_categorized_gene)) == 1){
+                  
+                  setnames(meta, "meta", "hm_categorized_gene_means")
+                  
+                  cat_gene_median <-  median(meta$hm_categorized_gene_means, na.rm = TRUE)
+                  
+                  meta <- meta[,c(hm_categorized_gene):=NULL]
+                  
+                  meta <- as.data.frame(meta)
+                  
+                  meta <- meta %>% 
+                    mutate(hm_categorized_gene_high_low = case_when(
+                      meta$hm_categorized_gene_means > cat_gene_median ~ "high",
+                      meta$hm_categorized_gene_means < cat_gene_median ~ "low"
+                    )) %>% 
+                    select(-hm_categorized_gene_means)
+                  
+                } else{
+                  
+                  dat <- meta
+                  
+                  for (i in input$hm_categorized_gene) {
+                    
+                    meta[, (i) := ifelse(dat[[i]] >= median(dat[[i]], na.rm = T), "high", ifelse(dat[[i]] < median(dat[[i]], na.rm = T), "low", "mid"))]
+                    
+                  }
+                  
+                  return(meta <- as.data.frame(meta))
+                  
+                } 
               }
-              
-              
-              cat_gene_median <-  median(meta$hm_categorized_gene_means, na.rm = TRUE)
-              
-              meta <- meta[,c(hm_categorized_gene):=NULL]
-              
-              meta <- as.data.frame(meta)
-              
-              meta <- meta %>% 
-                mutate(hm_categorized_gene_high_low = case_when(
-                  meta$hm_categorized_gene_means > cat_gene_median ~ "high",
-                  meta$hm_categorized_gene_means < cat_gene_median ~ "low"
-                )) %>% 
-                select(-hm_categorized_gene_means)
               
               
             })} else if (length(as.vector(input$annotation)) == 0 & length(as.vector(input$hm_categorized_gene)) == 0){
@@ -576,7 +655,7 @@ heatmap_server <- function(id,Xproj) {
               distfun_col = function(x) as.dist(1 - cor(t(x), method = input$clustering_distance_columns))
             }else{
               distfun_col =  function(x) stats::dist(x, method = input$clustering_distance_columns)}
-
+            
             mat_data <- mat()
             
             mat_data <- mat_data[ , colSums(is.na(mat_data))==0]
@@ -585,14 +664,15 @@ heatmap_server <- function(id,Xproj) {
             hclustfun_col = function(x) stats::hclust(x, method = input$clustering_method_columns)
             
             heatmap_obj <- heatmaply(mat_data, 
-                                       fontsize_row = 9 , 
-                                       colors = rev(brewer.pal(n= 10, "RdBu")) , 
-                                       showticklabels = c(FALSE, TRUE) ,
-                                       distfun_row = distfun_row,
-                                       distfun_col = distfun_col,
-                                       hclustfun_row = hclustfun_row,
-                                       hclustfun_col = hclustfun_col,
-                                       plot_method = "plotly")
+                                     fontsize_row = 9 , 
+                                     colors = rev(brewer.pal(n= 10, "RdBu")) , 
+                                     showticklabels = c(FALSE, TRUE) ,
+                                     distfun_row = distfun_row,
+                                     distfun_col = distfun_col,
+                                     hclustfun_row = hclustfun_row,
+                                     hclustfun_col = hclustfun_col,
+                                     scale = input$scale_by_row_column,
+                                     plot_method = "plotly")
           })
         } else {
           
@@ -626,16 +706,17 @@ heatmap_server <- function(id,Xproj) {
           hclustfun_col = function(x) stats::hclust(x, method = input$clustering_method_columns)
           
           heatmap_obj <- heatmaply(mat_data, 
-                                     fontsize_row = 9 , 
-                                     col_side_colors = meta(),
-                                     colors = rev(brewer.pal(n= 10, "RdBu")) , 
-                                     showticklabels = c(FALSE, TRUE) ,
-                                     distfun_row = distfun_row,
-                                     distfun_col = distfun_col,
-                                     hclustfun_row = hclustfun_row,
-                                     hclustfun_col = hclustfun_col,
-                                     plot_method = "plotly")
-      }})
+                                   fontsize_row = 9 , 
+                                   col_side_colors = meta(),
+                                   colors = rev(brewer.pal(n= 10, "RdBu")) , 
+                                   showticklabels = c(FALSE, TRUE) ,
+                                   distfun_row = distfun_row,
+                                   distfun_col = distfun_col,
+                                   hclustfun_row = hclustfun_row,
+                                   hclustfun_col = hclustfun_col,
+                                   scale = input$scale_by_row_column,
+                                   plot_method = "plotly")
+        }})
       
       output$heatmap_plot <- renderPlotly({
         
@@ -648,15 +729,13 @@ heatmap_server <- function(id,Xproj) {
       })
       
       
+      ## Since it is plotly object, it will be downloaded in hml format.
+      
       output$downloadPlot6 <- downloadHandler(
-        filename = function() {
-          paste("Heatmap_plot.png")
-        },
+        filename = function() {'heatmap.html'},
         content = function(file) {
           
-          png(file)
-          print(heatmap_object())
-          dev.off()
+          htmlwidgets::saveWidget(as_widget(heatmap_object()), file)
           
         })
       
