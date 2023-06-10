@@ -50,22 +50,52 @@ gene_vs_gene_ui <- function(id) {
         inputId = ns("Gene2"),
         label = "*Please select the y axis variable",
         choices = NULL,
-        options=list(placeholder = "eg. TOX or meta.Histology"),
+        options=list(placeholder = "eg. TOX or meta.Histology")
         
       ),
-      
-      
-     colourInput(
-       ns("col"), "Please select a color for points of the plot", "black",
-       returnName = TRUE, 
-       palette = "limited",
-       closeOnClick = TRUE), 
      
-
-     numericInput(inputId = ns("gene_width"), "Choose the width of the plot", min = 1, step = 1, value = 15),
+     span(style="color:#3382FF",
+          
+          selectizeInput(
+            inputId = ns("Gene3"),
+            label = "*Please select a gene to classify the patients by size (optional)",
+            choices = NULL,
+            options=list(placeholder = "eg. WNT")
+            
+                 )
+          
+          ), 
+     
+     
+     span(style="color:#3382FF",
+          
+          selectizeInput(
+            inputId = ns("Gene4"),
+            label = "*Please select a gene to classify the patients by transparency (optional)",
+            choices = NULL,
+            options=list(placeholder = "eg. BRCA2")
+            
+               )
+          
+          ), 
+     
+     
+     span(style="color:#3382FF",
+          
+          selectizeInput(
+            inputId = ns("Gene5"),
+            label = "*Please select a gene to classify the patients by color (optional)",
+            choices = NULL,
+            options=list(placeholder = "eg. MYC")
+            
+             )
+          
+          ),
+     
+     numericInput(inputId = ns("gene_width"), "Choose the width of the plot", min = 1, step = 1, value = 18),
      numericInput(inputId = ns("gene_height"), "Choose the height of the plot", min = 1, step = 1, value = 9),
-     numericInput(inputId = ns("text_size"), "Choose the size of the axis titles", min = 1, step = 1, value = 30),
-    
+     numericInput(inputId = ns("text_size"), "Choose the text size", min = 1, step = 1, value = 25),
+   
       
       checkboxInput(ns("notification"), "Show patient information", value = T),
       checkboxInput(ns("genecor_regline"), "Show regression line", value = F),
@@ -177,6 +207,9 @@ gene_vs_gene_server <- function(id,Xproj) {
       observe({updateSelectizeInput(session, "genecor_samp",choices = Xproj$a()[["meta.definition"]], server = T)})
       observe({updateSelectizeInput(session, 'Gene1', choices = gene_choice(), server = TRUE, selected = "")})
       observe({updateSelectizeInput(session, 'Gene2', choices = gene_choice_2(), server = TRUE, selected = "" )})
+      observe({updateSelectizeInput(session, 'Gene3', choices = colnames(gen_dat()), server = TRUE, selected = "")})
+      observe({updateSelectizeInput(session, 'Gene4', choices = colnames(gen_dat()), server = TRUE, selected = "" )})
+      observe({updateSelectizeInput(session, 'Gene5', choices = colnames(gen_dat()), server = TRUE, selected = "")})
       observe({updateSelectizeInput(session, 'Facet', choices = available_cols_gplot(), server = TRUE, selected = "")})
       
       ## input choices for facet variable selection 
@@ -197,7 +230,8 @@ gene_vs_gene_server <- function(id,Xproj) {
       
       ## input choices for gene selection
       
-    gen_dat <- reactive({
+      
+  gen_dat <- reactive({
       
       Xproj$a() %>%
         select(!starts_with("meta.")) %>%
@@ -279,17 +313,17 @@ gene_vs_gene_server <- function(id,Xproj) {
         
         p = ggplot(data = dataset) 
         
-        {if(input$notification == T) p <- p + geom_point_interactive(aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), color= input$col,
+        {if(input$notification == T) p <- p + geom_point_interactive(aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]],size= dataset[[input$Gene3]], alpha= dataset[[input$Gene4]],color = dataset[[input$Gene5]],
                                                                      tooltip = paste0( "Gender: ",dataset[["meta.gender"]] , "<br/>",
                                                                                        "Patient ID: ", dataset[["meta.patient"]], "<br/>",
-                                                                                       "Race: ", dataset[["meta.race"]]))}
+                                                                                       "Race: ", dataset[["meta.race"]])))}
         
         
         
-        {if(input$notification == F) p <- p + geom_point_interactive(aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), color= input$col)}       
+        {if(input$notification == F) p <- p + geom_point_interactive(aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]], alpha= dataset[[input$Gene3]]), size= dataset[[input$Gene4]], color = dataset[[input$Gene5]])}       
         
         
-        {if(input$formula) p <- p + stat_cor(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), family = "Arial", size = 7, color = input$col, geom = "label")}        
+        {if(input$formula) p <- p + stat_cor(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), family = "Arial", size = 7, geom = "label")}        
         
         {if(input$genecor_regline) p <- p + stat_smooth(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), method = "lm", color = input$col2)}   
         
@@ -298,6 +332,16 @@ gene_vs_gene_server <- function(id,Xproj) {
             theme(aspect.ratio = 1)}   
         
         p <- p + theme_bw(base_size = 16)
+        
+        legend_title1 <- input$Gene3
+        legend_title2 <- input$Gene4
+        legend_title3 <- input$Gene5
+        
+        p <- p + scale_size(legend_title1, range = c(1, 10))
+        
+        p <- p + scale_alpha_continuous(legend_title2, range = c(0.1, 1))
+        
+        p <- p + scale_colour_continuous(legend_title3, type = getOption("ggplot2.continuous.colour"))
         
         p <- p + theme(text=element_text(family="Arial", face="bold", size=input$text_size))
         
@@ -336,7 +380,7 @@ gene_vs_gene_server <- function(id,Xproj) {
               need(input$Gene2, "Don't forget to choose a variable for y-axis"),
               need(input$gene_width, "Don't forget to choose the width of the plot"),
               need(input$gene_height, "Don't forget to choose the height of the plot"),
-              need(input$text_size, "Don't forget to choose the size of the axis titles")
+              need(input$text_size, "Don't forget to choose the text size")
             )
             
             if (input$Facet < 0  && input$facet == T ) {
