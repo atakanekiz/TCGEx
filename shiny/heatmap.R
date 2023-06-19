@@ -8,8 +8,10 @@ library(heatmaply)
 library(dplyr)
 library(shinyWidgets)
 library(rintrojs)
+library(readxl)
 
 # Define UI for application that draws a histogram
+
 heatmap_ui <- function(id, label, choices) {
   ns <- NS(id)
   tagList(
@@ -25,80 +27,111 @@ heatmap_ui <- function(id, label, choices) {
     sidebarPanel(
       selectizeInput(inputId =ns("hm_definition_sel"), 
                      multiple=T,
-                     label = "1. Select sample types",
+                     label = "Select sample types",
                      choices=NULL, # will be updated dynamically
                      options=list(placeholder = "eg. Primary solid tumor")),
       selectizeInput(inputId = ns("selectors"),
-                     label= "2. Choose if you would like to examine your own geneset or Human MSigDB genesetsi or upload an csv file including your genes of interest.",
-                     choices = NULL,
+                     label= "Choose how you would like to select genes to be shown",
+                     choices = c("Manually enter gene names", "MSigDB gene sets", "Upload a xlsx/xls file"),
                      multiple = FALSE),
       conditionalPanel(
-        condition = "input.selectors == 'Create Gene Set'",
+        condition = "input.selectors == 'Manually enter gene names'",
         ns=ns,
         selectizeInput(inputId = ns("genes"),
-                       label= "3. Choose genes to create your gene set",
+                       label= "Type gene names",
                        choices = NULL,
                        multiple = TRUE,
                        options=list(placeholder = "eg. TSPAN6, TNMD etc."))
       ),
       conditionalPanel(
-        condition= "input.selectors == 'Human MSigDB Gene sets'",
+        condition= "input.selectors == 'MSigDB gene sets'",
         ns=ns,
-        selectInput(ns("cat"), "3. Please select a Human MSigDB Collection", 
-                    choices = list(`Gene Sets` = list("H", "C1", "C6", "C8"),
-                                   `C2 Subcategories` = list("CGP", "CP", "CP:BIOCARTA", "CP:KEGG", "CP:PID", "CP:REACTOME", "CP:WIKIPATHWAYS"),
-                                   `C3 Subcategories` = list("MIR:MIR_Legacy", "MIR:MIRDB", "TFT:GTRD", "TFT:TFT_Legacy"),
-                                   `C4 Subcategories` = list("CGN", "CM"),
-                                   `C5 Subcategories` = list("GO:BP", "GO:CC", "GO:MF", "HPO"),
-                                   `C7 Subcategories` = list("IMMUNESIGDB", "VAX")
-                                   
-                    )),
-        selectizeInput(ns("chosen_gse"), 
-                       "3.1 Please select the subset of your chosen Human MSigDB Collection", 
+        selectizeInput(ns("cat"), "Please select an MSigDB Collection", choices = c("Hallmark gene sets (H)" = "H",
+                                                                                    "Positional gene sets (C1)" = "C1",
+                                                                                    "Curated gene sets (C2)" = "C2",
+                                                                                    "Regulatory target gene sets (C3)" = "C3",
+                                                                                    "Computational gene sets (C4)" = "C4",
+                                                                                    "Ontology gene sets (C5)" = "C5" ,
+                                                                                    "Oncogenic gene sets (C6)" = "C6",
+                                                                                    "Immunologic gene sets (C7)" = "C7",
+                                                                                    "Cell type signature gene sets (C8)" = "C8")),
+        conditionalPanel(condition = "input.cat == 'C2'|input.cat =='C3'|
+                                      input.cat =='C4'|
+                                      input.cat =='C5'|
+                                      input.cat =='C7' ", ns = ns, 
+                         selectizeInput(ns("heatmap_subcat"),"Please select a subcategory" ,choices = c(""))
+        ),
+        selectizeInput(ns("chosen_gse"), #Automatically updates to show subset.
+                       "Select a specific gene set", 
                        choices = NULL)
       ),
       conditionalPanel(
-        condition = "input.selectors == 'Upload a csv File'",
+        condition = "input.selectors == 'Upload a xlsx/xls file'",
         ns=ns,
         fileInput(ns("heatmap_csv"), 
-                  label = "3. Please upload your csv file.",
+                  label = tags$span(
+                    "Please upload your xlsx/xls file.", 
+                    tags$i(
+                      class = "glyphicon glyphicon-info-sign", 
+                      style = "color:#0072B2;",
+                      title = "The xlsx/xls file should contain two unnamed columns: the first column should contain the gene set name, and the second column should contain gene names. Each gene should be associated with a gene set (ie. no missing data), and multiple gene sets can be provided in one file."
+                    )),
+                  accept = c(".xls", ".xlsx"),
                   multiple = FALSE)
       ),
-      
+      radioButtons(inputId = ns("scale_by_row_column"),
+                   label = "Scale by row or column",
+                   c("Row" = "row", 
+                     "Column" = "column",
+                     "None" = "none"),
+                   selected = "none"),
       sliderInput(inputId = ns("variable"),
-                               label = "Only Show Top Variable Genes",
-                  min = 0, max = 1, value = 0
+                  label = "Variation filter (Keep top n% variable genes)",
+                  min = 0, max = 100, value = 100
       ),
-  
-      selectizeInput(ns("annotation"), 
-                     "4. Please select annotation variables (optional)", 
-                     choices = NULL,
-                     multiple = TRUE,
-                     options=list(placeholder = "eg. meta.definition, meta.LYMPHOCYTE.SCORE etc.")),
-      selectizeInput(ns("hm_categorized_gene"), 
-                     "5. Please select a gene/genes to be categorized as high/low (optional)", 
-                     choices = NULL,
-                     multiple = TRUE,
-                     options=list(placeholder = "eg. TSPAN6, TNMD etc.")),
-      p("Click 'Create Heatmap' button in the bottom of the page each time after a parameter is changed."),
+      
+      span(style="color:#3382FF",
+           
+           selectizeInput(ns("annotation"), 
+                          "Please select annotation variables (optional)", 
+                          choices = NULL,
+                          multiple = TRUE,
+                          options=list(placeholder = "eg. meta.definition, meta.LYMPHOCYTE.SCORE etc.")),
+           selectizeInput(ns("hm_categorized_gene"), 
+                          "Please select a gene/genes to be categorized as high/low (optional)", 
+                          choices = NULL,
+                          multiple = TRUE,
+                          options=list(placeholder = "eg. TSPAN6, TNMD etc."))
+           
+      ),
+      radioButtons(inputId = ns("hm_gene_categorization_button"),
+                   label = "Choose if you would like to categorize genes as high/low separately or by taking the median.",
+                   c("Take the median of of all genes and calculate high/low values" = "take_median",
+                     "Calculate as high/low separately" = "take_separately"),
+                   selected = "take_separately"),
+      
       selectizeInput(inputId = ns("clustering_distance_rows"), 
                      multiple=F,
-                     label = "choose the distance method for rows",
+                     label = "Choose the distance calculation method for genes",
                      choices=c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall")),
+      
       selectizeInput(inputId = ns("clustering_distance_columns"), 
                      multiple=F,
-                     label = "Choose the distance method for columns",
+                     label = "Choose the distance calculation method for samples",
                      choices=c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall")),
+      
       
       selectizeInput(inputId = ns("clustering_method_rows"), 
                      multiple=F,
-                     label = "Choose the clustering method for rows",
-                     choices=c("ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid")),
+                     label = "Choose the clustering method for genes",
+                     choices=c("ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid", "ward.D")),
+      
       
       selectizeInput(inputId = ns("clustering_method_columns"), 
                      multiple=F,
-                     label = "Choose the clustering method for columns",
-                     choices=c("ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid")),
+                     label = "Choose the clustering method for samples",
+                     choices=c("ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid", "ward.D")),
+      
       actionBttn(inputId = ns("heatmap_run"), 
                  label = "Create Heatmap",
                  style = "unite",
@@ -134,52 +167,74 @@ heatmap_server <- function(id,Xproj) {
       
       heatmap_help_tutorial <- reactive({
         
-        if(input$selectors == "Create Gene Set"){
+        if(input$selectors == "Manually enter gene names"){
           
           return(
             data.frame(
               
-              element = paste0("#", session$ns(c(NA, "hm_definition_sel + .selectize-control", "selectors + .selectize-control ", "genes + .selectize-control", "variable + .selectize-control", "annotation + .selectize-control ", "hm_categorized_gene + .selectize-control", "cluster_rows + .selectize-control", "clustering_distance_rows + .selectize-control", "clustering_distance_columns + .selectize-control", "clustering_method_rows + .selectize-control", "clustering_method_columns + .selectize-control"))),
+              element = paste0("#", session$ns(c(NA, "hm_definition_sel + .selectize-control", "selectors + .selectize-control ", "genes + .selectize-control", "variable + .selectize-control", "annotation + .selectize-control ", "hm_categorized_gene + .selectize-control",
+                                                 "clustering_distance_rows + .selectize-control", "clustering_distance_columns + .selectize-control", "clustering_method_rows + .selectize-control", "clustering_method_columns + .selectize-control"))),
               
               intro = paste(c(
-                "This is the Heatmap Generator App, press the buttons to learn features of the app.",
-                "You can choose one or more than one tumor types to create a plot including certain tumor types.",
-                "You can either create your own gene set or choose genesets from the Human MSigDB Collections.",
-                "Here, you can create your own geneset to observe on the heatmap.",
-                "Only Show Top Variable Genes: If this toggle is on, only the top differentially expressed genes will be filtered and shown on the heatmap.",
-                "You can add categorical annotation parameters here.",
-                "You can choose gene or genes to take its expression value. For the selected gene, patients with lower expression value than the median will be taken as 'low' while patients with higher expression value will be taken as 'high' on the heatmap.",
-                "Cluster the rows: 
-                Cluster the columns: ",
-                "Desired distance methods for rows can be chosen.",
-                "Desired distance methods for columns can be chosen.",
-                "Clustering methods for rows can be chosen.",
-                "Clustering methods for columns can be chosen."
-                ))
+                "This is the heatmap module where you can visualize expression patterns of selected genes. Continue the tutorial to learn how to use this module",
+                "You can select sample types to focus the analysis on the specific subsets.",
+                "Here you can choose how you would like to select genes for the plot",
+                "You can manually type genes of interest here (for other input possibilities, go back to the previous selection box)",
+                "Next, you can apply a variance filter to keep only highly variable genes in the plot. 100 (default) means no filter is applied. If you like to see top 10% variable genes only, set this value to 10. Such filtering can help see more informative genes.",
+                "You can select categorical clinical meta data features to show as annotations on top of the heatmap.",
+                "You can also create an annotation bar by categorizing the patients based on their gene expression levels. You can specify one or more genes here. When multiple genes are entered, their average is calculated. Patients are categorized as 'high' and 'low' according to the median gene expression value",
+                "You can choose how the distance will be calculated for genes here",
+                "You can choose how the distance will be calculated for samples here",
+                "You can choose different hierarchical clustering methods for genes here",
+                "You can choose different hierarchical clustering methods for samples here"
+              ))
             )
           )
-        } else {
+        } else if (input$selectors == "MSigDB gene sets") {
           return(
             
             data.frame(
               
-              element = paste0("#", session$ns(c(NA, "hm_definition_sel + .selectize-control", "selectors + .selectize-control ", "cat + .selectize-control", "chosen_gse + .selectize-control", "variable + .selectize-control", "annotation + .selectize-control ", "hm_categorized_gene + .selectize-control", "cluster_rows + .selectize-control", "clustering_distance_rows + .selectize-control", "clustering_distance_columns + .selectize-control", "clustering_method_rows + .selectize-control", "clustering_method_columns + .selectize-control"))),
+              element = paste0("#", session$ns(c(NA, "hm_definition_sel + .selectize-control", "selectors + .selectize-control ", "cat + .selectize-control", "chosen_gse + .selectize-control", "variable + .selectize-control", "annotation + .selectize-control ", "hm_categorized_gene + .selectize-control", 
+                                                 "clustering_distance_rows + .selectize-control", "clustering_distance_columns + .selectize-control", "clustering_method_rows + .selectize-control", "clustering_method_columns + .selectize-control"))),
               
               intro = paste(c(
-                "This is the Heatmap Generator App, press the buttons to learn features of the app.",
-                "You can choose one or more than one tumor types to create a plot including certain tumor types.",
-                "You can either create your own gene set or choose genesets from the Human MSigDB Collections.",
-                "Here you can choose between different Human MSigDB Collections and their subcategories.",
-                "Each Human MSigDB Collection and subcategory have different sets in it. Here you can filter between those sets. Plot is not created untill these sets are chosen.",
-                "Only Show Top Variable Genes: If this toggle is on, only the top differentially expressed genes will be filtered and shown on the heatmap.",
-                "You can add categorical annotation parameters here.",
-                "You can choose gene or genes to take its expression value. For the selected gene, patients with lower expression value than the median will be taken as 'low' while patients with higher expression value will be taken as 'high' on the heatmap.",
-                "Cluster the rows: 
-                Cluster the columns: ",
-                "Desired distance methods for rows can be chosen.",
-                "Desired distance methods for columns can be chosen.",
-                "Clustering methods for rows can be chosen.",
-                "Clustering methods for columns can be chosen."
+                "This is the heatmap module where you can visualize expression patterns of selected genes. Continue the tutorial to learn how to use this module",
+                "You can select sample types to focus the analysis on the specific subsets.",
+                "Here you can choose how you would like to select genes for the plot",
+                "If MSigDB is selected, you can specify the main MSigDB collection you are interested in here. The next selection box will allow you to select a particular gene set",
+                "When plotting gene sets from MSigDB, you can specify the particular gene set here.",
+                "Next, you can apply a variance filter to keep only highly variable genes in the plot. 100 (default) means no filter is applied. If you like to see top 10% variable genes only, set this value to 10. Such filtering can help see more informative genes.",
+                "You can select categorical clinical meta data features to show as annotations on top of the heatmap.",
+                "You can also create an annotation bar by categorizing the patients based on their gene expression levels. You can specify one or more genes here. When multiple genes are entered, their average is calculated. Patients are categorized as 'high' and 'low' according to the median gene expression value",
+                "You can choose how the distance will be calculated for genes here",
+                "You can choose how the distance will be calculated for samples here",
+                "You can choose different hierarchical clustering methods for genes here",
+                "You can choose different hierarchical clustering methods for samples here"
+              ))
+            )
+            
+          )
+        } else if (input$selectors == "Upload a xlsx/xls file"){
+          return(
+            
+            data.frame(
+              
+              element = paste0("#", session$ns(c(NA, "hm_definition_sel + .selectize-control", "selectors + .selectize-control ", "heatmap_csv + .selectize-control", "variable + .selectize-control", "annotation + .selectize-control ", "hm_categorized_gene + .selectize-control", 
+                                                 "clustering_distance_rows + .selectize-control", "clustering_distance_columns + .selectize-control", "clustering_method_rows + .selectize-control", "clustering_method_columns + .selectize-control"))),
+              
+              intro = paste(c(
+                "This is the heatmap module where you can visualize expression patterns of selected genes. Continue the tutorial to learn how to use this module",
+                "You can select sample types to focus the analysis on the specific subsets.",
+                "Here you can choose how you would like to select genes for the plot",
+                "You can upload a xlsx/xls file including your genes of interest to see them on the heatmap",
+                "Next, you can apply a variance filter to keep only highly variable genes in the plot. 100 (default) means no filter is applied. If you like to see top 10% variable genes only, set this value to 10. Such filtering can help see more informative genes.",
+                "You can select categorical clinical meta data features to show as annotations on top of the heatmap.",
+                "You can also create an annotation bar by categorizing the patients based on their gene expression levels. You can specify one or more genes here. When multiple genes are entered, their average is calculated. Patients are categorized as 'high' and 'low' according to the median gene expression value",
+                "You can choose how the distance will be calculated for genes here",
+                "You can choose how the distance will be calculated for samples here",
+                "You can choose different hierarchical clustering methods for genes here",
+                "You can choose different hierarchical clustering methods for samples here"
               ))
             )
             
@@ -197,52 +252,72 @@ heatmap_server <- function(id,Xproj) {
       
       # Reactive selectboxes
       
-      observeEvent(input$cat,{
+      observe({
         req(input$cat)
-        if(length(as.vector(input$selectors)) == "Create Gene Set"){
-          return()
-        }
-        updateSelectizeInput(session = getDefaultReactiveDomain(),"chosen_gse", choices = gene_sets()$gs_name, selected = character(0) ,server = TRUE)
+        
+        heatmap_subcat = names(heatmap_df_msigdb()[[input$cat]])
+        if (length(heatmap_subcat) > 1)  {
+          updateSelectizeInput(session,'heatmap_subcat', choices = heatmap_subcat , server = TRUE)
+        } 
       })
       
-      observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "selectors", choices = c("Create Gene Set", "Human MSigDB Gene sets", "Upload a csv File"), server = TRUE)})
+      # observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "selectors", choices = c("Manually enter gene names", "MSigDB gene sets", "Upload a xlsx/xls file"), server = TRUE)})
+      
       observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "genes", choices = colnames(Xproj$a()[, lapply(Xproj$a(), is.numeric) == TRUE, with = FALSE]), server = TRUE)})
       observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "annotation", choices = colnames(Xproj$a()[, lapply(Xproj$a(), is.factor) == TRUE, with = FALSE]), selected = character(0), server = TRUE)})
       observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "hm_categorized_gene", choices = colnames(Xproj$a()[, lapply(Xproj$a(), is.numeric) == TRUE, with = FALSE]), selected = character(0), server = TRUE)})
       observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "hm_definition_sel", choices = c(Xproj$a()$meta.definition), selected = character(0), server = TRUE)})
       
-      gene_sets <- reactive({ 
+      heatmap_df_msigdb <- reactive({heatmap_df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))})
+      
+      hm_gene_sets <- reactive({ 
         
-        # Downloading the MSigDB datasets if selected.
+        req(heatmap_df_msigdb())
         
-        if(input$cat %in% c("H", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8")){
+        #Preparation of Human MSigDB genesets.
+        
+        df_msigdb <- heatmap_df_msigdb()
+        
+        if(input$selectors == 'MSigDB gene sets'){
+          
+          if(input$cat %in% c("C2","C3","C4","C5","C7")) {
+            
+            df_msigdb2 = df_msigdb[[input$cat]][[input$heatmap_subcat]]
+            
+          } else {
+            df_msigdb2 = df_msigdb[[input$cat]]
+          }
+          return(df_msigdb2)
+          
+        } else {
           
           return({
-            
-            genset2 <- msigdbr(species = "human", category = input$cat)
-            
-            genset2
-            
+            df_msigdb3 <- NULL
           })
-          
-          
-        } else if(input$cat %in% c("CGP", "CP", "CP:BIOCARTA", "CP:KEGG", "CP:PID", "CP:REACTOME", "CP:WIKIPATHWAYS",
-                                   "MIR:MIR_Legacy", "MIR:MIRDB", "TFT:GTRD", "TFT:TFT_Legacy",
-                                   "CGN", "CM",
-                                   "GO:BP", "GO:CC", "GO:MF", "HPO",
-                                   "IMMUNESIGDB", "VAX")){
-          
-          
-          return({
-            
-            genset3 <- msigdbr(species = "human", category = NULL, subcategory = input$cat)
-            
-            genset3
-            
-          })}
+        }
         
       })
       
+      
+      observe({
+        
+        req(heatmap_df_msigdb())
+        
+        req(hm_gene_sets())
+        
+        if(input$cat %in% c("C2","C3","C4","C5","C7")) {
+          
+          
+          heatmap_path = names(hm_gene_sets())
+          updateSelectizeInput(session,'chosen_gse', choices = heatmap_path , server = TRUE)
+          
+        } else {
+          
+          heatmap_path = names(hm_gene_sets()[[1]])
+          updateSelectizeInput(session,'chosen_gse', choices = heatmap_path , server = TRUE)
+        }
+        
+      })
       
       pre_data <- eventReactive(input$heatmap_run, {
         
@@ -254,7 +329,7 @@ heatmap_server <- function(id,Xproj) {
             daf1 <- setDT(daf1, key = 'meta.definition')[J(input$hm_definition_sel)]
             daf1
           })
-        } else if (length(as.vector(input$hm_hm_definition_sel)) == 0){
+        } else if (length(as.vector(input$hm_definition_sel)) == 0){
           return({
             daf2 <- Xproj$a()
             daf2
@@ -269,27 +344,40 @@ heatmap_server <- function(id,Xproj) {
         
         req(pre_data())
         
-        if(input$selectors == "Human MSigDB Gene sets"){
+        if(input$selectors == "MSigDB gene sets"){
           
-          req(gene_sets())
+          req(hm_gene_sets())
           
           req(input$chosen_gse)
           
-          final_gene_sets <- gene_sets()
+          heatmap_df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))
           
-          final_gene_sets <- setDT(final_gene_sets, key = 'gs_name')[J(input$chosen_gse)]
+          if(input$cat %in% c("C2","C3","C4","C5","C7")) {
+            
+            heatmap_msigdb_genes <- heatmap_df_msigdb[[input$cat]][[input$heatmap_subcat]][[input$chosen_gse]]
+            
+          } else {
+            
+            heatmap_msigdb_genes <- heatmap_df_msigdb[[input$cat]][[]][[input$chosen_gse]]
+          }
+          
+          #Take the subset of chosen Human MsigDB geneset.
+          
+          final_gene_sets <- heatmap_msigdb_genes
+          
+          # Drop and the Human MsigDB genes which are not in our data.
           
           daf <- as.data.frame(pre_data())
           
           rownames(daf) <- daf$meta.barcode
           
-          same_hallmarks_names = intersect(final_gene_sets$gene_symbol, colnames(daf))
+          same_hallmarks_names = intersect(final_gene_sets, colnames(daf))
           
           selected_cols <- c(same_hallmarks_names)
           
           daf <- daf[,selected_cols]  
           
-        } else if(input$selectors == "Create Gene Set"){
+        } else if(input$selectors == "Manually enter gene names"){
           
           req(input$genes)
           
@@ -301,19 +389,20 @@ heatmap_server <- function(id,Xproj) {
           
           daf <- daf[,selected_cols]  
           
-        } else if(input$selectors == "Upload a csv File"){
-
-          req(input$heatmap_csv)
+        } else if(input$selectors == "Upload a xlsx/xls file"){
+          
           
           daf <- as.data.frame(pre_data())
           
           rownames(daf) <- daf$meta.barcode
           
           uploaded_heatmap_csv <- input$heatmap_csv
-
-          selected_csv <- read.csv(uploaded_heatmap_csv$datapath, stringsAsFactors = FALSE, header = FALSE)$V1
           
-          same_gene_names = intersect(selected_csv, colnames(daf))
+          selected_csv <- as.data.frame(read_excel(uploaded_heatmap_csv$datapath, sheet = 1, col_names = F))
+          
+          colnames(selected_csv)[1] <- "Genes" 
+          
+          same_gene_names = intersect(selected_csv[["Genes"]], colnames(daf))
           
           selected_cols <- c(same_gene_names)
           
@@ -321,27 +410,46 @@ heatmap_server <- function(id,Xproj) {
           
         }
         
-        if (input$variable !=1) {
+        
+        if (input$variable !=100) {
           
-          daf_variable <- t(daf)
+          # daf_variable <- t(daf)
+          # 
+          # evar <- apply(daf_variable,1,var)
+          # 
+          # mostVariable <- daf_variable[evar>quantile(evar,as.numeric(input$variable)/100),]
+          # mostvariablegenes <- rownames(mostVariable)
+          # daf <- daf[,mostvariablegenes]
           
-          evar <- apply(daf_variable,1,var)
+          daf_variation <- apply(daf,2,var, na.rm=T) 
           
-          mostVariable <- daf_variable[evar>quantile(evar,as.numeric(input$variable)),]
-          mostvariablegenes <- rownames(mostVariable)
-          daf <- daf[,mostvariablegenes]
-        } else if(input$variable == 0){
+          mostVariablegenes <- names(which(daf_variation >= quantile(daf_variation, 1-as.numeric(input$variable)/100)))
+          
+          daf <- daf[,mostVariablegenes]
+          
+          
+          
+        } else if(input$variable == 100){
           daf
         }
         
         # When you have several variables to examine over multiple scales, the scale() function makes more sense. 
         # One variable, for example, is of magnitude 100, whereas another is of magnitude 1000.
-        
-        daf <- scale(daf, scale = FALSE)
+        # if(input$scale_by_row == TRUE){
+        #   
+        # daf <- scale(daf, scale = FALSE)
+        ## scaling will be done in heatmaply from now on, scale function is not needed anymore
         
         daf <- as.matrix(daf)
         
         daf <- t(daf)
+        
+        # } else if (input$scale_by_row == FALSE){
+        #   
+        #   daf <- as.matrix(daf)
+        # 
+        # daf <- t(daf)
+        # }
       })
       
       meta <- eventReactive(input$heatmap_run, {
@@ -370,20 +478,45 @@ heatmap_server <- function(id,Xproj) {
             
             meta <- as.data.table(meta)
             
-            meta <- meta[, hm_categorized_gene_means := rowMeans(.SD, na.rm = TRUE), .SDcols = c(hm_categorized_gene)]  
-            
-            cat_gene_median <-  median(meta$hm_categorized_gene_means, na.rm = TRUE)
-            
-            meta <- meta[,c(hm_categorized_gene):=NULL]
-            
-            meta <- as.data.frame(meta)
-            
-            meta <- meta %>% 
-              mutate(hm_categorized_gene_high_low = case_when(
-                meta$hm_categorized_gene_means > cat_gene_median ~ "high",
-                meta$hm_categorized_gene_means < cat_gene_median ~ "low"
-              )) %>% 
-              select(-hm_categorized_gene_means)
+            if (input$hm_gene_categorization_button == "take_median"){
+              
+              if (length(as.vector(input$hm_categorized_gene)) == 1){
+                
+                setnames(meta, "meta", "hm_categorized_gene_means")
+                
+              } else {
+                
+                meta <- meta[, hm_categorized_gene_means := rowMeans(.SD, na.rm = TRUE), .SDcols = c(hm_categorized_gene)]  
+                
+              }
+              
+              
+              cat_gene_median <-  median(meta$hm_categorized_gene_means, na.rm = TRUE)
+              
+              meta <- meta[,c(hm_categorized_gene):=NULL]
+              
+              meta <- as.data.frame(meta)
+              
+              meta <- meta %>% 
+                mutate(hm_categorized_gene_high_low = case_when(
+                  meta$hm_categorized_gene_means > cat_gene_median ~ "high",
+                  meta$hm_categorized_gene_means < cat_gene_median ~ "low"
+                )) %>% 
+                select(-hm_categorized_gene_means)
+              
+            } else if (input$hm_gene_categorization_button == "take_separately"){
+              
+              dat <- meta
+              
+              for (i in input$hm_categorized_gene) {
+                
+                meta[, (i) := ifelse(dat[[i]] >= median(dat[[i]], na.rm = T), "high", ifelse(dat[[i]] < median(dat[[i]], na.rm = T), "low", "mid"))]
+                
+              }
+              
+              return(meta <- as.data.frame(meta))
+              
+            }
             
           })} else if (length(as.vector(input$annotation)) > 0 & length(as.vector(input$hm_categorized_gene)) == 0){
             
@@ -421,40 +554,76 @@ heatmap_server <- function(id,Xproj) {
               
               meta <- as.data.table(meta)
               
-              if (length(as.vector(input$hm_categorized_gene)) == 1){
+              if (input$hm_gene_categorization_button == "take_median"){
                 
-                setnames(meta, "meta", "hm_categorized_gene_means")
+                if (length(as.vector(input$hm_categorized_gene)) == 1){
+                  
+                  setnames(meta, "meta", "hm_categorized_gene_means")
+                  
+                } else {
+                  
+                  meta <- meta[, hm_categorized_gene_means := rowMeans(.SD, na.rm = TRUE), .SDcols = c(hm_categorized_gene)]  
+                  
+                }
                 
-              } else {
                 
-                meta <- meta[, hm_categorized_gene_means := rowMeans(.SD, na.rm = TRUE), .SDcols = c(hm_categorized_gene)]  
+                cat_gene_median <-  median(meta$hm_categorized_gene_means, na.rm = TRUE)
                 
+                meta <- meta[,c(hm_categorized_gene):=NULL]
+                
+                meta <- as.data.frame(meta)
+                
+                meta <- meta %>% 
+                  mutate(hm_categorized_gene_high_low = case_when(
+                    meta$hm_categorized_gene_means > cat_gene_median ~ "high",
+                    meta$hm_categorized_gene_means < cat_gene_median ~ "low"
+                  )) %>% 
+                  select(-hm_categorized_gene_means)
+                
+              } else if (input$hm_gene_categorization_button == "take_separately"){
+                
+                if (length(as.vector(input$hm_categorized_gene)) == 1){
+                  
+                  setnames(meta, "meta", "hm_categorized_gene_means")
+                  
+                  cat_gene_median <-  median(meta$hm_categorized_gene_means, na.rm = TRUE)
+                  
+                  meta <- meta[,c(hm_categorized_gene):=NULL]
+                  
+                  meta <- as.data.frame(meta)
+                  
+                  meta <- meta %>% 
+                    mutate(hm_categorized_gene_high_low = case_when(
+                      meta$hm_categorized_gene_means > cat_gene_median ~ "high",
+                      meta$hm_categorized_gene_means < cat_gene_median ~ "low"
+                    )) %>% 
+                    select(-hm_categorized_gene_means)
+                  
+                } else{
+                  
+                  dat <- meta
+                  
+                  for (i in input$hm_categorized_gene) {
+                    
+                    meta[, (i) := ifelse(dat[[i]] >= median(dat[[i]], na.rm = T), "high", ifelse(dat[[i]] < median(dat[[i]], na.rm = T), "low", "mid"))]
+                    
+                  }
+                  
+                  return(meta <- as.data.frame(meta))
+                  
+                } 
               }
               
               
-              cat_gene_median <-  median(meta$hm_categorized_gene_means, na.rm = TRUE)
+            })} else if (length(as.vector(input$annotation)) == 0 & length(as.vector(input$hm_categorized_gene)) == 0){
               
-              meta <- meta[,c(hm_categorized_gene):=NULL]
-              
-              meta <- as.data.frame(meta)
-              
-              meta <- meta %>% 
-                mutate(hm_categorized_gene_high_low = case_when(
-                  meta$hm_categorized_gene_means > cat_gene_median ~ "high",
-                  meta$hm_categorized_gene_means < cat_gene_median ~ "low"
-                )) %>% 
-                select(-hm_categorized_gene_means)
-              
-            
-          })} else if (length(as.vector(input$annotation)) == 0 & length(as.vector(input$hm_categorized_gene)) == 0){
-            
-            return({
-              
-              # When there is no categorized genes or meta annotation entered
-              meta <- NULL
-              
-            })
-          }
+              return({
+                
+                # When there is no categorized genes or meta annotation entered
+                meta <- NULL
+                
+              })
+            }
       })
       
       heatmap_object <- eventReactive(input$heatmap_run, {
@@ -467,9 +636,9 @@ heatmap_server <- function(id,Xproj) {
           
           validate(need(input$hm_definition_sel, "Please select a sample type"))
           validate(need(input$selectors, "Please select a Human MSigDB Gene set or create a gene set"))
-          if(input$selectors == 'Create Gene Set'){
+          if(input$selectors == 'Manually enter gene names'){
             validate(need(input$genes, "Create genes to create your gene set"))
-          } else if (input$selectors == 'Human MSigDB Gene sets'){
+          } else if (input$selectors == 'MSigDB gene sets'){
             validate(need(input$cat, "Please select a Human MSigDB Collection"))
             validate(need(input$chosen_gse, "Please select the subset of your chosen Human MSigDB Collection"))
           }
@@ -477,24 +646,33 @@ heatmap_server <- function(id,Xproj) {
           
           
           return({
-            distfun_row = function(x) stats::dist(x, method = input$clustering_distance_rows)
-            distfun_col =  function(x) stats::dist(x, method = input$clustering_distance_columns)
+            if(input$clustering_distance_rows == "pearson"| input$clustering_distance_rows == "spearman" | input$clustering_distance_rows == "kendall"){
+              distfun_row = function(x) as.dist(1 - cor(t(x), method=input$clustering_distance_rows))
+            } else{
+              distfun_row = function(x) stats::dist(x, method = input$clustering_distance_rows)}
+            
+            if(input$clustering_distance_columns == "pearson"| input$clustering_distance_columns == "spearman" | input$clustering_distance_columns == "kendall"){
+              distfun_col = function(x) as.dist(1 - cor(t(x), method = input$clustering_distance_columns))
+            }else{
+              distfun_col =  function(x) stats::dist(x, method = input$clustering_distance_columns)}
+            
+            mat_data <- mat()
+            
+            mat_data <- mat_data[ , colSums(is.na(mat_data))==0]
             
             hclustfun_row = function(x) stats::hclust(x, method = input$clustering_method_rows)
             hclustfun_col = function(x) stats::hclust(x, method = input$clustering_method_columns)
             
-            
-            heatmap_obj <- heatmaply(mat(), 
-                                  fontsize_row = 9 , 
-                                  colors = rev(brewer.pal(n= 10, "RdBu")) , 
-                                  showticklabels = c(FALSE, TRUE) ,
-                                  distfun_row = distfun_row,
-                                  distfun_col = distfun_col,
-                                  hclustfun_row = hclustfun_row,
-                                  hclustfun_col = hclustfun_col,
-                                  plot_method = "plotly") 
-            
-            heatmap_obj
+            heatmap_obj <- heatmaply(mat_data, 
+                                     fontsize_row = 9 , 
+                                     colors = rev(brewer.pal(n= 10, "RdBu")) , 
+                                     showticklabels = c(FALSE, TRUE) ,
+                                     distfun_row = distfun_row,
+                                     distfun_col = distfun_col,
+                                     hclustfun_row = hclustfun_row,
+                                     hclustfun_col = hclustfun_col,
+                                     scale = input$scale_by_row_column,
+                                     plot_method = "plotly")
           })
         } else {
           
@@ -502,22 +680,32 @@ heatmap_server <- function(id,Xproj) {
           
           validate(need(input$hm_definition_sel, "Please select a sample type"))
           validate(need(input$selectors, "Please select a Human MSigDB Gene set or create a gene set"))
-          if(input$selectors == 'Create Gene Set'){
+          if(input$selectors == 'Manually enter gene names'){
             validate(need(input$genes, "Create genes to create your gene set"))
-          } else if (input$selectors == 'Human MSigDB Gene sets'){
+          } else if (input$selectors == 'MSigDB gene sets'){
             validate(need(input$cat, "Please select a Human MSigDB Collection"))
             validate(need(input$chosen_gse, "Please select the subset of your chosen Human MSigDB Collection"))
           }
           validate(need(input$heatmap_run, "Please click the create heatmap button"))
           
-          distfun_row = function(x) stats::dist(x, method = input$clustering_distance_rows)
-          distfun_col =  function(x) stats::dist(x, method = input$clustering_distance_columns)
+          if(input$clustering_distance_rows == "pearson"| input$clustering_distance_rows == "spearman" | input$clustering_distance_rows == "kendall"){
+            distfun_row = function(x) as.dist(1 - cor(t(x), method=input$clustering_distance_rows))
+          } else{
+            distfun_row = function(x) stats::dist(x, method = input$clustering_distance_rows)}
+          
+          if(input$clustering_distance_columns == "pearson"| input$clustering_distance_columns == "spearman" | input$clustering_distance_columns == "kendall"){
+            distfun_col = function(x) as.dist(1 - cor(t(x), method =input$clustering_distance_columns))
+          }else{
+            distfun_col =  function(x) stats::dist(x, method = input$clustering_distance_columns)}
+          
+          mat_data <- mat()
+          
+          mat_data <- mat_data[ , colSums(is.na(mat_data))==0]
           
           hclustfun_row = function(x) stats::hclust(x, method = input$clustering_method_rows)
           hclustfun_col = function(x) stats::hclust(x, method = input$clustering_method_columns)
           
-          
-          heatmap_obj <- heatmaply(mat(), 
+          heatmap_obj <- heatmaply(mat_data, 
                                    fontsize_row = 9 , 
                                    col_side_colors = meta(),
                                    colors = rev(brewer.pal(n= 10, "RdBu")) , 
@@ -526,11 +714,9 @@ heatmap_server <- function(id,Xproj) {
                                    distfun_col = distfun_col,
                                    hclustfun_row = hclustfun_row,
                                    hclustfun_col = hclustfun_col,
-                                   plot_method = "plotly") 
-          
-          heatmap_obj
-        }
-      })
+                                   scale = input$scale_by_row_column,
+                                   plot_method = "plotly")
+        }})
       
       output$heatmap_plot <- renderPlotly({
         
@@ -543,15 +729,13 @@ heatmap_server <- function(id,Xproj) {
       })
       
       
+      ## Since it is plotly object, it will be downloaded in hml format.
+      
       output$downloadPlot6 <- downloadHandler(
-        filename = function() {
-          paste("Heatmap_plot.png")
-        },
+        filename = function() {'heatmap.html'},
         content = function(file) {
           
-          png(file)
-          print(heatmap_object())
-          dev.off()
+          htmlwidgets::saveWidget(as_widget(heatmap_object()), file)
           
         })
       

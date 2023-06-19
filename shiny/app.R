@@ -1,5 +1,4 @@
 #Source
-
 source("select_data.R")
 source("heatmap.R")
 source("ml_glm.R")
@@ -14,6 +13,7 @@ source("gene_correlations.R")
 
 #Library and Theme
 
+library(shinyjs)
 library(shinydashboardPlus)
 library(fresh)
 
@@ -40,22 +40,25 @@ mytheme <- create_theme(
 ui <- dashboardPage(skin = "black", 
                     title = "TCGExplorer",
                     dashboardHeader(
-                      title = tags$img(src='images/tcgex_logo_2.jpg', align = 'middle', height = '50px')
+                      title = tags$a(href = "https://tcgex.iyte.edu.tr/",
+                                     tags$img(src='images/tcgex_logo_2.jpg', align = 'middle', height = '50px')
+                        
+                         )
                       ),
                     dashboardSidebar(
                       minified = F,
                       sidebarMenu(
                         menuItem("HOMEPAGE",icon = icon("home"),tabName="home"),
                         menuItem("DATA SELECTION",icon = icon("dna"),tabName="select_data"),
+                        menuItem("KAPLAN-MEIER",icon = icon("disease"),tabName="km"),
+                        menuItem("COX-PH",icon = icon("biohazard"),tabName="cox"),
                         menuItem("METADATA ANALYSIS",icon = icon("chart-bar"),tabName="gene_vs_cat"),
-                        menuItem("KAPLAN MEIER",icon = icon("disease"),tabName="km"),
-                        menuItem("GENE-to-GENE CORRELATION",icon = icon("chart-line"),tabName="gene_vs_gene"),
-                        menuItem("CORRELATED GENES",icon = icon("magnifying-glass"),tabName="gene_cor"),                        
+                        menuItem("CORRELATION ANALYSIS",icon = icon("chart-line"),tabName="gene_vs_gene"),
+                        menuItem("CORRELATED GENE TABLE",icon = icon("magnifying-glass"),tabName="gene_cor"),                        
                         menuItem("HEATMAP",icon = icon("microscope"),tabName="heatmap"),
-                        menuItem("COXPH",icon = icon("biohazard"),tabName="cox"),
+                        menuItem("GSEA",icon = icon("chart-line"),tabName="gsea"),
                         menuItem("ROC",icon = icon("capsules"),tabName="roc"),
                         menuItem("PCA",icon = icon("circle-nodes"),tabName="pca"),
-                        menuItem("GSEA",icon = icon("chart-line"),tabName="gsea"),
                         menuItem("MACHINE LEARNING",icon = icon("atom"),tabName="ml"),
                         menuItem("ABOUT",icon = icon("address-card"),tabName="about")
                         
@@ -64,9 +67,16 @@ ui <- dashboardPage(skin = "black",
                         
                       )
                     ),
-                    dashboardBody(
-                                  tags$head(
-                                            includeHTML(("google-analytics.html"))
+                    dashboardBody(tags$head(
+                                    tags$script(src = "https://www.googletagmanager.com/gtag/js?id=G-HWCPP52NZ2"),
+                                    tags$script(
+                                      HTML(
+                                        "window.dataLayer = window.dataLayer || [];
+                                        function gtag(){dataLayer.push(arguments);}
+                                        gtag('js', new Date());
+                                        gtag('config', 'G-HWCPP52NZ2');"
+                                      )
+                                    )
                                   ),
                                   
                                   tags$div(
@@ -74,7 +84,7 @@ ui <- dashboardPage(skin = "black",
                                     style = "position: fixed; bottom: 0; left: 0; right: 0; height: 45px; background-color: #AAA4A3; color: white; padding: 10px; width: 100%; z-index: 998;",
                                     tags$p(
                                       style = "font-size: 15px; margin: 0; display: inline-block;",
-                                      "We use Google Analytics to give you the best experience on our site and analyze traffic. We wanted to let you know :)",
+                                      "We use Google Analytics to give you the best experience on our site and analyze traffic.",
                                       tags$a(
                                         href = "https://policies.google.com/technologies/cookies",
                                         style = "color: white; font-weight: bold; margin-left: 10px; text-decoration: underline;",
@@ -83,7 +93,7 @@ ui <- dashboardPage(skin = "black",
                                     ),
                                     tags$button(
                                       id = "close-button",
-                                      "I got it!",
+                                      "Got it!",
                                       style = "float: right; background-color: #ffffff; color: #AAA4A3; border: none; border-radius: 5px; padding: 5px; font-size: 14px; margin-left: 10px; font-weight: bold;",
                                       onclick = "this.parentNode.style.display = 'none';")
                                   ),
@@ -94,37 +104,37 @@ ui <- dashboardPage(skin = "black",
                                             includeHTML("about.html"),
                                             shinyjs::useShinyjs()),
                                     tabItem(tabName="select_data",
-                                            fluidPage(h1("Please Select The Cancer Data"),
+                                            fluidPage(h1("Please select the cancer data"),
                                                       select_data_ui("module"))),
                                     tabItem(tabName="heatmap",
                                             fluidPage(h1("Heatmap Analysis "),
                                                       heatmap_ui("module"))),
                                     tabItem(tabName="ml",
-                                            fluidPage(h1("Machine Learning Algorithms Analysis"),
+                                            fluidPage(
                                                       ml_ui("ml"))),
                                     tabItem(tabName="pca",
                                             fluidPage(h1("Principal Compenent Analysis (PCA)"),
                                                       pca_ui("module_pca"))),
                                     tabItem(tabName="roc",
-                                            fluidPage(h1("Receiver Operating Characteristic (ROC) Curve Analysis "),
+                                            fluidPage(h1("Receiver Operating Characteristic (ROC) Analysis "),
                                                       roc_ui("module"))),
                                     tabItem(tabName="gene_vs_gene",
-                                            fluidPage(h1("Gene-to-Gene Correlation Analysis"),
+                                            fluidPage(h1("Correlation Analysis"),
                                                       gene_vs_gene_ui("module"))),
                                     tabItem(tabName="cox",
-                                            fluidPage(h1("Cox Proportional Hazards Regression"),
+                                            fluidPage(h1("Cox Proportional Hazards Survival Analysis"),
                                                       cox_ui("module"))),
                                     tabItem(tabName="gene_vs_cat",
-                                            fluidPage(h1("Metadata Analysis"),
+                                            fluidPage(h1("MetaData Analysis"),
                                                       gene_vs_cat_ui("module"))),
                                     tabItem(tabName="km",
-                                            fluidPage(h1("Kaplan Meier Survival Analysis "),
+                                            fluidPage(h1("Kaplan-Meier Survival Analysis "),
                                                       km_ui("module"))),
                                     tabItem(tabName="gsea",
-                                            fluidPage(h1("Gene Sets Enrinchment Analysis (GSEA) "),
+                                            fluidPage(h1("Gene Sets Enrichment Analysis (GSEA) "),
                                                       gsea_ui("module"))),
                                     tabItem(tabName="gene_cor",
-                                            fluidPage(h1("Correlated Genes Analysis "),
+                                            fluidPage(h1("Correlated Gene Table Analysis "),
                                                       gene_cor_UI("module"))),
                                     tabItem(tabName="home",
                                              includeHTML("home.html"),
@@ -135,11 +145,11 @@ ui <- dashboardPage(skin = "black",
                                                          href = "plugins/font-awesome-4.7.0/css/font-awesome.min.css"),
                                                tags$link(rel = "icon", 
                                                          type = "image/png", 
-                                                         href = "images/logo_icon.png")))
+                                                         href = "images/logo_tab_icon.png")))
                                    ),
                                   dashboardFooter(
                                       includeHTML("footer.html")
-                                      ) 
+                                      )
                                   
                                     
                                   ))
@@ -147,6 +157,29 @@ ui <- dashboardPage(skin = "black",
 #Main Server
 
 server <- function(input, output, session) {
+  
+  # # User React
+  # lastInteractionTime <- reactiveVal(NULL)
+  # 
+  # # Update last interaction
+  # observeEvent(input, {
+  #   lastInteractionTime(Sys.time())
+  # })
+  # 
+  # # Close app after 5 min without interaction
+  # autoCloseApp <- function() {
+  #   if (!is.null(lastInteractionTime())) {
+  #     if (as.numeric(difftime(Sys.time(), lastInteractionTime(), units = "secs")) >= 300) {
+  #       session$close()
+  #     }
+  #   }
+  # }
+  # 
+  # # Start the timer and constantly check the interaction time  
+  # observe({
+  #   invalidateLater(1000) # Start the timer every 1 second
+  #   autoCloseApp() # Check Auto Close
+  # })
   
   Xproj<-reactiveValues()
   
@@ -163,7 +196,6 @@ server <- function(input, output, session) {
   roc_server("module",Xproj=Xproj)
   
   gene_vs_gene_server("module",Xproj=Xproj)
-
   
   cox_server("module",Xproj=Xproj)
   

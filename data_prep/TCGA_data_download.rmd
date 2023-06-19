@@ -1,0 +1,180 @@
+---
+title: 'Download and prepare TCGA data using TCGAbiolinks'
+author: "memrekus"
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '3'
+---
+
+
+# Get TCGA project info
+
+```{r}
+suppressPackageStartupMessages(library(TCGAbiolinks))
+
+tcga_projects <- getGDCprojects()
+tcga_projects <- grep("TCGA", tcga_projects$project_id, value = T)
+tcga_projects <- tcga_projects[order(tcga_projects)]
+
+```
+
+
+
+# RNAseq data
+
+## Download data files
+
+```{r}
+
+
+# for(i in tcga_projects){
+#   
+#   query_harmonized_gene <- GDCquery(project = i,
+#                                     data.category = "Transcriptome Profiling",
+#                                     data.type = "Gene Expression Quantification",
+#                                     workflow.type = "HTSeq - Counts",
+#                                     legacy = FALSE)
+#   
+#   # Download all transcriptome profiling data from SKCM project(all tumors and healthy)
+#   GDCdownload(query_harmonized_gene, method="client", files.per.chunk = 10, directory = "./")
+# }
+
+for(i in tcga_projects){
+  
+  query_harmonized_gene <- GDCquery(project = i ,
+                                    data.category = "Transcriptome Profiling",
+                                    data.type = "Gene Expression Quantification",
+                                    workflow.type = "STAR - Counts",
+                                    experimental.strategy = "RNA-Seq")
+  
+  # Download all transcriptome profiling data from SKCM project(all tumors and healthy)
+  GDCdownload(query_harmonized_gene,files.per.chunk = 8)
+  
+  rnaseq_data <- GDCprepare(query_harmonized_gene) 
+  
+  saveRDS(rnaseq_data, paste0("./RNAseq_RDS/",gsub("TCGA-", "", i), "_rnaseq.rds")) 
+}
+
+```
+
+
+## Prepare data objects
+
+<!-- ```{r} -->
+
+<!-- dir.create("./RNAseq_RDS") -->
+
+<!-- for(i in tcga_projects){ -->
+
+<!--   rnaseq_data <- GDCprepare(query_harmonized_gene)  -->
+<!--   saveRDS(rnaseq_data, paste0("./RNAseq_RDS/",gsub("TCGA-", "", i), "_rnaseq.rds"))  -->
+
+<!-- } -->
+
+<!-- ``` -->
+
+
+# miRNAseq data
+
+## Download data files
+
+<!-- ```{r} -->
+
+
+<!-- for(i in tcga_projects){ -->
+
+<!--   query_harmonized_mir <- GDCquery(project = i, -->
+<!--                                    data.category = "Transcriptome Profiling", -->
+<!--                                    data.type = "miRNA Expression Quantification", -->
+<!--                                    legacy = FALSE) -->
+
+<!--   # Download all transcriptome profiling data from SKCM project(all tumors and healthy) -->
+<!--   GDCdownload(query_harmonized_mir, method="api", files.per.chunk = 10) -->
+
+<!-- } -->
+
+<!-- ``` -->
+
+
+<!-- ## Prepare data objects -->
+
+<!-- ```{r} -->
+
+<!-- dir.create("./miRNAseq_RDS") -->
+
+<!-- for(i in tcga_projects){ -->
+
+<!--   mir_data <- GDCprepare(query_harmonized_mir, directory = "./") -->
+<!--   saveRDS(mir_data, paste0("./miRNAseq_RDS/",gsub("TCGA-", "", i), "_mirna.rds")) -->
+
+<!-- } -->
+
+<!-- ``` -->
+
+
+# miRNA Isoform (3p/5p) data
+
+```{r}
+
+dir.create("./miRNAseq_RDS")
+
+suppressPackageStartupMessages(library(TCGAbiolinks))
+suppressPackageStartupMessages(library(miRBaseConverter))
+suppressPackageStartupMessages(library(data.table))
+suppressPackageStartupMessages(library(tidyr))
+
+
+tcga_projects <- getGDCprojects()
+tcga_projects <- grep("TCGA", tcga_projects$project_id, value = T)
+tcga_projects <- tcga_projects[order(tcga_projects)]
+
+# i <- "TCGA-SKCM"
+
+for(i in tcga_projects){
+  
+message(paste("Processing", i))
+  
+query.isoform <- GDCquery(project = i, 
+                          experimental.strategy = "miRNA-Seq",
+                          data.category = "Transcriptome Profiling", 
+                          data.type = "Isoform Expression Quantification")
+
+GDCdownload(query.isoform, directory = "./miRNAseq_RDS/")
+
+miriso <- GDCprepare(query.isoform, directory = "./miRNAseq_RDS/")
+
+miriso$miRNA_region <- gsub("mature,", "", miriso$miRNA_region)
+
+mirnames <- miRNA_AccessionToName(miriso$miRNA_region)
+
+miriso$mir_name <- mirnames$TargetName
+
+miriso <- data.table(miriso)
+
+miriso <- miriso[, .(total_read_count = sum(read_count), 
+                      total_rpm = sum(reads_per_million_miRNA_mapped)),
+                  by=.(barcode, miRNA_region, mir_name)]
+
+miriso <- dcast(miriso, miRNA_region + mir_name ~ barcode, value.var = "total_read_count")
+
+miriso$mir_name[is.na(miriso$mir_name)] <- "nonmature_mir"
+
+miriso <- as.data.frame(miriso[, -c("miRNA_region")])
+
+# miriso_rpm <- dcast(miriso, miRNA_region + mir_name ~ barcode, value.var = "total_rpm")
+
+saveRDS(miriso, file = paste0("./miRNAseq_RDS/",gsub("TCGA-", "", i), "_miRisoform.rds"))
+
+}
+
+
+
+```
+
+
+
+
+

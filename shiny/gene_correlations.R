@@ -11,14 +11,16 @@ library(stats)
 library(openxlsx)
 library(corrplot)
 library(RColorBrewer)
+library(readxl)
+
 gene_cor_UI <- function(id) {
   ns <- NS(id)
   tagList(
-  
+    
     navbarPage(
       "TCGExplorer",
       tabPanel(
-        "Corr Table",
+        "Correlation Table",
         sidebarPanel(
           
           add_busy_spinner(
@@ -45,13 +47,13 @@ gene_cor_UI <- function(id) {
           ),
           numericInput(
             inputId = ns("top_high"),
-            label = "How many genes with the highest correlation should be shown?",
+            label = "How many genes with the highest positive correlation should be shown?",
             value = 10 ,
             min = 2
           ),
           numericInput(
             inputId = ns("top_low"),
-            label = "How many genes with the least correlation should be shown?",
+            label = "How many genes with the highest negative correlation should be shown?",
             value = 10 ,
             min = 2
           ),
@@ -66,7 +68,7 @@ gene_cor_UI <- function(id) {
                      block = TRUE,
                      color = "primary"),
           br(),
-          downloadButton(ns("downloadDat"), "Download correlation data", style="color: #eeeeee; background-color: #01303f; border-color: #01303f"),
+          downloadButton(ns("downloadDat"), "Download results", style="color: #eeeeee; background-color: #01303f; border-color: #01303f"),
           br(),
           br(),
           #help section UI
@@ -79,15 +81,13 @@ gene_cor_UI <- function(id) {
         mainPanel(
           textOutput(ns("note")),
           verbatimTextOutput(ns("p_text")),
-          textOutput(ns("zero")),
-          verbatimTextOutput(ns("zero_text")),
           DTOutput(ns("g_table"))
         )
         
         
       ),
       tabPanel(
-        "Corr Plot",
+        "Correlation Plot",
         sidebarPanel(
           selectizeInput(ns("genecor_samp3"), multiple=T,
                          "*Please select sample types",
@@ -115,9 +115,14 @@ gene_cor_UI <- function(id) {
             condition = "input.gen_sel == 'Upload File' ", ns = ns,
             
             fileInput(inputId = ns("corr_up"),
-                      label = "Upload your gene set as .csv file",
-                      accept = c("text/csv", "text/comma-separated-values,text/plain",
-                                 ".csv")),  
+                      label = tags$span(
+                        "Please upload your xlsx/xls file.",
+                        tags$i(
+                          class = "glyphicon glyphicon-info-sign",
+                          style = "color:#0072B2;",
+                          title = "The xlsx/xls file should contain a single unnamed column with human gene names."
+                        )),
+                      accept = c(".xls", ".xlsx")),  
           ),
           
           actionBttn(inputId = ns("act2"),
@@ -131,7 +136,7 @@ gene_cor_UI <- function(id) {
           actionButton(ns("intro5"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7")
           
           
-        
+          
         ),
         mainPanel(
           plotOutput(ns("corre_plot"),
@@ -178,29 +183,29 @@ gene_cor_tb_server <- function(id,Xproj) {
       ns <- session$ns
       
       inf <- reactive({
-          
-            data.frame(
-                
-                element = paste0("#", session$ns(c(NA, "genecor_samp2 + .selectize-control","p_gene + .selectize-control ", "top_high", "top_low", "corr"))),
-                
-                intro = paste(c(
-                  "This is the Gene Correlation Analysis app, press the buttons to learn features of the app.",
-                  "You can choose single tissue type or more than one tissue types to filter patients who have that tissue type.",
-                  "You must choose a gene for correlation coefficient calculation",
-                  "You can decide on the number of genes with the highest correlation coefficient to show on the table",
-                  "You can decide on the number of genes with the least correlation coefficient to show on the table",
-                  "You can decide on correlation coefficient calculation method."
-
-                ))
-              )
-              
-           
-            
-         
-        })
         
-       
-        observeEvent(input$intro4, {
+        data.frame(
+          
+          element = paste0("#", session$ns(c(NA, "genecor_samp2 + .selectize-control","p_gene + .selectize-control ", "top_high", "top_low", "corr"))),
+          
+          intro = paste(c(
+            "This is the Gene Correlation Analysis module. In this first tab, you can select a gene and tabulate its top positively and negatively correlated genes. You can also visualize correlations in the second tab above. Continue the tutorial to learn the features of this module. <b>NOTE:</b> Since pair-wise correlation is calculated genome-wide, this analysis can take a some time.",
+            "Select sample type (eg. primary and/or metastatic) to focus the analysis on specific patient subsets.",
+            "Select your gene of interest here.",
+            "Here you can change the number of top positively correlated genes shown.",
+            "You can also change the number of top negatively correlated genes shown.",
+            "Specify how the correlation should be calculated."
+            
+          ))
+        )
+        
+        
+        
+        
+      })
+      
+      
+      observeEvent(input$intro4, {
         
         introjs(session, options = list(steps = inf() ) )
         
@@ -208,23 +213,23 @@ gene_cor_tb_server <- function(id,Xproj) {
       
       #shinyvalidate
       
-        num_iv <- InputValidator$new()
-        num_iv$add_rule("top_high", ~ if (input$top_high < 2  & !anyNA(input$top_high)) "Choice must be equal to or greater than 2")
-        num_iv$add_rule("top_low", ~ if (input$top_low < 2 & !anyNA(input$top_low)) "Choice must be equal to or greater than 2")  
-        
-        iv <- InputValidator$new()
-        iv$add_validator(num_iv)
-        
-        iv$enable()
-        
-        
+      num_iv <- InputValidator$new()
+      num_iv$add_rule("top_high", ~ if (input$top_high < 2  & !anyNA(input$top_high)) "Choice must be equal to or greater than 2")
+      num_iv$add_rule("top_low", ~ if (input$top_low < 2 & !anyNA(input$top_low)) "Choice must be equal to or greater than 2")  
+      
+      iv <- InputValidator$new()
+      iv$add_validator(num_iv)
+      
+      iv$enable()
+      
+      
       ##inputs
       
       observe({updateSelectizeInput(session, "genecor_samp2",choices = as.data.frame(Xproj$a())[["meta.definition"]], server = T)})
       observe({updateSelectizeInput(session, 'p_gene', choices = colnames(gene_choices()), server = TRUE, selected = "")})
       
       
-
+      
       
       
       ## input choices for gene selection
@@ -243,9 +248,9 @@ gene_cor_tb_server <- function(id,Xproj) {
       
       pre_data <- reactive({
         pre <- as.data.frame(Xproj$a()) %>% 
-        filter(meta.definition %in% input$genecor_samp2) %>%
-        select(!starts_with("meta.")) %>% 
-        select(where(is.numeric))
+          filter(meta.definition %in% input$genecor_samp2) %>%
+          select(!starts_with("meta.")) %>% 
+          select(where(is.numeric))
         
         pre
         
@@ -257,19 +262,19 @@ gene_cor_tb_server <- function(id,Xproj) {
       f_data_2 <- reactive({
         
         f_data_1() %>% 
-           
-           select(-input$p_gene)
+          
+          select(-input$p_gene)
         
         
       })
       
-     
+      
       
       cor_dat <-  reactive({
-       
-       data_cor_a <- cor(as.matrix(f_data_1()[,input$p_gene]),as.matrix(f_data_2()), method = input$corr)
-       
-       data_cor_b <- sapply(f_data_2(), FUN=function(x, y) cor.test(x, y, method = input$corr)$p.value, y=f_data_1()[[input$p_gene]])
+        
+        data_cor_a <- cor(as.matrix(f_data_1()[,input$p_gene]),as.matrix(f_data_2()), method = input$corr)
+        
+        data_cor_b <- sapply(f_data_2(), FUN=function(x, y) cor.test(x, y, method = input$corr)$p.value, y=f_data_1()[[input$p_gene]])
         
         data_cor_a = t(data_cor_a)
         
@@ -293,185 +298,149 @@ gene_cor_tb_server <- function(id,Xproj) {
         data_cor
       })
       
-     
-     ##high gene selection 
-     
-     high_genes <- reactive ({ cor_dat() %>%                                      
-       arrange(desc(correlation_coefficient)) %>% 
-       head(n= input$top_high)
-     })
-     
-     ##low gene selection 
-     
-      low_genes <- reactive({cor_dat() %>%                                      
-       arrange(desc(correlation_coefficient)) %>% 
-       tail(n= input$top_low)
+      
+      ##high gene selection 
+      
+      high_genes <- reactive ({ cor_dat() %>%                                      
+          arrange(desc(correlation_coefficient)) %>% 
+          head(n= input$top_high)
       })
-        
+      
+      ##low gene selection 
+      
+      low_genes <- reactive({cor_dat() %>%                                      
+          arrange(desc(correlation_coefficient)) %>% 
+          tail(n= input$top_low)
+      })
+      
       ## high-low table prep
       
       hl_table <- reactive(rbind(high_genes(), low_genes()))
-     
-     
-      p_table <- reactive ({ pre_data() %>% 
-        select(hl_table()$Genes)
       
+      
+      p_table <- reactive ({ pre_data() %>% 
+          select(hl_table()$Genes)
+        
       })
       
-      p_table_2 <- reactive ({data.frame(zero_patient = colSums(p_table()==0, na.rm = T),
-                                         patient_no_data = colSums(is.na(p_table())) )
-        
-        })
+      p_table_2 <- reactive ({data.frame(zero_patient = colSums(p_table()==0, na.rm = T)) })
       
+      
+      gene_table <- reactive({
         
-        gene_table <- reactive({
+        gene_tab <- cbind(hl_table(), p_table_2())
         
-          gene_tab <- cbind(hl_table(), p_table_2())
+        gene_tab <- gene_tab %>% 
+          relocate(Genes)%>% 
+          mutate_if(is.numeric, signif, digits=3)
         
-          gene_tab <- gene_tab %>% 
-            relocate(Genes)%>% 
-            mutate_if(is.numeric, signif, digits=3)
+      })
+      
+      
+      
+      
+      observeEvent(input$act, {
+        
+        
+        
+        ##table formation
+        
+        output$g_table <- renderDataTable({
+          
+          req(input$act)
+          input$act
+          
+          isolate({
+            
+            req(iv$is_valid()) 
+            
+            validate(
+              need(input$genecor_samp2, 'Please select at least one sample type'),
+              need(input$p_gene, 'Please select a gene'),
+              need(input$top_high, 'Please choose how many top positive correlators should be shown'),
+              need(input$top_low, 'Please choose how many top negative correlators should be shown')
+            )
+            
+            gene_table()}) 
           
         })
-     
-    
         
-      
-       observeEvent(input$act, {
-         
-
-         
-         ##table formation
-         
-         output$g_table <- renderDataTable({
-           
-           req(input$act)
-           input$act
-           
-           isolate({
-             
-             req(iv$is_valid()) 
-             
-             validate(
-               need(input$genecor_samp2, 'Please select at least one sample type'),
-               need(input$p_gene, 'Please select a gene'),
-               need(input$top_high, 'Please choose the number of high correlated genes '),
-               need(input$top_low, 'Please choose the number of low correlated genes')
-             )
-             
-             gene_table()}) 
-           
-         })
- 
- 
-         
-         ##message 
         
-         output$p_text <- renderText({
-           
-           req(input$act)
-           input$act
-           
-           isolate({
-
-             req(iv$is_valid())
-             
-             validate(
-               need(input$genecor_samp2, ''),
-               need(input$p_gene, ''),
-               need(input$top_high, ''),
-               need(input$top_low, '')
-             )
-             
+        
+        ##message 
+        
+        output$p_text <- renderText({
           
-            sum(pre_data()[[input$p_gene]]== 0, na.rm = T)
-           
-           
-           
-           })
-           
-         })
-        
-         
-         output$zero_text <- renderText({
-           
-           req(input$act)
-           input$act
-           
-           isolate({
-             
-             req(iv$is_valid())
-             
-             validate(
-               need(input$genecor_samp2, ''),
-               need(input$p_gene, ''),
-               need(input$top_high, ''),
-               need(input$top_low, '')
-             )
-             
-             
-             sum(is.na(pre_data()[[input$p_gene]]), na.rm = T)
-             
-             
-             
-           })
-           
-         })
-         
-         
-         
-         ##note
+          req(input$act)
+          input$act
           
-         
-         output$note <- renderText({
-           
-           req(input$act)
-           input$act
-           
-           isolate({
-             req(iv$is_valid())
-             validate(
-               need(input$genecor_samp2, ''),
-               need(input$p_gene, ''),
-               need(input$top_high, ''),
-               need(input$top_low, '')
-             )
+          isolate({
+            
+            req(iv$is_valid())
+            req(input$genecor_samp2)
+            req(input$p_gene)
+            req(input$top_high)
+            req(input$top_low)
+            
+            # validate(
+            #   need(input$genecor_samp2, ''),
+            #   need(input$p_gene, ''),
+            #   need(input$top_high, ''),
+            #   need(input$top_low, '')
+            # )
+
+       
              
-             "The number of patients without chosen gene expressions"
-           })
-           
-         })
-         
-         output$zero <- renderText({
-           
-           req(input$act)
-           input$act
-           
-           isolate({
-             req(iv$is_valid())
-             validate(
-               need(input$genecor_samp2, ''),
-               need(input$p_gene, ''),
-               need(input$top_high, ''),
-               need(input$top_low, '')
-             )
-             
-             "The number of patients without desired gene expression data "
-           })
-           
-         })
-         
-         #download 
-         
-         output$downloadDat <- downloadHandler(
-           filename = "gene_correlations.xlsx",
-           content = function(file) {
-             write.xlsx(gene_table(), file,colnames = TRUE,
-                        rownames = F, append = FALSE, showNA = TRUE)
-           }
-         )
-         
-         
+            
+
+            sum(pre_data()[[input$p_gene]] == 0, na.rm = T)})
+          
+        })
+        
+        
+        
+        
+        
+        
+        ##note
+        
+        
+        output$note <- renderText({
+          
+          req(input$act)
+          input$act
+          
+          isolate({
+            req(iv$is_valid())
+            req(input$genecor_samp2)
+            req(input$p_gene)
+            req(input$top_high)
+            req(input$top_low)
+            
+            # validate(
+            #   need(input$genecor_samp2, ''),
+            #   need(input$p_gene, ''),
+            #   need(input$top_high, ''),
+            #   need(input$top_low, '')
+            # )
+
+            "Number of samples where the chosen gene is not expressed"
+          })
+          
+        })
+        
+        
+        #download 
+        
+        output$downloadDat <- downloadHandler(
+          filename = "gene_correlations.xlsx",
+          content = function(file) {
+            write.xlsx(gene_table(), file,colnames = TRUE,
+                       rownames = F, append = FALSE, showNA = TRUE)
+          }
+        )
+        
+        
       })
       
     }
@@ -484,7 +453,7 @@ gene_cor_pl_server <- function(id,Xproj) {
   moduleServer(
     id,
     function(input, output, session) {
-    
+      
       ns <- session$ns
       
       cor_help <- reactive({
@@ -494,14 +463,12 @@ gene_cor_pl_server <- function(id,Xproj) {
           element = paste0("#", session$ns(c(NA, "genecor_samp3 + .selectize-control","corr2", "gen_sel" ))),
           
           intro = paste(c(
-            "This is the Gene Correlation Analysis app, press the buttons to learn features of the app.",
-            "You can choose single tissue type or more than one tissue types to filter patients who have that tissue type.",
-            "You can decide on correlation coefficient calculation method.",
-            "You can choose genes manually or you can upload the gene list as a csv file."
+            "Here, you can visualize gene-to-gene correlations. Continue the tutorial to learn the features of this module.",
+            "Select sample type (eg. primary and/or metastatic) to focus the analysis on specific patient subsets.",
+            "Specify how the correlation should be calculated.",
+            "You can choose genes manually or you can upload the gene list as a xlsx/xls file. You can create xlsx/xls file in spreadsheet software by providing your genes in the first column. Please only use gene symbols and ensure that you are using the correct capitalization."
           ))
         )
-        
-        
         
         
       })
@@ -516,9 +483,9 @@ gene_cor_pl_server <- function(id,Xproj) {
       
       #shinyvalidate
       
-     iv <- InputValidator$new()
-     iv$add_rule("p_gene2", ~ if (length(input$p_gene2) == 1  & !anyNA(length(input$p_gene2)) & input$gen_sel == 'Choose manually') "You must choose at least 2 genes")
-     
+      iv <- InputValidator$new()
+      iv$add_rule("p_gene2", ~ if (length(input$p_gene2) == 1  & !anyNA(length(input$p_gene2)) & input$gen_sel == 'Choose manually') "You must choose at least 2 genes")
+      
       iv$enable()
       
       observe({updateSelectizeInput(session, "genecor_samp3",choices = as.data.frame(Xproj$a())[["meta.definition"]], server = T)})
@@ -536,18 +503,27 @@ gene_cor_pl_server <- function(id,Xproj) {
       
       
       #gene list upload
-
+      
       g_list <- reactive({
         
         req(input$corr_up)
-
-        glist <- read.table(input$corr_up$datapath, header = FALSE, sep = ";", quote = "\"'",
-                            dec = ".")
-
+        
+        glist <- as.data.frame(read_excel(input$corr_up$datapath, sheet = 1, col_names = F))
+        
+        validate(
+          need(
+            {if(length(colnames(glist))== 1) TRUE else FALSE},
+            "This file contains more than 1 columns.Please ensure that your file contains a single column with human gene names"))
+        
         colnames(glist)[1] <- "genes"
-
+        
+        validate(
+          need(
+            {if(class(glist$genes) == "character")TRUE else FALSE}, 
+            "The column must contain only character input.Please ensure that the column contains only human gene names"))
+        
         glist
-
+        
       })
       
       #correlation plot data 
@@ -564,7 +540,7 @@ gene_cor_pl_server <- function(id,Xproj) {
           cor_df_a
           
         }else if(input$gen_sel == 'Upload File'){
-        
+          
           cor_df_b  <- Xproj$a() %>% 
             filter(meta.definition %in% input$genecor_samp3)   
           
@@ -613,42 +589,42 @@ gene_cor_pl_server <- function(id,Xproj) {
                    col=brewer.pal(n=8, name="BrBG"))
         }
         
-
+        
         
       })
       
       
       observeEvent(input$act2, {
         
-          output$corre_plot <- renderPlot({
+        output$corre_plot <- renderPlot({
+          
+          
+          req(input$act2)
+          input$act2
+          
+          isolate({
+            req(iv$is_valid())
+            validate(
+              need(input$genecor_samp3, "Choose at least 1 sample type")
+              
+            )
             
+            if(input$gen_sel == 'Choose manually'){
+              
+              validate(need(input$p_gene2, "Choose at least 2 genes"))
+            }
             
-            req(input$act2)
-            input$act2
+            if(input$gen_sel == 'Upload File'){
+              
+              validate(need(input$corr_up, "Please upload your file"))
+            }
             
-            isolate({
-              req(iv$is_valid())
-              validate(
-                need(input$genecor_samp3, "Choose at least 1 sample type")
-                
-              )
-              
-              if(input$gen_sel == 'Choose manually'){
-                
-                validate(need(input$p_gene2, "Choose at least 2 genes"))
-              }
-              
-              if(input$gen_sel == 'Upload File'){
-                
-                validate(need(input$corr_up, "Don't forget to upload your file"))
-              }
-              
-              corr_pl()
-              
-            })
+            corr_pl()
+            
+          })
           
         })
-          
+        
       })
       
     }
