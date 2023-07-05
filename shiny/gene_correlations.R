@@ -594,7 +594,8 @@ gene_cor_pl_server <- function(id,Xproj) {
                    number.digits = 2,
                    col=brewer.pal(n=20, name=input$corr_palette),
                    p.mat = signif_dat()$p,
-                   sig.level = 1-input$conflev)
+                   sig.level = 1-input$conflev,
+                   insig='blank')
         }else {
           
           corrplot(corre_dat(), 
@@ -607,7 +608,8 @@ gene_cor_pl_server <- function(id,Xproj) {
                    number.digits = 2,
                    col=brewer.pal(n=20, name=input$corr_palette),
                    p.mat = signif_dat()$p,
-                   sig.level = 1-input$conflev)
+                   sig.level = 1-input$conflev,
+                   insig = 'label_sig')
         }
         
         
