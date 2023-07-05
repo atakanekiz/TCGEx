@@ -585,9 +585,7 @@ gene_cor_pl_server <- function(id,Xproj) {
         if(input$coef){
           
           corrplot(corre_dat(), 
-                   method= "color",
                    order = 'original',
-                   # type = 'upper', 
                    addCoef.col = "black",
                    tl.col="black", 
                    tl.srt=45, 
@@ -595,13 +593,14 @@ gene_cor_pl_server <- function(id,Xproj) {
                    col=brewer.pal(n=20, name=input$corr_palette),
                    p.mat = signif_dat()$p,
                    sig.level = 1-input$conflev,
-                   insig='blank')
+                   insig='blank')$corrPos -> p1
+          
+          text(p1$x, p1$y, round(p1$corr, 2))
+          
         }else {
           
           corrplot(corre_dat(), 
-                   method= "color",
                    order = 'original',
-                   # type = 'upper', 
                    addCoef.col = NULL ,
                    tl.col="black", 
                    tl.srt=45, 
@@ -609,6 +608,7 @@ gene_cor_pl_server <- function(id,Xproj) {
                    col=brewer.pal(n=20, name=input$corr_palette),
                    p.mat = signif_dat()$p,
                    sig.level = 1-input$conflev,
+                   pch.cex = 1.5,
                    insig = 'label_sig')
         }
         
