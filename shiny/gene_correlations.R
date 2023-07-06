@@ -42,7 +42,8 @@ gene_cor_UI <- function(id) {
             inputId = ns("p_gene"),
             label = "*Please select primary gene",
             choices = NULL,
-            options=list(placeholder = "eg. TSPAN6")
+            options=list(placeholder = "eg. TSPAN6",
+                         plugins = list('restore_on_backspace'))
             
           ),
           numericInput(
