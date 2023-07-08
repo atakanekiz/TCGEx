@@ -63,9 +63,9 @@ gsea_ui <- function(id, label, choices) {
           condition = "output.gsea_var_status",
           ns=ns, 
           
-          numericInput(inputId = ns("gsea_high_cutoff"), "High cutoff percent", 50, 1, 100),
+          numericInput(inputId = ns("gsea_high_cutoff"), "High cutoff percent (Sample Group Left)", 50, 1, 100),
           
-          numericInput(inputId = ns("gsea_low_cutoff"), "Low cutoff percent", 50, 1, 100)
+          numericInput(inputId = ns("gsea_low_cutoff"), "Low cutoff percent (Reference Group Right)", 50, 1, 100)
         ),
         
         conditionalPanel(
@@ -84,7 +84,17 @@ gsea_ui <- function(id, label, choices) {
         
         hr(),
         
-        numericInput(inputId = ns("nperm"), "3. nPerm Value", min = 1000, step = 100, value = 1000),
+        numericInput(inputId = ns("nperm"), 
+                     label = tags$span(
+                       "3. nPerm Value",
+                       tags$i(
+                         class = "glyphicon glyphicon-info-sign",
+                         style = "color:#0072B2;",
+                         title = "If you increase the nPerm Value, the analysis takes more time"
+                       )),
+                     min = 1000, 
+                     step = 100, 
+                     value = 1000),
         
         radioButtons(ns("gsea_gene_sets"), "Choose gene set collection", choices = c("MSigDB", "Custom Gene Set")),
         
@@ -163,8 +173,6 @@ gsea_ui <- function(id, label, choices) {
           
         ),
         
-        numericInput(inputId = ns("gsea_width"), "Choose the width of the plot to download", min = 100, step = 10, value = 480),
-        numericInput(inputId = ns("gsea_height"), "Choose the height of the plot to download", min = 100, step = 10, value = 480),
         
         
         actionBttn(inputId = ns("gsea_run"), 
@@ -173,6 +181,10 @@ gsea_ui <- function(id, label, choices) {
                    block = TRUE,
                    color = "primary"),
         br(),
+        
+        numericInput(inputId = ns("gsea_width"), "Choose the width of the plot to download", min = 100, step = 10, value = 480),
+        numericInput(inputId = ns("gsea_height"), "Choose the height of the plot to download", min = 100, step = 10, value = 480),
+        
         downloadButton(ns("g_downloadPlot"), "Download GSEA Plot", style="color: #eeeeee; background-color: #01303f; border-color: #01303f"),
         br(),
         br(),
@@ -180,6 +192,9 @@ gsea_ui <- function(id, label, choices) {
         br(),
         br(),
         downloadButton(ns("downloadData"), "Download ranked data", style="color: #eeeeee; background-color: #01303f; border-color: #01303f"),
+        br(),
+        br(),
+        downloadButton(ns("download_fgsea"), "Download GSEA result", style="color: #eeeeee; background-color: #01303f; border-color: #01303f"),
         br(),
         br(),
         #help section UI
@@ -661,14 +676,18 @@ gsea_server <- function(id,Xproj) {
     #fgsea reactive
     
     res <- reactive({
-      
-      
-      fgsea(pathways = gene_set(), stats = preranked_genes(), minSize = 1, maxSize = ncol(gsea_dat())-3,  nPermSimple = input$nperm)
-      
-      
-      
+    
+    fgsea(pathways = gene_set(), stats = preranked_genes(), minSize = 1, maxSize = ncol(gsea_dat())-3,  nPermSimple = input$nperm)
+    
     }) 
     
+    gsea_res <- reactive({
+      
+      g_res = data.frame(res())
+      
+      g_res = select(g_res, c("pathway", "pval", "padj", "log2err", "ES", "NES"))
+      
+    })
   
     
     
@@ -701,13 +720,13 @@ gsea_server <- function(id,Xproj) {
         if (verbose)
           message(paste("Plotting", plot_ind()))
         
-        annot_padj <- signif(as.numeric(res()[res()$pathway == plot_ind(), "padj"]), digits = 2)
+        annot_pval <- signif(as.numeric(res()[res()$pathway == plot_ind(), "pval"]), digits = 2)
         annot_NES <- signif(as.numeric(res()[res()$pathway == plot_ind(), "NES"]), digits = 2)
         annot_ES <- signif(as.numeric(res()[res()$pathway == plot_ind(), "ES"]), digits = 2)
         x_pos <- length(preranked_genes())/4
         
         
-        annot_text <- paste("adj.p: ", annot_padj, "\nNES:", annot_NES)
+        annot_text <- paste("p: ", annot_pval, "\nNES:", annot_NES)
         
         
         
@@ -879,6 +898,17 @@ gsea_server <- function(id,Xproj) {
         filename = "preranked_genes.xlsx",
         content = function(file) {
           write.xlsx(ranked_data(), file, colnames = TRUE,
+                     rownames = F, append = FALSE, showNA = TRUE)
+          
+          
+        } 
+      )
+      
+      
+      output$download_fgsea <- downloadHandler(
+        filename = "GSEA_result.xlsx",
+        content = function(file) {
+          write.xlsx(gsea_res(), file, colnames = TRUE,
                      rownames = F, append = FALSE, showNA = TRUE)
           
           
