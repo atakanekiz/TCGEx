@@ -39,7 +39,8 @@ gene_vs_gene_ui <- function(id) {
         inputId = ns("Gene1"),
         label = "*Please select the x axis variable",
         choices = NULL,
-        options=list(placeholder = "eg. TSPAN6 or meta.gender")
+        options=list(placeholder = "eg. TSPAN6 or meta.gender",
+                     plugins = list('restore_on_backspace'))
         
       ),
       
@@ -50,7 +51,8 @@ gene_vs_gene_ui <- function(id) {
         inputId = ns("Gene2"),
         label = "*Please select the y axis variable",
         choices = NULL,
-        options=list(placeholder = "eg. TOX or meta.Histology")
+        options=list(placeholder = "eg. TOX or meta.Histology",
+                     plugins = list('restore_on_backspace'))
         
       ),
      
@@ -60,7 +62,8 @@ gene_vs_gene_ui <- function(id) {
             inputId = ns("Gene3"),
             label = "*Please select a gene to classify the patients by size (optional)",
             choices = NULL,
-            options=list(placeholder = "eg. WNT")
+            options=list(placeholder = "eg. WNT",
+                         plugins = list('restore_on_backspace'))
             
                  )
           
@@ -73,7 +76,8 @@ gene_vs_gene_ui <- function(id) {
             inputId = ns("Gene4"),
             label = "*Please select a gene to classify the patients by transparency (optional)",
             choices = NULL,
-            options=list(placeholder = "eg. BRCA2")
+            options=list(placeholder = "eg. BRCA2",
+                         plugins = list('restore_on_backspace'))
             
                )
           
@@ -86,7 +90,8 @@ gene_vs_gene_ui <- function(id) {
             inputId = ns("Gene5"),
             label = "*Please select a gene to classify the patients by color (optional)",
             choices = NULL,
-            options=list(placeholder = "eg. MYC")
+            options=list(placeholder = "eg. MYC",
+                         plugins = list('restore_on_backspace'))
             
              )
           
@@ -119,11 +124,12 @@ gene_vs_gene_ui <- function(id) {
          inputId = ns("Facet"),
          label = "Please select faceting variable",
          choices = NULL,
-         options=list(placeholder = "eg. meta.gender"))
+         options=list(placeholder = "eg. meta.gender",
+                      plugins = list('restore_on_backspace')))
        
      ),
      
-      checkboxInput(ns("formula"), "Show statistics", value = F),
+      checkboxInput(ns("formula"), "Show statistics", value = T),
       actionBttn(inputId = ns("do"), 
                  label = "Generate Correlation Plot",
                  style = "unite",
@@ -325,7 +331,7 @@ gene_vs_gene_server <- function(id,Xproj) {
         
         {if(input$formula) p <- p + stat_cor(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), family = "Arial", size = 7, geom = "label")}        
         
-        {if(input$genecor_regline) p <- p + stat_smooth(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), method = "lm", color = input$col2)}   
+        {if(input$genecor_regline) p <- p + stat_smooth(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), method = "loess", color = input$col2)}   
         
         {if(input$facet) p <- p + facet_wrap(facet_cat(), labeller = as_labeller(dataset, default=label_wrap_gen(16)), scales = "free_y")+ 
             
