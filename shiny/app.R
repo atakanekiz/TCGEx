@@ -42,7 +42,6 @@ ui <- dashboardPage(skin = "black",
                     dashboardHeader(
                       title = tags$a(href = "https://tcgex.iyte.edu.tr/",
                                      tags$img(src='images/tcgex_logo_2.jpg', align = 'middle', height = '50px')
-                        
                          )
                       ),
                     dashboardSidebar(
