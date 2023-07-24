@@ -444,8 +444,8 @@ km_server <- function(id,Xproj) {
         
         if(is.numeric(dat[[input$km_feat]])){
           
-          km_feat_zero_count <<- sum(dat[[input$km_feat]] == 0, na.rm=T)
-          km_feat_na_count <<- sum(is.na(dat[[input$km_feat]]))
+          km_feat_zero_count <- sum(dat[[input$km_feat]] == 0, na.rm=T)
+          km_feat_na_count <- sum(is.na(dat[[input$km_feat]]))
           
           mid_value_feat <- ifelse(input$keep_mid, "mid", NA)
           
@@ -481,8 +481,8 @@ km_server <- function(id,Xproj) {
           
           if(is.numeric(dat[[input$km_feat]])){
             
-            km_feat_zero_count <<- sum(dat[[input$km_feat]] == 0, na.rm=T)
-            km_feat_na_count <<- sum(is.na(dat[[input$km_feat]]))
+            km_feat_zero_count <- sum(dat[[input$km_feat]] == 0, na.rm=T)
+            km_feat_na_count <- sum(is.na(dat[[input$km_feat]]))
             
             mid_value_feat <- ifelse(input$keep_mid, "mid", NA)
             
@@ -510,8 +510,8 @@ km_server <- function(id,Xproj) {
           
           if(is.numeric(dat[[input$km_feat]])){
             
-            km_feat_zero_count <<- sum(dat[[input$km_feat]] == 0, na.rm=T)
-            km_feat_na_count <<- sum(is.na(dat[[input$km_feat]]))
+            km_feat_zero_count <- sum(dat[[input$km_feat]] == 0, na.rm=T)
+            km_feat_na_count <- sum(is.na(dat[[input$km_feat]]))
             
             mid_value_feat <- ifelse(input$keep_mid, "mid", NA)
             
@@ -538,15 +538,15 @@ km_server <- function(id,Xproj) {
           
           covar_dat <- Xproj$a()[, ..sel_cols2][meta.definition %in% input$km_samptyp,][!duplicated(meta.patient), ]
           
-          dat[, (input$km_covar) := covar_dat[, input$km_covar, with=F]]
+          dat <- left_join(dat, covar_dat, by=c("meta.vital_status", "meta.days_to_event", "meta.definition", "meta.patient"))
           
-          km_covar_zero_count <<- sum(dat[[input$km_covar]] == 0, na.rm=T)
-          km_covar_na_count <<- sum(is.na(dat[[input$km_covar]]))
+          km_covar_zero_count <- sum(dat[[input$km_covar]] == 0, na.rm=T)
+          km_covar_na_count <- sum(is.na(dat[[input$km_covar]]))
           
           if(is.numeric(dat[[input$km_covar]])){
             
-            km_covar_zero_count <<- sum(dat[[input$km_covar]] == 0, na.rm=T)
-            km_covar_na_count <<- sum(is.na(dat[[input$km_covar]]))
+            km_covar_zero_count <- sum(dat[[input$km_covar]] == 0, na.rm=T)
+            km_covar_na_count <- sum(is.na(dat[[input$km_covar]]))
             
             mid_value_covar <- ifelse(input$keep_mid_covar, "mid", NA)
             
@@ -566,15 +566,15 @@ km_server <- function(id,Xproj) {
             
             covar_dat <- Xproj$a()[, ..sel_cols2][meta.definition %in% input$km_samptyp,][!duplicated(meta.patient), ]
             
-            dat[, (input$km_covar) := covar_dat[, input$km_covar, with=F]]
+            dat <- left_join(dat, covar_dat, by=c("meta.vital_status", "meta.days_to_event", "meta.definition", "meta.patient"))
             
-            km_covar_zero_count <<- sum(dat[[input$km_covar]] == 0, na.rm=T)
-            km_covar_na_count <<- sum(is.na(dat[[input$km_covar]]))
+            km_covar_zero_count <- sum(dat[[input$km_covar]] == 0, na.rm=T)
+            km_covar_na_count <- sum(is.na(dat[[input$km_covar]]))
             
             if(is.numeric(dat[[input$km_covar]])){
               
-              km_covar_zero_count <<- sum(dat[[input$km_covar]] == 0, na.rm=T)
-              km_covar_na_count <<- sum(is.na(dat[[input$km_covar]]))
+              km_covar_zero_count <- sum(dat[[input$km_covar]] == 0, na.rm=T)
+              km_covar_na_count <- sum(is.na(dat[[input$km_covar]]))
               
               mid_value_covar <- ifelse(input$keep_mid_covar, "mid", NA)
               
@@ -592,15 +592,15 @@ km_server <- function(id,Xproj) {
             
             covar_dat <- Xproj$a()[, ..sel_cols2][meta.definition %in% input$km_samptyp,][!duplicated(meta.patient), ]
             
-            dat[, (input$km_covar) := covar_dat[, input$km_covar, with=F]]
+            dat <- left_join(dat, covar_dat, by=c("meta.vital_status", "meta.days_to_event", "meta.definition", "meta.patient", "meta.project_id"))
             
-            km_covar_zero_count <<- sum(dat[[input$km_covar]] == 0, na.rm=T)
-            km_covar_na_count <<- sum(is.na(dat[[input$km_covar]]))
+            km_covar_zero_count <- sum(dat[[input$km_covar]] == 0, na.rm=T)
+            km_covar_na_count <- sum(is.na(dat[[input$km_covar]]))
             
             if(is.numeric(dat[[input$km_covar]])){
               
-              km_covar_zero_count <<- sum(dat[[input$km_covar]] == 0, na.rm=T)
-              km_covar_na_count <<- sum(is.na(dat[[input$km_covar]]))
+              km_covar_zero_count <- sum(dat[[input$km_covar]] == 0, na.rm=T)
+              km_covar_na_count <- sum(is.na(dat[[input$km_covar]]))
               
               mid_value_covar <- ifelse(input$keep_mid_covar, "mid", NA)
               
