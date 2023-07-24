@@ -44,7 +44,8 @@ ui <- navbarPage(
   title = div(
   tags$a(href = "https://tcgex.iyte.edu.tr/"
          
-         ,tags$img(src = 'images/left_logo.png', align = 'middle', height = "50px", width = "130px"))
+         # ,tags$img(src = 'images/left_logo.png', align = 'middle', height = "50px", width = "130px")
+         )
 ),
   theme = mytheme,
   tags$head(
@@ -59,9 +60,11 @@ ui <- navbarPage(
     )
   ),
   
+
+
   tabPanel(
-    "HOMEPAGE",
-    # tags$img(src = "images/Untitled.png", height = "27px", width = "90px"),
+    # "TCGEx",
+     tags$img(src = "images/left_logo.png", height = "23px", width = "90px"),
     includeHTML("home.html"),
     tags$script(src = "plugins/scripts.js"),
     tags$head(
@@ -120,6 +123,7 @@ ui <- navbarPage(
     "ABOUT",
     fluidPage(includeHTML("about.html"), shinyjs::useShinyjs())
   ),
+
   footer = includeHTML("footer.html")
 )
 
