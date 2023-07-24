@@ -298,8 +298,9 @@ ml_ui <- function(id) {
       sidebarPanel(
         dataprepInputControl_UI("ml"),
         introjsUI(),
-        actionButton(ns("mldata_help"), "Tutorial")
+        actionButton(ns("mldata_help"), "Tutorial"),
         
+        width = 3
         
       ),
       mainPanel(

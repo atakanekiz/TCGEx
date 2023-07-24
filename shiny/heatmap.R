@@ -146,6 +146,8 @@ heatmap_ui <- function(id, label, choices) {
       introjsUI(),
       actionButton(ns("heatmap_help"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
       
+      width = 3
+      
     ),
     
     mainPanel(

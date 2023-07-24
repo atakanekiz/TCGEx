@@ -74,8 +74,9 @@ gene_cor_UI <- function(id) {
           br(),
           #help section UI
           introjsUI(),
-          actionButton(ns("intro4"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7")
+          actionButton(ns("intro4"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
           
+          width = 3
           
         ),
         
@@ -162,9 +163,9 @@ gene_cor_UI <- function(id) {
           br(),
           #help section UI
           introjsUI(),
-          actionButton(ns("intro5"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7")
+          actionButton(ns("intro5"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
           
-          
+          width = 3
           
         ),
         mainPanel(

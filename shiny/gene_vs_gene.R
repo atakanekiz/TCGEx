@@ -142,7 +142,7 @@ gene_vs_gene_ui <- function(id) {
       introjsUI(),
       actionButton(ns("intro"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
       
-      
+      width = 3
       
     ),
     

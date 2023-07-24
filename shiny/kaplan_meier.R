@@ -7,6 +7,7 @@ library(ggplot2)
 library(dplyr)
 
 ##KM survival modularization
+
 km_ui <- function(id, label, choices) {
   
   
@@ -16,9 +17,9 @@ km_ui <- function(id, label, choices) {
   tagList(
     
     ui <- fluidPage(
+      
       sidebarPanel(
-        
-        
+      
         selectizeInput(inputId = ns ("km_samptyp"), 
                        multiple=T,
                        label = "1. Select sample types",
@@ -120,11 +121,12 @@ km_ui <- function(id, label, choices) {
         introjsUI(),
         actionButton(ns("KM_help"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
         
+        width = 3
         
-      ),
+    ),
       
       mainPanel(
-        
+       
         
         plotOutput(outputId = ns("km_plot")),
         

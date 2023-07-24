@@ -186,7 +186,9 @@ pca_ui <- function(id) {
       #help section UI
       
       introjsUI(),
-      actionButton(ns("intro2"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7")
+      actionButton(ns("intro2"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
+      
+      width = 3
       
     ),
     
