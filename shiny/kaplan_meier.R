@@ -428,6 +428,7 @@ km_server <- function(id,Xproj) {
       
       if(Xproj$cancer_length() ==1) {
         
+        
         sel_cols <- c(input$km_feat, "meta.vital_status", "meta.days_to_event", "meta.definition", "meta.patient")
         
         dat <- Xproj$a()[, ..sel_cols]
@@ -489,7 +490,7 @@ km_server <- function(id,Xproj) {
           } else if(is.character(dat[[input$km_feat]]) | is.factor(dat[[input$km_feat]])){
             
             
-            dat <- dat[get(input$km_feat) %in% input$sel_feat_meta_groups, ]
+            dat <- dat[get(input$km_feat) %in% input$sel_feat_meta_groups, ]   
             
           }
         } else if (input$choose_KM == "Per cancer type") {
@@ -536,7 +537,7 @@ km_server <- function(id,Xproj) {
           
           covar_dat <- Xproj$a()[, ..sel_cols2][meta.definition %in% input$km_samptyp,][!duplicated(meta.patient), ]
           
-          dat[, (input$km_covar) := covar_dat[, input$km_covar, with=F]]
+          dat <- left_join(dat, covar_dat, by=c("meta.vital_status", "meta.days_to_event", "meta.definition", "meta.patient"))
           
           km_covar_zero_count <- sum(dat[[input$km_covar]] == 0, na.rm=T)
           km_covar_na_count <- sum(is.na(dat[[input$km_covar]]))
@@ -554,6 +555,7 @@ km_server <- function(id,Xproj) {
             
             
             dat <- dat[get(input$km_covar) %in% input$sel_covar_meta_groups, ]
+          
             
           }    
         } else if (Xproj$cancer_length() > 1) { 
@@ -612,6 +614,7 @@ km_server <- function(id,Xproj) {
               
               
               dat <- dat[get(input$km_covar) %in% input$sel_covar_meta_groups, ]
+              
               
             }
             
