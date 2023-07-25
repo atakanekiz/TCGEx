@@ -64,7 +64,7 @@ ui <- navbarPage(
 
   tabPanel(
     # "TCGEx",
-     tags$img(src = "images/left_logo.png", height = "23px", width = "90px"),
+     tags$img(src = "images/left_logo.png", height = "30px", width = "80px"),
     includeHTML("home.html"),
     tags$script(src = "plugins/scripts.js"),
     tags$head(
@@ -77,8 +77,8 @@ ui <- navbarPage(
   ),
   tabPanel(
     "DATA SELECTION",
-    fluidPage(h1("Please select the cancer data"), select_data_ui("module"))
-  ),
+    fluidPage(h1("Please select the cancer data"), select_data_ui("module")
+  )),
   tabPanel(
     "KAPLAN-MEIER",
     fluidPage(h1("Kaplan-Meier Survival Analysis "), km_ui("module"))

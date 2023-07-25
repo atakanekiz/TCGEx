@@ -23,7 +23,7 @@ RUN apt-get update -qq && \
     && apt-get clean \ 
     && rm -rf /var/lib/apt/lists/*
 
-RUN Rscript -e "install.packages(c('heatmaply','grid','plyr','colourpicker','gridExtra','corrplot','stats','shinyjs','fresh','openxlsx','readxl','shinydashboardPlus','survminer', 'survival','DT','data.table', 'dplyr', 'Hmisc', 'janitor', 'plotly', 'shinybusy', 'rintrojs', 'shinyvalidate', 'ggpubr', 'shiny', 'ggplot2', 'shinydashboard', 'ggiraph', 'extrafont', 'broom', 'msigdbr', 'pheatmap', 'RColorBrewer','shinyWidgets', 'tidyverse', 'glmnet', 'shinythemes', 'factoextra', 'kableExtra', 'plotROC'))"
+RUN Rscript -e "install.packages(c('heatmaply','shinyBS','grid','plyr','colourpicker','gridExtra','corrplot','stats','shinyjs','fresh','openxlsx','readxl','shinydashboardPlus','survminer', 'survival','DT','data.table', 'dplyr', 'Hmisc', 'janitor', 'plotly', 'shinybusy', 'rintrojs', 'shinyvalidate', 'ggpubr', 'shiny', 'ggplot2', 'shinydashboard', 'ggiraph', 'extrafont', 'broom', 'msigdbr', 'pheatmap', 'RColorBrewer','shinyWidgets', 'tidyverse', 'glmnet', 'shinythemes', 'factoextra', 'kableExtra', 'plotROC'))"
 RUN Rscript -e "if (!requireNamespace('BiocManager', quietly = TRUE)) install.packages('BiocManager')"
 RUN Rscript -e "BiocManager::install(c('edgeR', 'fgsea','ComplexHeatmap'))"
 

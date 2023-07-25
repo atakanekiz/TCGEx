@@ -1,0 +1,9 @@
+proxy:
+  title: My Shiny Proxy
+  port: 8080
+
+specs:
+  - id: my-shiny-app
+    display-name: My Shiny App
+    description: My R Shiny application
+    container-cmd: ["docker", "run", "--rm", "-p", "3838:3838", "my-shiny-app-image"]
