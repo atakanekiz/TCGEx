@@ -413,7 +413,10 @@ km_server <- function(id,Xproj) {
     
     outputOptions(output, "proj_length_KM", suspendWhenHidden = FALSE)  
     
-    
+    km_feat_zero_count <- reactiveValues(value = NULL)
+    km_feat_na_count <- reactiveValues(value = NULL)
+    km_covar_zero_count <- reactiveValues(value = NULL)
+    km_covar_na_count <- reactiveValues(value = NULL)
     
     # Prepare trimmed km_dat object
     
@@ -444,9 +447,11 @@ km_server <- function(id,Xproj) {
         
         if(is.numeric(dat[[input$km_feat]])){
           
-          km_feat_zero_count <- sum(dat[[input$km_feat]] == 0, na.rm=T)
-          km_feat_na_count <- sum(is.na(dat[[input$km_feat]]))
           
+          km_feat_zero_count$value <- sum(dat[[input$km_feat]] == 0, na.rm = TRUE)
+          
+          km_feat_na_count$value <- sum(is.na(dat[[input$km_feat]]))
+  
           mid_value_feat <- ifelse(input$keep_mid, "mid", NA)
           
           dat[, (input$km_feat) := ifelse(dat[[input$km_feat]] >= quantile(dat[[input$km_feat]], (100-input$hi_cutoff)/100, na.rm = T), "high", ifelse(dat[[input$km_feat]] < quantile(dat[[input$km_feat]], input$lo_cutoff/100, na.rm = T), "low", mid_value_feat))]
@@ -481,8 +486,8 @@ km_server <- function(id,Xproj) {
           
           if(is.numeric(dat[[input$km_feat]])){
             
-            km_feat_zero_count <- sum(dat[[input$km_feat]] == 0, na.rm=T)
-            km_feat_na_count <- sum(is.na(dat[[input$km_feat]]))
+            km_feat_zero_count$value <- sum(dat[[input$km_feat]] == 0, na.rm = TRUE)
+            km_feat_na_count$value <- sum(is.na(dat[[input$km_feat]]))
             
             mid_value_feat <- ifelse(input$keep_mid, "mid", NA)
             
@@ -510,8 +515,8 @@ km_server <- function(id,Xproj) {
           
           if(is.numeric(dat[[input$km_feat]])){
             
-            km_feat_zero_count <- sum(dat[[input$km_feat]] == 0, na.rm=T)
-            km_feat_na_count <- sum(is.na(dat[[input$km_feat]]))
+            km_feat_zero_count$value <- sum(dat[[input$km_feat]] == 0, na.rm = TRUE)
+            km_covar_na_count$value <- sum(is.na(dat[[input$km_feat]]))
             
             mid_value_feat <- ifelse(input$keep_mid, "mid", NA)
             
@@ -540,13 +545,13 @@ km_server <- function(id,Xproj) {
           
           dat <- left_join(dat, covar_dat, by=c("meta.vital_status", "meta.days_to_event", "meta.definition", "meta.patient"))
           
-          km_covar_zero_count <- sum(dat[[input$km_covar]] == 0, na.rm=T)
-          km_covar_na_count <- sum(is.na(dat[[input$km_covar]]))
+          km_covar_zero_count$value <- sum(dat[[input$km_covar]] == 0, na.rm=T)
+          km_covar_na_count$value <- sum(is.na(dat[[input$km_covar]]))
           
           if(is.numeric(dat[[input$km_covar]])){
             
-            km_covar_zero_count <- sum(dat[[input$km_covar]] == 0, na.rm=T)
-            km_covar_na_count <- sum(is.na(dat[[input$km_covar]]))
+            km_covar_zero_count$value <- sum(dat[[input$km_covar]] == 0, na.rm=T)
+            km_covar_na_count$value <- sum(is.na(dat[[input$km_covar]]))
             
             mid_value_covar <- ifelse(input$keep_mid_covar, "mid", NA)
             
@@ -568,13 +573,13 @@ km_server <- function(id,Xproj) {
             
             dat <- left_join(dat, covar_dat, by=c("meta.vital_status", "meta.days_to_event", "meta.definition", "meta.patient"))
             
-            km_covar_zero_count <- sum(dat[[input$km_covar]] == 0, na.rm=T)
-            km_covar_na_count <- sum(is.na(dat[[input$km_covar]]))
+            km_covar_zero_count$value <- sum(dat[[input$km_covar]] == 0, na.rm=T)
+            km_covar_na_count$value <- sum(is.na(dat[[input$km_covar]]))
             
             if(is.numeric(dat[[input$km_covar]])){
               
-              km_covar_zero_count <- sum(dat[[input$km_covar]] == 0, na.rm=T)
-              km_covar_na_count <- sum(is.na(dat[[input$km_covar]]))
+              km_covar_zero_count$value <- sum(dat[[input$km_covar]] == 0, na.rm=T)
+              km_covar_na_count$value <- sum(is.na(dat[[input$km_covar]]))
               
               mid_value_covar <- ifelse(input$keep_mid_covar, "mid", NA)
               
@@ -594,13 +599,13 @@ km_server <- function(id,Xproj) {
             
             dat <- left_join(dat, covar_dat, by=c("meta.vital_status", "meta.days_to_event", "meta.definition", "meta.patient", "meta.project_id"))
             
-            km_covar_zero_count <- sum(dat[[input$km_covar]] == 0, na.rm=T)
-            km_covar_na_count <- sum(is.na(dat[[input$km_covar]]))
+            km_covar_zero_count$value <- sum(dat[[input$km_covar]] == 0, na.rm=T)
+            km_covar_na_count$value <- sum(is.na(dat[[input$km_covar]]))
             
             if(is.numeric(dat[[input$km_covar]])){
               
-              km_covar_zero_count <- sum(dat[[input$km_covar]] == 0, na.rm=T)
-              km_covar_na_count <- sum(is.na(dat[[input$km_covar]]))
+              km_covar_zero_count$value <- sum(dat[[input$km_covar]] == 0, na.rm=T)
+              km_covar_na_count$value <- sum(is.na(dat[[input$km_covar]]))
               
               mid_value_covar <- ifelse(input$keep_mid_covar, "mid", NA)
               
@@ -711,21 +716,21 @@ km_server <- function(id,Xproj) {
       
       writeLines("\n\n\n")
       
-      print(paste("Number of samples with zero counts of the numeric feature:", km_feat_zero_count))
+      print(paste("Number of samples with zero counts of the numeric feature:", km_feat_zero_count$value))
       
       writeLines("\n")
       
-      print(paste("Number of samples lacking information on selected feature:", km_feat_na_count))
+      print(paste("Number of samples lacking information on selected feature:", km_feat_na_count$value))
       
       writeLines("\n")
       
       if(input$km_covar != ""){
         
-        print(paste("Number of samples with zero counts of the numeric covariate:", km_covar_zero_count))
+        print(paste("Number of samples with zero counts of the numeric covariate:", km_covar_zero_count$value))
         
         writeLines("\n")
         
-        print(paste("Number of samples lacking information on selected covariate:", km_covar_na_count))
+        print(paste("Number of samples lacking information on selected covariate:", km_covar_na_count$value))
         
       }
     })
