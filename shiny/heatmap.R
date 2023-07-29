@@ -74,7 +74,7 @@ heatmap_ui <- function(id, label, choices) {
                     tags$i(
                       class = "glyphicon glyphicon-info-sign", 
                       style = "color:#0072B2;",
-                      title = "The xlsx/xls file should contain two unnamed columns: the first column should contain the gene set name, and the second column should contain gene names. Each gene should be associated with a gene set (ie. no missing data), and multiple gene sets can be provided in one file."
+                      title = "The xlsx/xls file should contain one unnamed column: the first column should contain the gene names."
                     )),
                   accept = c(".xls", ".xlsx"),
                   multiple = FALSE)
