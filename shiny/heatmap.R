@@ -74,7 +74,7 @@ heatmap_ui <- function(id, label, choices) {
                     tags$i(
                       class = "glyphicon glyphicon-info-sign", 
                       style = "color:#0072B2;",
-                      title = "The xlsx/xls file should contain two unnamed columns: the first column should contain the gene set name, and the second column should contain gene names. Each gene should be associated with a gene set (ie. no missing data), and multiple gene sets can be provided in one file."
+                      title = "The xlsx/xls file should contain one unnamed column: the first column should contain the gene names."
                     )),
                   accept = c(".xls", ".xlsx"),
                   multiple = FALSE)
@@ -98,7 +98,13 @@ heatmap_ui <- function(id, label, choices) {
                           multiple = TRUE,
                           options=list(placeholder = "eg. meta.definition, meta.LYMPHOCYTE.SCORE etc.")),
            selectizeInput(ns("hm_categorized_gene"), 
-                          "Please select a gene/genes to be categorized as high/low (optional)", 
+                          label = tags$span(
+                            "Please select a gene/genes to be categorized as high/low (optional)",
+                            tags$i(
+                              class = "glyphicon glyphicon-info-sign",
+                              style = "color:#0072B2;",
+                              title = "Also meta variables can be added into this input box, but averaging meta variables and genes might produce meaningless results, try to examine them separately."
+                            )),
                           choices = NULL,
                           multiple = TRUE,
                           options=list(placeholder = "eg. TSPAN6, TNMD etc."))
@@ -179,15 +185,20 @@ heatmap_server <- function(id,Xproj) {
               
               intro = paste(c(
                 "This is the heatmap module where you can visualize expression patterns of selected genes. Continue the tutorial to learn how to use this module",
-                "You can select sample types to focus the analysis on the specific subsets.",
+                "You can select sample types to focus the analysis on the specific subsets",
                 "Here you can choose how you would like to select genes for the plot",
                 "You can manually type genes of interest here (for other input possibilities, go back to the previous selection box)",
                 "Next, you can apply a variance filter to keep only highly variable genes in the plot. 100 (default) means no filter is applied. If you like to see top 10% variable genes only, set this value to 10. Such filtering can help see more informative genes.",
                 "You can select categorical clinical meta data features to show as annotations on top of the heatmap.",
-                "You can also create an annotation bar by categorizing the patients based on their gene expression levels. You can specify one or more genes here. When multiple genes are entered, their average is calculated. Patients are categorized as 'high' and 'low' according to the median gene expression value",
-                "You can choose how the distance will be calculated for genes here",
+                "You can also create an annotation bar by categorizing the patients based on their gene expression levels or continuous meta variables. You can specify one or more variables here. When multiple variables are entered, their average is calculated so be careful not to average the genes and meta variables since it can produce meaningles results. In that case try to view them separately by the buttons on the next input.Patients are categorized as 'high' and 'low' according to the median variable expression value",
+                "You can choose how the distance will be calculated for genes here. To learn more about the methods check following links out.
+                Dist function - https://l1nq.com/Qhchg ,
+                Clustering in Heatmaps - https://ury1.com/nnnnt ,
+                Clustering and heatmaps - https://ury1.com/I2EPP",
                 "You can choose how the distance will be calculated for samples here",
-                "You can choose different hierarchical clustering methods for genes here",
+                "You can choose different hierarchical clustering methods for genes here. To learn more about the methods check following links out. 
+                Hclust function - https://ury1.com/9i3zc ,
+                Hierarchical Clustering - https://urx1.com/xDeiP ",
                 "You can choose different hierarchical clustering methods for samples here"
               ))
             )
@@ -208,10 +219,15 @@ heatmap_server <- function(id,Xproj) {
                 "When plotting gene sets from MSigDB, you can specify the particular gene set here.",
                 "Next, you can apply a variance filter to keep only highly variable genes in the plot. 100 (default) means no filter is applied. If you like to see top 10% variable genes only, set this value to 10. Such filtering can help see more informative genes.",
                 "You can select categorical clinical meta data features to show as annotations on top of the heatmap.",
-                "You can also create an annotation bar by categorizing the patients based on their gene expression levels. You can specify one or more genes here. When multiple genes are entered, their average is calculated. Patients are categorized as 'high' and 'low' according to the median gene expression value",
-                "You can choose how the distance will be calculated for genes here",
+                "You can also create an annotation bar by categorizing the patients based on their gene expression levels or continuous meta variables. You can specify one or more variables here. When multiple variables are entered, their average is calculated so be careful not to average the genes and meta variables since it can produce meaningles results. In that case try to view them separately by the buttons on the next input.Patients are categorized as 'high' and 'low' according to the median variable expression value",
+                "You can choose how the distance will be calculated for genes here. To learn more about the methods check following links out.
+                Dist function - https://l1nq.com/Qhchg ,
+                Clustering in Heatmaps - https://ury1.com/nnnnt ,
+                Clustering and heatmaps - https://ury1.com/I2EPP",
                 "You can choose how the distance will be calculated for samples here",
-                "You can choose different hierarchical clustering methods for genes here",
+                "You can choose different hierarchical clustering methods for genes here. To learn more about the methods check following links out. 
+                Hclust function - https://ury1.com/9i3zc ,
+                Hierarchical Clustering - https://urx1.com/xDeiP ",
                 "You can choose different hierarchical clustering methods for samples here"
               ))
             )
@@ -232,10 +248,15 @@ heatmap_server <- function(id,Xproj) {
                 "You can upload a xlsx/xls file including your genes of interest to see them on the heatmap",
                 "Next, you can apply a variance filter to keep only highly variable genes in the plot. 100 (default) means no filter is applied. If you like to see top 10% variable genes only, set this value to 10. Such filtering can help see more informative genes.",
                 "You can select categorical clinical meta data features to show as annotations on top of the heatmap.",
-                "You can also create an annotation bar by categorizing the patients based on their gene expression levels. You can specify one or more genes here. When multiple genes are entered, their average is calculated. Patients are categorized as 'high' and 'low' according to the median gene expression value",
-                "You can choose how the distance will be calculated for genes here",
+                "You can also create an annotation bar by categorizing the patients based on their gene expression levels or continuous meta variables. You can specify one or more variables here. When multiple variables are entered, their average is calculated so be careful not to average the genes and meta variables since it can produce meaningles results. In that case try to view them separately by the buttons on the next input.Patients are categorized as 'high' and 'low' according to the median variable expression value",
+                "You can choose how the distance will be calculated for genes here. To learn more about the methods check following links out.
+                Dist function - https://l1nq.com/Qhchg ,
+                Clustering in Heatmaps - https://ury1.com/nnnnt ,
+                Clustering and heatmaps - https://ury1.com/I2EPP",
                 "You can choose how the distance will be calculated for samples here",
-                "You can choose different hierarchical clustering methods for genes here",
+                "You can choose different hierarchical clustering methods for genes here. To learn more about the methods check following links out. 
+                Hclust function - https://ury1.com/9i3zc ,
+                Hierarchical Clustering - https://urx1.com/xDeiP ",
                 "You can choose different hierarchical clustering methods for samples here"
               ))
             )
@@ -480,19 +501,11 @@ heatmap_server <- function(id,Xproj) {
             
             meta <- as.data.table(meta)
             
-            if (input$hm_gene_categorization_button == "take_median"){
-              
-              if (length(as.vector(input$hm_categorized_gene)) == 1){
-                
-                setnames(meta, "meta", "hm_categorized_gene_means")
-                
-              } else {
-                
-                meta <- meta[, hm_categorized_gene_means := rowMeans(.SD, na.rm = TRUE), .SDcols = c(hm_categorized_gene)]  
-                
-              }
-              
-              
+            if (input$hm_gene_categorization_button == "take_median" & input$hm_categorized_gene > 1){
+
+            
+              meta <- meta[, hm_categorized_gene_means := rowMeans(.SD, na.rm = TRUE), .SDcols = c(hm_categorized_gene)]  
+
               cat_gene_median <-  median(meta$hm_categorized_gene_means, na.rm = TRUE)
               
               meta <- meta[,c(hm_categorized_gene):=NULL]
@@ -500,13 +513,13 @@ heatmap_server <- function(id,Xproj) {
               meta <- as.data.frame(meta)
               
               meta <- meta %>% 
-                mutate(hm_categorized_gene_high_low = case_when(
+                mutate(categorized_gene_set_expression = case_when(
                   meta$hm_categorized_gene_means > cat_gene_median ~ "high",
                   meta$hm_categorized_gene_means < cat_gene_median ~ "low"
                 )) %>% 
                 select(-hm_categorized_gene_means)
               
-            } else if (input$hm_gene_categorization_button == "take_separately"){
+            } else if (input$hm_gene_categorization_button == "take_separately" | input$hm_categorized_gene == 1){
               
               dat <- meta
               
@@ -576,7 +589,7 @@ heatmap_server <- function(id,Xproj) {
                 meta <- as.data.frame(meta)
                 
                 meta <- meta %>% 
-                  mutate(hm_categorized_gene_high_low = case_when(
+                  mutate(categorized_gene_set_expression = case_when(
                     meta$hm_categorized_gene_means > cat_gene_median ~ "high",
                     meta$hm_categorized_gene_means < cat_gene_median ~ "low"
                   )) %>% 
@@ -595,7 +608,7 @@ heatmap_server <- function(id,Xproj) {
                   meta <- as.data.frame(meta)
                   
                   meta <- meta %>% 
-                    mutate(hm_categorized_gene_high_low = case_when(
+                    mutate(categorized_gene_set_expression = case_when(
                       meta$hm_categorized_gene_means > cat_gene_median ~ "high",
                       meta$hm_categorized_gene_means < cat_gene_median ~ "low"
                     )) %>% 

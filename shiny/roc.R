@@ -92,7 +92,7 @@ roc_ui <- function(id, label, choices) {
                     tags$i(
                       class = "glyphicon glyphicon-info-sign", 
                       style = "color:#0072B2;",
-                      title = "The xlsx/xls file should contain two unnamed columns: the first column should contain the gene set name, and the second column should contain gene names. Each gene should be associated with a gene set (ie. no missing data), and multiple gene sets can be provided in one file."
+                      title = "The xlsx/xls file should contain one unnamed column: the first column should contain the gene names."
                     )),
                   accept = c(".xls", ".xlsx"),
                   multiple = FALSE))
@@ -268,7 +268,8 @@ roc_server <- function(id, Xproj) {
         if(length(as.vector(input$binaryone)) == 0){
           return()
         }
-        updateSelectizeInput(session = getDefaultReactiveDomain(),"binarytwo", choices = Xproj$a()[[input$binaryone]], server = TRUE)
+          updateSelectizeInput(session = getDefaultReactiveDomain(),"binarytwo", choices = Xproj$a()[[input$binaryone]] , server = TRUE)
+
       })
       
       observeEvent(input$binaryone,{
@@ -276,7 +277,7 @@ roc_server <- function(id, Xproj) {
         if(length(as.vector(input$binaryone)) == 0){
           return()
         }
-        updateSelectizeInput(session = getDefaultReactiveDomain(),"binarythree", choices = Xproj$a()[[input$binaryone]], server = TRUE)
+          updateSelectizeInput(session = getDefaultReactiveDomain(),"binarythree", choices = Xproj$a()[[input$binaryone]] , server = TRUE)
       })
       
       
@@ -532,6 +533,12 @@ roc_server <- function(id, Xproj) {
           
         }else{
           
+          if(input$binaryone == "meta.definition"){
+            validate(need(all(input$binarytwo %in% input$roc_definition_sel) == TRUE, "Please add the binarization meta.definition subtype to the first input box to not filter it in the data."))
+            validate(need(all(input$binarythree %in% input$roc_definition_sel) == TRUE, "Please add the binarization meta.definition subtype to the first input box to not filter it in the data."))
+            
+          } else
+            
           #Calculation of plot with the chosen binary value.
           
           validate(need(input$roc_definition_sel, "Please select a sample type"))
