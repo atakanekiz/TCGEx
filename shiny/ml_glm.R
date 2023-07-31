@@ -151,7 +151,8 @@ dataprepInputControl_UI <- function(id) {
                                           class = "glyphicon glyphicon-info-sign", 
                                           style = "color:#0072B2;",
                                           title = "The xlsx/xls file should contain a list of gene symbols. Neither matrix/dataframe structure nor named columns are required. If a matrix/dataframe provided, first column will be extracted as a gene list."
-                                        )), 
+                                        ), tags$br(),
+                                        a(href="sample_gene_input.xlsx", "Sample Input File", download=NA, target="_blank")), 
                                         accept =  c(".xls", ".xlsx") 
                                       )
                      )
@@ -205,7 +206,8 @@ dataprepInputControl_UI <- function(id) {
                                           class = "glyphicon glyphicon-info-sign", 
                                           style = "color:#0072B2;",
                                           title = "The xlsx/xls file should contain a list of gene symbols. Neither matrix/dataframe structure nor named columns are required. If a matrix/dataframe provided, first column will be extracted as a gene list." 
-                                        )
+                                        ),tags$br(),
+                                        a(href="sample_gene_input.xlsx", "Sample Input File", download=NA, target="_blank")
                                       ), accept =  c(".xls", ".xlsx") 
                                       )
                                       

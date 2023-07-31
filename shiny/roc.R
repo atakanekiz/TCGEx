@@ -93,9 +93,12 @@ roc_ui <- function(id, label, choices) {
                       class = "glyphicon glyphicon-info-sign", 
                       style = "color:#0072B2;",
                       title = "The xlsx/xls file should contain one unnamed column: the first column should contain the gene names."
-                    )),
+                    ), tags$br(),
+                    a(href="sample_gene_input.xlsx", "Sample Input File", download=NA, target="_blank")
+                    ),
                   accept = c(".xls", ".xlsx"),
                   multiple = FALSE))
+        # a(href="roc_input_sample.xlsx", "Download Sample File", download=NA, target="_blank"))
       ,
       materialSwitch(inputId = ns("show_msigdb_gene_sets"),
                      label = "Add MSigDB sets as a second predictor",

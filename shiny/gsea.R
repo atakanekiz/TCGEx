@@ -152,7 +152,8 @@ gsea_ui <- function(id, label, choices) {
                       class = "glyphicon glyphicon-info-sign",
                       style = "color:#0072B2;",
                       title = "The xlsx/xls file should contain two unnamed columns: the first column should contain the gene set name, and the second column should contain human gene names. Each gene should be associated with a gene set (ie. no missing data), and multiple gene sets can be provided in one file."
-                    )),
+                    ),tags$br(),
+                    a(href="sample_gsea_input.xlsx", "Sample Input File", download=NA, target="_blank")),
                     accept = c(".xls", ".xlsx" # "text/csv", "text/comma-separated-values,text/plain", ".csv"
                                )),  
           radioButtons(ns("individual_2"), "Show", choices = c("Top Pathways", "Specific Pathway"), selected = "Top Pathways"),

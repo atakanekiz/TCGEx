@@ -130,7 +130,8 @@ gene_cor_UI <- function(id) {
                           class = "glyphicon glyphicon-info-sign",
                           style = "color:#0072B2;",
                           title = "The xlsx/xls file should contain a single unnamed column with human gene names."
-                        )),
+                        ), tags$br(),
+                        a(href="sample_gene_input.xlsx", "Sample Input File", download=NA, target="_blank")),
                       accept = c(".xls", ".xlsx")),  
           ),
           
