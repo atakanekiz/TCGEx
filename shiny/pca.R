@@ -333,26 +333,26 @@ pca_server <- function(id,Xproj) {
         
 
       
-      na_number <- reactive({
-        
-        NA_number <- data.frame(colSums(is.na(gene_cols())))
-        
-        na_miRNA <- NA_number %>% filter(grepl('hsa.', rownames(NA_number)))
-        
-        colnames(na_miRNA)[1] <- "na_numbers"
-        
-        if (length(unique(na_miRNA$na_numbers)) == 1) {
-          
-          na_num = unique(na_miRNA$na_numbers)
-          
-        }else if (length(unique(na_miRNA$na_numbers)) > 1) {
-          
-          na_num = max(unique(na_miRNA$na_numbers))
-          
-        }
-        
-        
-      })
+      # na_number <- reactive({
+      #   
+      #   NA_number <- data.frame(colSums(is.na(gene_cols())))
+      #   
+      #   na_miRNA <- NA_number %>% filter(grepl('hsa.', rownames(NA_number)))
+      #   
+      #   colnames(na_miRNA)[1] <- "na_numbers"
+      #   
+      #   if (length(unique(na_miRNA$na_numbers)) == 1) {
+      #     
+      #     na_num = unique(na_miRNA$na_numbers)
+      #     
+      #   }else if (length(unique(na_miRNA$na_numbers)) > 1) {
+      #     
+      #     na_num = max(unique(na_miRNA$na_numbers))
+      #     
+      #   }
+      #   
+      #   
+      # })
      
 
       
@@ -436,20 +436,61 @@ pca_server <- function(id,Xproj) {
             "The column must contain only character input.Please ensure that the column contains only human gene names"))
         
         
-        if(na_number()/nrow(gene_cols())*100 > 15) {
+        gene_var <- Xproj$a() %>%
+            select(!starts_with("meta.")) %>%
+            select(where(is.numeric))
           
-          c_gene <- filter(c_gene, !grepl("hsa.", genes))
+        
+        
+        
+        NA_number <- data.frame(colSums(is.na(gene_cols())))
+        
+        na_miRNA <- NA_number %>% filter(grepl('hsa.', rownames(NA_number)))
+        
+        colnames(na_miRNA)[1] <- "na_numbers"
+        
+        if (length(unique(na_miRNA$na_numbers)) == 1) {
+          
+          na_num = unique(na_miRNA$na_numbers)
+          
+        }else if (length(unique(na_miRNA$na_numbers)) > 1) {
+          
+          na_num = max(unique(na_miRNA$na_numbers))
           
         }
         
-        if(na_number()/nrow(gene_cols())*100 > 15) {
-          
-          showNotification("genes which starts with 'hsa.' were removed because there is no enough miRNA data ", 
-                           duration = 7, 
-                           closeButton = T, 
-                           type= "message")
-          
-        }
+        
+        
+        # if(((NA_number/nrow(gene_var))*100) > 15) {
+        #   
+        #   c_gene <- filter(c_gene, !grepl("hsa.", genes))
+        #   
+        #   showNotification("genes which starts with 'hsa.' were removed because there is no enough miRNA data ", 
+        #                    duration = 7, 
+        #                    closeButton = T, 
+        #                    type= "message")
+        #   
+        # }else {
+        #   
+        #   c_gene 
+        #   
+        # }
+        
+        ifelse(((NA_number/nrow(gene_var))*100) > 25, return(c_gene <- filter(c_gene, !grepl("hsa.", genes))), c_gene )
+        
+        # ifelse(((NA_number/nrow(gene_var))*100) > 25,  return({showNotification("genes which starts with 'hsa.' were removed because there is no enough miRNA data ", 
+        #                                                                 duration = 7, 
+        #                                                                 closeButton = T, 
+        #                                                                 type= "message")}), "")
+        
+        # if((NA_number/(nrow(gene_var)*100)) > 15) {
+        # 
+        #   showNotification("genes which starts with 'hsa.' were removed because there is no enough miRNA data ",
+        #                    duration = 7,
+        #                    closeButton = T,
+        #                    type= "message")
+        # 
+        # }
 
         c_gene
         
