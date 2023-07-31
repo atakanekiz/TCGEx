@@ -59,7 +59,7 @@ ui <- navbarPage(
       )
     )
   ),
-  
+
 
 
   tabPanel(
@@ -77,39 +77,39 @@ ui <- navbarPage(
   ),
   tabPanel(
     "DATA SELECTION",
-    fluidPage(h1("Please select the cancer data"), select_data_ui("module")
+    fluidPage(h1("Please select cancer project(s)"), select_data_ui("module")
   )),
   tabPanel(
     "KAPLAN-MEIER",
-    fluidPage(h1("Kaplan-Meier Survival Analysis "), km_ui("module"))
+    fluidPage(h1("Kaplan-Meier Survival Analysis"), km_ui("module"))
   ),
   tabPanel(
     "COX-PH",
     fluidPage(h1("Cox Proportional Hazards Survival Analysis"), cox_ui("module"))
   ),
   tabPanel(
-    "METADATA ANALYSIS",
-    fluidPage(h1("MetaData Analysis"), gene_vs_cat_ui("module"))
+    "METADATA",
+    fluidPage(h1("Metadata Analysis"), gene_vs_cat_ui("module"))
   ),
   tabPanel(
-    "CORRELATION ANALYSIS",
+    "CORRELATION",
     fluidPage(h1("Correlation Analysis"), gene_vs_gene_ui("module"))
   ),
   tabPanel(
-    "CORRELATED GENE TABLE",
-    fluidPage(h1("Correlated Gene Table Analysis "), gene_cor_UI("module"))
+    "CORRELATED GENES",
+    fluidPage(h1("Correlated Gene Table Analysis"), gene_cor_UI("module"))
   ),
   tabPanel(
     "HEATMAP",
-    fluidPage(h1("Heatmap Analysis "), heatmap_ui("module"))
+    fluidPage(h1("Heatmap Analysis"), heatmap_ui("module"))
   ),
   tabPanel(
     "GSEA",
-    fluidPage(h1("Gene Sets Enrichment Analysis (GSEA) "), gsea_ui("module"))
+    fluidPage(h1("Gene Sets Enrichment Analysis (GSEA)"), gsea_ui("module"))
   ),
   tabPanel(
     "ROC",
-    fluidPage(h1("Receiver Operating Characteristic (ROC) Analysis "), roc_ui("module"))
+    fluidPage(h1("Receiver Operating Characteristic (ROC) Analysis"), roc_ui("module"))
   ),
   tabPanel(
     "PCA",
