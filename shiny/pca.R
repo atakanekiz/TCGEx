@@ -417,7 +417,7 @@ pca_server <- function(id,Xproj) {
       
       cre_gene <- reactive({
         
-        # browser()
+        browser()
         
         req(input$pca_up)
         
@@ -436,29 +436,37 @@ pca_server <- function(id,Xproj) {
             "The column must contain only character input.Please ensure that the column contains only human gene names"))
         
         
-        gene_var <- Xproj$a() %>%
-            select(!starts_with("meta.")) %>%
-            select(where(is.numeric))
-          
+        # gene_var <- Xproj$a() %>%
+        #     select(!starts_with("meta.")) %>%
+        #     select(where(is.numeric))
+        #   
         
         
         
-        NA_number <- data.frame(colSums(is.na(gene_cols())))
+        # NA_number <- data.frame(na_mum = colSums(is.na(gene_cols())))
+        # 
+        # na_miRNA <- NA_number %>% filter(grepl('hsa.', rownames(NA_number)))
+        # 
+        # colnames(na_miRNA)[1] <- "na_numbers"
+        # 
+        # if (length(unique(na_miRNA$na_numbers)) == 1) {
+        #   
+        #   na_num = unique(na_miRNA$na_numbers)
+        #   
+        # }else if (length(unique(na_miRNA$na_numbers)) > 1) {
+        #   
+        #   na_num = max(unique(na_miRNA$na_numbers))
+        #   
+        # }
         
-        na_miRNA <- NA_number %>% filter(grepl('hsa.', rownames(NA_number)))
         
-        colnames(na_miRNA)[1] <- "na_numbers"
         
-        if (length(unique(na_miRNA$na_numbers)) == 1) {
-          
-          na_num = unique(na_miRNA$na_numbers)
-          
-        }else if (length(unique(na_miRNA$na_numbers)) > 1) {
-          
-          na_num = max(unique(na_miRNA$na_numbers))
-          
-        }
-        
+          c_gene <- filter(c_gene, !grepl("hsa.", genes))
+
+          showNotification("Genes which starts with 'hsa.' were removed. This tool will allow to use miRNA's coming soon",
+                           duration = 7,
+                           closeButton = T,
+                           type= "message")
         
         
         # if(((NA_number/nrow(gene_var))*100) > 15) {
@@ -476,7 +484,7 @@ pca_server <- function(id,Xproj) {
         #   
         # }
         
-        ifelse(((NA_number/nrow(gene_var))*100) > 25, return(c_gene <- filter(c_gene, !grepl("hsa.", genes))), c_gene )
+        # ifelse(((NA_number/nrow(gene_var))*100) > 25, return(c_gene <- filter(c_gene, !grepl("hsa.", genes))), c_gene )
         
         # ifelse(((NA_number/nrow(gene_var))*100) > 25,  return({showNotification("genes which starts with 'hsa.' were removed because there is no enough miRNA data ", 
         #                                                                 duration = 7, 
