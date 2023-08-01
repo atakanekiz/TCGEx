@@ -716,7 +716,7 @@ heatmap_server <- function(id,Xproj) {
           
           mat_data <- mat()
           
-          mat_data <- mat_data[ , colSums(is.na(mat_data))==0]
+          # mat_data <- mat_data[ , colSums(is.na(mat_data))==0]
           
           hclustfun_row = function(x) stats::hclust(x, method = input$clustering_method_rows)
           hclustfun_col = function(x) stats::hclust(x, method = input$clustering_method_columns)
