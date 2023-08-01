@@ -417,8 +417,6 @@ pca_server <- function(id,Xproj) {
       
       cre_gene <- reactive({
         
-        browser()
-        
         req(input$pca_up)
         
         c_gene <- as.data.frame(read_excel(input$pca_up$datapath, sheet = 1, col_names = F))  
