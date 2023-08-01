@@ -65,7 +65,7 @@ pca_ui <- function(id) {
                       style = "color:#0072B2;",
                       title = "The xlsx/xls file should contain a single unnamed column with human gene names."
                     ), tags$br(),
-                    a(href="sample_pca_input.xlsx", "Sample Input File", download=NA, target="_blank")),
+                    a(href="sample_gene_input.xlsx", "Sample Input File", download=NA, target="_blank")),
                   accept = c(".xls", ".xlsx" # "text/csv", "text/comma-separated-values,text/plain", ".csv")), 
        
         
