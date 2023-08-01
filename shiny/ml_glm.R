@@ -364,18 +364,18 @@ ml_ui <- function(id) {
                  materialSwitch(
                    NS(id,"plot_setting"),
                    label = "Plot selected coefficient(s)",
-                   value = TRUE,
+                   value = FALSE,
                    status = "primary"
                  )
           ),
           column(6,
                  conditionalPanel(
-                   condition = "input.plot_setting == true ", ns = ns, 
+                   condition = "input.plot_setting == false ", ns = ns, 
                    plotlyOutput(NS(id,"coef_lambda_plot"))
                    
                  ),
                  conditionalPanel(
-                   condition = "input.plot_setting == false ", ns = ns,
+                   condition = "input.plot_setting == true ", ns = ns,
                    plotlyOutput(NS(id,"coef_lambda_plot_some"))
                    
                  )
@@ -392,7 +392,7 @@ ml_ui <- function(id) {
         fluidRow(
           column(6,
                  conditionalPanel(
-                   condition = "input.plot_setting == false ", ns = ns,
+                   condition = "input.plot_setting == true ", ns = ns,
                    plotlyOutput(NS(id,"coef_box_plot"))
                    
                  )),

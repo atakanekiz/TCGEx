@@ -477,7 +477,7 @@ heatmap_server <- function(id,Xproj) {
       })
       
       meta <- eventReactive(input$heatmap_run, {
-        
+
         # Preparing the meta data for annotation bar.
         
         req(pre_data())
@@ -502,7 +502,7 @@ heatmap_server <- function(id,Xproj) {
             
             meta <- as.data.table(meta)
             
-            if (input$hm_gene_categorization_button == "take_median" & input$hm_categorized_gene > 1){
+            if (input$hm_gene_categorization_button == "take_median" & length(as.vector(input$hm_categorized_gene)) > 1){
 
             
               meta <- meta[, hm_categorized_gene_means := rowMeans(.SD, na.rm = TRUE), .SDcols = c(hm_categorized_gene)]  
@@ -520,7 +520,7 @@ heatmap_server <- function(id,Xproj) {
                 )) %>% 
                 select(-hm_categorized_gene_means)
               
-            } else if (input$hm_gene_categorization_button == "take_separately" | input$hm_categorized_gene == 1){
+            } else if (input$hm_gene_categorization_button == "take_separately" | length(as.vector(input$hm_categorized_gene)) == 1){
               
               dat <- meta
               
@@ -716,7 +716,7 @@ heatmap_server <- function(id,Xproj) {
           
           mat_data <- mat()
           
-          mat_data <- mat_data[ , colSums(is.na(mat_data))==0]
+          # mat_data <- mat_data[ , colSums(is.na(mat_data))==0]
           
           hclustfun_row = function(x) stats::hclust(x, method = input$clustering_method_rows)
           hclustfun_col = function(x) stats::hclust(x, method = input$clustering_method_columns)
