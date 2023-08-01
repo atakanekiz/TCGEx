@@ -411,6 +411,13 @@ gene_vs_cat_server <- function(id,Xproj){
       }
       
       
+      # Data validation to check if there are enough observations for the t-test
+      validate(need(nrow(df) >= 3, "Not enough observations for t-test"))
+      
+      # to ensure there are enough unique groups in the categorical variable for t-test to work
+      validate(need(length(unique(df[[input$cat_plotvar]])) >= 2, "Not enough unique groups in the categorical variable for t-test"))
+      
+      
       res <-compare_means(form, df,
                           method=input$exprs_statmethod,
                           p.adjust.method = input$exprs_padjmethod,
