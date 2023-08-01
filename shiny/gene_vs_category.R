@@ -46,7 +46,7 @@ gene_vs_cat_ui <- function(id, label, choices){
                        choices=NULL, # will be updated dynamically
                        options = list(placeholder = "eg. meta.gender")),
         
-        checkboxInput(inputId = ns("exprs_stats"), "Show statistics?", F),
+        checkboxInput(inputId = ns("exprs_stats"), "Show statistics?", T),
         
         actionBttn(inputId = ns("cat_gene_run"), 
                    label = "Generate Correlation Plot",
@@ -275,7 +275,21 @@ gene_vs_cat_server <- function(id,Xproj){
     
     available_cols_cat_plotvar <- reactive({setdiff(sel_cols_cat_plotvar(), c(hidden_cols_cat_plotvar(), sel_cols_cat_plotvar()[numeric_cols_cat_plotvar()]))})
     
-    #   # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
+    
+    
+    # Remove cols which is including more than 10 levels and numeric for facet_plotvar
+    
+    hidden_cols_facet_plotvar<-reactive({"meta.definition"})
+    
+    meta_cols_facet_plotvar <- reactive({colnames(Xproj$a())[grep("^meta\\.", colnames(Xproj$a()))]})
+    
+    sel_cols_facet_plotvar <- reactive({meta_cols_facet_plotvar()[unlist(lapply(Xproj$a()[, meta_cols_facet_plotvar(), with = FALSE], function(x) length(levels(x)))) < 10]})
+    
+    numeric_cols_facet_plotvar <- reactive({unlist(lapply(Xproj$a()[, sel_cols_facet_plotvar(), with = FALSE], function(x) is.numeric(x)))})
+    
+    available_cols_facet_plotvar <- reactive({setdiff(sel_cols_facet_plotvar(), c(hidden_cols_facet_plotvar(), sel_cols_facet_plotvar()[numeric_cols_facet_plotvar()]))})
+   
+     #   # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
     observe({updateSelectizeInput(session,
                                   "cat_plotvar", selected="",
                                   choices = available_cols_cat_plotvar(),
@@ -298,7 +312,7 @@ gene_vs_cat_server <- function(id,Xproj){
     # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
     observe({updateSelectizeInput(session,
                                   "facet_plotvar", selected="",
-                                  choices = colnames(Xproj$a()%>% select(starts_with("meta."))),
+                                  choices = available_cols_facet_plotvar(),
                                   server = T)})
     
     
