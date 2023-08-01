@@ -449,12 +449,7 @@ gene_vs_cat_server <- function(id,Xproj){
     val3 <- reactiveValues()
     
     output$exprs_plot <- renderPlot({
-      
-      
       if(input$facet_plotvar == "") facetvar <- NULL else facetvar <- input$facet_plotvar
-      
-      
-      
       
       pp <- ggboxplot(exprs_plotdat(), input$cat_plotvar, input$num_plotvar, 
                       fill = input$cat_plotvar,
@@ -464,23 +459,96 @@ gene_vs_cat_server <- function(id,Xproj){
                       add.params = list(size=input$exprs_plotaddsize,
                                         color=input$exprs_plotaddcolor),
                       outlier.shape=NA,
-                      font.x=18, font.y=18, font.tickslab = 18,
-                      panel.labs.font = list(size=16))
+                      font.x=14, font.y=14, font.tickslab = 12, # Adjust axis label and tick font size
+                      panel.labs.font = list(size=16)) # Adjust panel label font size
       
       if(input$exprs_rotatex) pp <- pp + rotate_x_text(angle=45)
       
-      if(input$exprs_stats) pp <- pp + stat_pvalue_manual(stat_layer(), size=7,
-                                                          label=input$exprs_statlabel, 
-                                                          step.increase = 0.1, 
-                                                          step.group.by = facetvar)
+      if(input$exprs_stats) {
+        pp <- pp + stat_pvalue_manual(stat_layer(), size=7,
+                                      label=input$exprs_statlabel, 
+                                      step.increase = 0.1, 
+                                      step.group.by = facetvar)
+        
+        # Move "ns" labels to the top of the plot
+        pp <- pp + theme(plot.caption = element_text(hjust = 0.5))
+      }
+      
+      # Determine the number of facets
+      num_facets <- ifelse(is.null(facetvar), 0, length(unique(exprs_plotdat()[[facetvar]])))
+      
+      # Dynamically adjust legend settings based on the number of facets
+      if (num_facets > 0) {
+        if (num_facets > 1) {
+          font_size_legend <- 12
+          legend_title_size <- 14
+          legend_position <- "bottom"
+        } else {
+          font_size_legend <- 14
+          legend_title_size <- 16
+          legend_position <- "bottom"
+        }
+        
+        # Adjust font size based on the number of facets
+        font_size_x <- switch(num_facets,
+                              1, 10,
+                              2, 9,
+                              3, 8,
+                              4, 7,
+                              5, 6,
+                              6, 5,
+                              7, 5,
+                              8, 4,
+                              9, 4,
+                              10, 4,
+                              12)
+        
+        font_size_y <- font_size_x
+        
+        # Adjust the size of facet panels based on the number of facets
+        panel_spacing <- switch(num_facets,
+                                1, 0.2,
+                                2, 0.25,
+                                3, 0.3,
+                                4, 0.35,
+                                5, 0.4,
+                                6, 0.45,
+                                7, 0.5,
+                                8, 0.55,
+                                9, 0.6,
+                                10, 0.65,
+                                12, 0.7)
+        
+        pp <- pp + theme(legend.text = element_text(size = font_size_legend),       # Font size for legend text
+                         legend.title = element_text(size = legend_title_size),     # Font size for legend title
+                         axis.text.x = element_text(size = font_size_x),            # Font size for x-axis labels
+                         axis.text.y = element_text(size = font_size_y),            # Font size for y-axis labels
+                         legend.position = legend_position,                         # Move the legend to the bottom of the plot
+                         plot.title = element_text(size = 18),                       # Increase the title font size
+                         plot.margin = unit(c(1, 1, 2, 1), "lines"),                 # Adjust the bottom margin
+                         legend.margin = margin(0, 0, 0, 0),                         # Reduce the legend margin
+                         legend.box.margin = margin(0, 0, 0, 0),                     # Reduce the legend box margin
+                         legend.spacing = unit(0.1, "lines"),                        # Reduce the legend spacing
+                         strip.text = element_text(size = font_size_x),              # Adjust facet text size
+                         panel.spacing = unit(panel_spacing, "lines"))               # Adjust the size of facet panels
+      } else {
+        pp <- pp + theme(legend.text = element_text(size = 14),                    
+                         legend.title = element_text(size = 16),
+                         axis.text.x = element_text(size = 12),                      
+                         axis.text.y = element_text(size = 12),
+                         legend.position = "bottom",                                
+                         plot.title = element_text(size = 18),                      
+                         plot.margin = unit(c(1, 1, 2, 1), "lines"),                 
+                         legend.margin = margin(0, 0, 0, 0),                        
+                         legend.box.margin = margin(0, 0, 0, 0),                     
+                         legend.spacing = unit(0.1, "lines"))                        
+      }
       
       val3$pp <- pp
       
       print(pp)
-      
-      
-      
     })
+    
     
     
     output$downloadPlot4 <- downloadHandler(
