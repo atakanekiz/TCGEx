@@ -285,10 +285,24 @@ heatmap_server <- function(id,Xproj) {
         } 
       })
       
+      
+      # Remove cols which is including more than 10 levels and numeric
+      
+      hidden_cols_heatmap_plotvar<-reactive({"meta.definition"})
+      
+      meta_cols_heatmap_plotvar <- reactive({colnames(Xproj$a())[grep("^meta\\.", colnames(Xproj$a()))]})
+      
+      sel_cols_heatmap_plotvar <- reactive({meta_cols_heatmap_plotvar()[unlist(lapply(Xproj$a()[, meta_cols_heatmap_plotvar(), with = FALSE], function(x) length(levels(x)))) < 10]})
+      
+      numeric_cols_heatmap_plotvar <- reactive({unlist(lapply(Xproj$a()[, sel_cols_heatmap_plotvar(), with = FALSE], function(x) is.numeric(x)))})
+      
+      available_cols_heatmap_plotvar <- reactive({setdiff(sel_cols_heatmap_plotvar(), c(hidden_cols_heatmap_plotvar(), sel_cols_heatmap_plotvar()[numeric_cols_heatmap_plotvar()]))})
+      
+      
       # observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "selectors", choices = c("Manually enter gene names", "MSigDB gene sets", "Upload a xlsx/xls file"), server = TRUE)})
       
       observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "genes", choices = colnames(Xproj$a()[, lapply(Xproj$a(), is.numeric) == TRUE, with = FALSE]), server = TRUE)})
-      observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "annotation", choices = colnames(Xproj$a()[, lapply(Xproj$a(), is.factor) == TRUE, with = FALSE]), selected = character(0), server = TRUE)})
+      observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "annotation", choices = available_cols_heatmap_plotvar(), selected = character(0), server = TRUE)})
       observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "hm_categorized_gene", choices = colnames(Xproj$a()[, lapply(Xproj$a(), is.numeric) == TRUE, with = FALSE]), selected = character(0), server = TRUE)})
       observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "hm_definition_sel", choices = c(Xproj$a()$meta.definition), selected = character(0), server = TRUE)})
       
