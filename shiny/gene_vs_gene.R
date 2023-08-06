@@ -103,7 +103,7 @@ gene_vs_gene_ui <- function(id) {
    
       
       checkboxInput(ns("notification"), "Show patient information", value = T),
-      checkboxInput(ns("genecor_regline"), "Show regression line", value = F),
+      checkboxInput(ns("genecor_regline"), "Show fitting curve", value = F),
       conditionalPanel(
        
        condition = "input.genecor_regline", ns=ns,
