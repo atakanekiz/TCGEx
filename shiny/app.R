@@ -48,6 +48,7 @@ ui <- navbarPage(
          )
 ),
   theme = mytheme,
+
   tags$head(
     tags$script(src = "https://www.googletagmanager.com/gtag/js?id=G-HWCPP52NZ2"),
     tags$script(
