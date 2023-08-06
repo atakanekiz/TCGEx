@@ -108,6 +108,16 @@ gene_vs_gene_ui <- function(id) {
        
        condition = "input.genecor_regline", ns=ns,
        
+       radioButtons(ns("regline_type"), "Please select a fitting type", choices = c("linear", "loess")),
+       
+       conditionalPanel(
+         
+         condition = "input.regline_type == 'linear'", ns=ns,
+         
+         checkboxInput(ns("formula"), "Show statistics", value = T)
+         
+       ),
+       
        colourInput(
          ns("col2"), "Please select a color for the regression line", "darkorange1",
          returnName = TRUE, 
@@ -129,7 +139,7 @@ gene_vs_gene_ui <- function(id) {
        
      ),
      
-      checkboxInput(ns("formula"), "Show statistics", value = T),
+      # checkboxInput(ns("formula"), "Show statistics", value = T),
       actionBttn(inputId = ns("do"), 
                  label = "Generate Correlation Plot",
                  style = "unite",
@@ -329,9 +339,13 @@ gene_vs_gene_server <- function(id,Xproj) {
         {if(input$notification == F) p <- p + geom_point_interactive(aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]], alpha= dataset[[input$Gene3]]), size= dataset[[input$Gene4]], color = dataset[[input$Gene5]])}       
         
         
-        {if(input$formula) p <- p + stat_cor(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), family = "Arial", size = 7, geom = "label")}        
+        {if(input$formula & input$regline_type == 'linear') p <- p + stat_cor(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), family = "Arial", size = 7, geom = "label")}        
         
-        {if(input$genecor_regline) p <- p + stat_smooth(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), method = "loess", color = input$col2)}   
+        # {if(input$genecor_regline) p <- p + stat_smooth(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), method = "loess", color = input$col2)}
+        
+        {if(input$regline_type == "linear") p <- p + stat_smooth(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), method = "lm", color = input$col2)}   
+        
+        {if(input$regline_type == "loess") p <- p + stat_smooth(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), method = "loess", color = input$col2)}   
         
         {if(input$facet) p <- p + facet_wrap(facet_cat(), labeller = as_labeller(dataset, default=label_wrap_gen(16)), scales = "free_y")+ 
             
