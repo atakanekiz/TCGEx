@@ -64,7 +64,7 @@ gene_cor_UI <- function(id) {
           
           
           actionBttn(inputId = ns("act"),
-                     label = "Generate",
+                     label = "Analyze",
                      style = "unite",
                      block = TRUE,
                      color = "primary"),
@@ -157,7 +157,7 @@ gene_cor_UI <- function(id) {
           ),
           
           actionBttn(inputId = ns("act2"),
-                     label = "Generate",
+                     label = "Analyze",
                      style = "unite",
                      block = TRUE,
                      color = "primary"),
@@ -220,7 +220,7 @@ gene_cor_tb_server <- function(id,Xproj) {
           element = paste0("#", session$ns(c(NA, "genecor_samp2 + .selectize-control","p_gene + .selectize-control ", "top_high", "top_low", "corr"))),
           
           intro = paste(c(
-            "This is the Gene Correlation Analysis module. In this first tab, you can select a gene and tabulate its top positively and negatively correlated genes. You can also visualize correlations in the second tab above. Continue the tutorial to learn the features of this module. <b>NOTE:</b> Since pair-wise correlation is calculated genome-wide, this analysis can take a some time.",
+            "This is the Gene Correlation Analysis module. In this first tab, you can select a gene and tabulate its top positively and negatively correlated genes. You can also visualize correlations in the second tab above. Continue the tutorial to learn the features of this module. <b>NOTE:</b> Since pair-wise correlation is calculated genome-wide, this analysis can take some time.",
             "Select sample type (eg. primary and/or metastatic) to focus the analysis on specific patient subsets.",
             "Select your gene of interest here.",
             "Here you can change the number of top positively correlated genes shown.",

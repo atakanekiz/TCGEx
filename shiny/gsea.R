@@ -177,7 +177,7 @@ gsea_ui <- function(id, label, choices) {
         
         
         actionBttn(inputId = ns("gsea_run"), 
-                   label = "Perform GSEA",
+                   label = "Analyze",
                    style = "unite",
                    block = TRUE,
                    color = "primary"),
@@ -240,10 +240,10 @@ gsea_server <- function(id,Xproj) {
           element = paste0("#", session$ns(c(NA, "gsea_samptyp + .selectize-control", "gsea_feat + .selectize-control ", "nperm", "gsea_gene_sets", "individual_2"))),
           
           intro = paste(c(
-            "This is the gene set enrichment analysis (GSEA) module. Here, you can categorize samples based on a custom criteria and examine whether previously defined or user-provided gene sets are enriched in either of the data subset. <b>NOTE:</b> This module can take some time depending on the data set. Continue with the tutorial to learn more about this module.",
+            "This is the gene set enrichment analysis (GSEA) module. Here, you can categorize samples based on a custom criteria and examine whether previously defined or user-provided gene sets are enriched in either of the data subset. Continue with the tutorial to learn more about this module. <b>NOTE:</b> This module can take some time depending on the data set and user selections.",
             "You can select which sample types should be included in the analysis (eg. primary and/or metastatic).",
-            "GSEA is performed between two groups of data. If you would like to perform GSEA for a categorical clinical feature, you are expected to select two data subsets and define one of them as the 'sample' for the analysis (the other one will become reference). If you would like to perform GSEA for a numerical feature such as gene expression, then you can categorize samples based on gene expression values as 'high' and 'low' through user-defined quantiles. Setting high and low cutoff to 50, will categorize gene expression at the median value. You can set this numbers to 25 to compare the top 25% expressors to bottom 25% expressors.", 
-            "You can increase the number of permutations for preliminary estimation of P-values.",
+            "GSEA is performed between two groups of data. If you would like to perform GSEA for a categorical clinical feature, you are expected to select two data subsets and define one of them as the 'sample' for the analysis (the other one will become reference). If you would like to perform GSEA for a numerical feature such as gene expression, then you can categorize samples based on gene expression values as 'high' and 'low' through user-defined quantiles. Setting high and low cutoff to 50, will categorize gene expression at the median value. You can set these numbers to 25 to compare the top 25% expressors to bottom 25% expressors.", 
+            "You can increase the number of permutations for preliminary estimation of P-values. If you see NA's in enrichment scores and p-values during your analyses, you can try increasing this number. Note that the calculation time will be longer accordingly.",
             "You can perform GSEA using previously defined gene sets from the <a href='https://www.gsea-msigdb.org/gsea/msigdb/'>Molecular Signatures Database (MSigDB)</a> or provide your own gene sets",
             "If you select the 'Top Pathways' option, pathways with the highest and lowest enrichments are shown </i>(they may not always be significant!)</i>. If you choose 'Specific Pathway', the enrichment plot is prepared only for the pathway you select."
           ))
@@ -262,8 +262,8 @@ gsea_server <- function(id,Xproj) {
             "GSEA is performed between two groups of data. If you would like to perform GSEA for a categorical clinical feature, you are expected to select two data subsets and define one of them as the 'sample' for the analysis (the other one will become reference). If you would like to perform GSEA for a numerical feature such as gene expression, then you can categorize samples based on gene expression values as 'high' and 'low' through user-defined quantiles. Setting high and low cutoff to 50, will categorize gene expression at the median value. You can set this numbers to 25 to compare the top 25% expressors to bottom 25% expressors.",
             "You can increase the number of permutations for preliminary estimation of P-values.",
             "You can perform GSEA using previously defined gene sets from the <a href='https://www.gsea-msigdb.org/gsea/msigdb/'>Molecular Signatures Database (MSigDB)</a> or provide your own gene sets",
-            "Select MSigDB gene set collection to use in the analyses <b>NOTE:</b> Since some of these collections contain a large number of gene sets, analysis can take some time.",
-            "If you select the 'Top Pathways' option, pathways with the highest and lowest enrichments are shown </i>(they may not always be significant!)</i>. If you choose 'Specific Pathway', the enrichment plot is prepared only for the pathway you select."
+            "Select MSigDB gene set collection to use in the analyses <b>NOTE:</b> Since some of these collections (such as curated and GO gene sets) contain a large number of entries, analysis can take some time.",
+            "If you select the 'Top Pathways' option, pathways with the highest and lowest enrichments are shown </i>(please note that they may not always be significant)</i>. If you choose 'Specific Pathway', the enrichment plot is prepared only for the pathway you select."
           ))
           
         )

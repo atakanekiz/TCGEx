@@ -49,7 +49,7 @@ gene_vs_cat_ui <- function(id, label, choices){
         checkboxInput(inputId = ns("exprs_stats"), "Show statistics?", T),
         
         actionBttn(inputId = ns("cat_gene_run"), 
-                   label = "Generate Correlation Plot",
+                   label = "Analyze",
                    style = "unite",
                    block = TRUE,
                    color = "primary"),
@@ -235,7 +235,7 @@ gene_vs_cat_server <- function(id,Xproj){
           
           intro = c(
             "This is feature-to-metadata visualization module. You can select various data subsets and see how numeric features such as gene expression differs among these. Continue the tutorial to see how the module works.",
-            "Select sample type you would like to analyze here.",
+            "Select sample type(s) you would like to analyze here.",
             "Define which data subsets you want to include in the analysis.",
             "Here, you can select the categorical variable to place on the x-axis",
             "Select a numeric feature to plot in the y-axis",
@@ -335,9 +335,9 @@ gene_vs_cat_server <- function(id,Xproj){
       validate(need(input$exprs_samptyp, "Select sample type"),
                need(input$cat_plotvar, "Select categorical variable for x-axis"),
                need(input$num_plotvar, "Select numerical variable for y-axis"),
-               need(input$cat_gene_run, " Click generate button to generate the graph"),
+               need(input$cat_gene_run, "Click 'Analyze' button to generate the graph"),
                if(input$exprs_stats){                              ## Validation is active only when statistics button is chosen
-                 need(input$exprs_statref, "Select the reference group below")}
+                 need(input$exprs_statref, "Specify the reference group or choose pairwise combinations below to show statistical comparisons")}
       )
       
       if(input$facet_plotvar == "") facetvar <- NULL else facetvar <- input$facet_plotvar
