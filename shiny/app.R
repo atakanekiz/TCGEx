@@ -89,12 +89,12 @@ ui <- navbarPage(
     fluidPage(h1("Cox Proportional Hazards Survival Analysis"), cox_ui("module"))
   ),
   tabPanel(
-    "METADATA",
-    fluidPage(h1("Metadata Analysis"), gene_vs_cat_ui("module"))
+    "BOXPLOT",
+    fluidPage(h1("Boxplot Metadata Analysis"), gene_vs_cat_ui("module"))
   ),
   tabPanel(
-    "CORRELATION",
-    fluidPage(h1("Correlation Analysis"), gene_vs_gene_ui("module"))
+    "SCATTERPLOT",
+    fluidPage(h1("Scatterplot Correlation Analysis"), gene_vs_gene_ui("module"))
   ),
   tabPanel(
     "CORRELATED GENES",

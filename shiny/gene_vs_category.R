@@ -265,7 +265,7 @@ gene_vs_cat_server <- function(id,Xproj){
     
     # Remove cols which is including more than 10 levels and numeric
     
-    hidden_cols_cat_plotvar<-reactive({"meta.definition"})
+    hidden_cols_cat_plotvar<-reactive({c("meta.definition","meta.treatments")})
     
     meta_cols_cat_plotvar <- reactive({colnames(Xproj$a())[grep("^meta\\.", colnames(Xproj$a()))]})
     
