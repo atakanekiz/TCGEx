@@ -125,7 +125,7 @@ roc_ui <- function(id, label, choices) {
       ),
       # p("Please click the ROC button after each change to refresh the plot and tables!"),
       actionBttn(inputId = ns("roc_run"), 
-                 label = "Create ROC Curve",
+                 label = "Analyze",
                  style = "unite",
                  block = TRUE,
                  color = "primary"),
@@ -175,10 +175,10 @@ roc_server <- function(id, Xproj) {
                   "Select sample types here to focus the analysis on specific subsets.",
                   "ROC analysis is performed between two classes in the response variable as '1' (desired outcome group) and '0' (undesired outcome group). You can specify these classes for both categorical and numeric variables in the TCGA data. Here you need to select what kind of response variable you are interested in.",
                   "Select the numerical variable you want to binarize here",
-                  "High cutoff input allows you to assign samples to class-1 if their values are more than the specified quantile here. For instance setting this value to 25 would mean binarizing the top 25% of the data as '1'. If you want to binarize at the median value this value should be 50 (default)",
-                  "Low cutoff input allows you to assign samples to class-0 if their values are less than the specified quantile here. For instance setting this value to 25 would mean binarizing the bottom 25% of the data as '0'. If you want to binarize at the median value this value should be 50 (default)",
+                  "High cutoff input allows you to assign samples to group-1 if their values are more than the specified quantile here. For instance setting this value to 25 would mean binarizing the top 25% of the data as '1'. If you want to binarize at the median value this value should be 50 (default)",
+                  "Low cutoff input allows you to assign samples to group-0 if their values are less than the specified quantile here. For instance setting this value to 25 would mean binarizing the bottom 25% of the data as '0'. If you want to binarize at the median value this value should be 50 (default)",
                   "Here, you select the predictor variable. If you enter more than one variable, their values will be averaged.",
-                  "If desired, the average expression value of a specific MSigDB gene set can be added to the graph.",
+                  "If desired, the average expression value of a specific MSigDB gene set can be added to the graph. <i> Note: You need to click on and activate 'Add MSigDB sets as a second predictor' button</i>",
                   "If you would like to include a curve for a specific MSigDB gene set, select it here."
                 ))
               )
@@ -195,10 +195,10 @@ roc_server <- function(id, Xproj) {
                   "Select sample types here to focus the analysis on specific subsets.",
                   "ROC analysis is performed between two classes in the response variable as '1' (desired outcome group) and '0' (undesired outcome group). You can specify these classes for both categorical and numeric variables in the TCGA data. Here you need to select what kind of response variable you are interested in.",
                   "Select the numerical variable you want to binarize here",
-                  "High cutoff input allows you to assign samples to class-1 if their values are more than the specified quantile here. For instance setting this value to 25 would mean binarizing the top 25% of the data as '1'. If you want to binarize at the median value this value should be 50 (default)",
-                  "Low cutoff input allows you to assign samples to class-0 if their values are less than the specified quantile here. For instance setting this value to 25 would mean binarizing the bottom 25% of the data as '0'. If you want to binarize at the median value this value should be 50 (default)",
+                  "High cutoff input allows you to assign samples to group-1 if their values are more than the specified quantile here. For instance setting this value to 25 would mean binarizing the top 25% of the data as '1'. If you want to binarize at the median value this value should be 50 (default)",
+                  "Low cutoff input allows you to assign samples to group-0 if their values are less than the specified quantile here. For instance setting this value to 25 would mean binarizing the bottom 25% of the data as '0'. If you want to binarize at the median value this value should be 50 (default)",
                   "You can upload a xlsx/xls file including your genes of interest to see them as a ROC curve. If you enter more than one variable, their values will be averaged.",
-                  "If desired, the average expression value of a specific MSigDB gene set can be added to the graph.",
+                  "If desired, the average expression value of a specific MSigDB gene set can be added to the graph. <i> Note: You need to click on and activate 'Add MSigDB sets as a second predictor' button</i>",
                   "If you would like to include a curve for a specific MSigDB gene set, select it here."
                 ))
               )
@@ -219,10 +219,10 @@ roc_server <- function(id, Xproj) {
                   "Select sample types here to focus the analysis on specific subsets.",
                   "ROC analysis is performed between two classes in the response variable as '1' (desired outcome group) and '0' (undesired outcome group). You can specify these classes for both categorical and numeric variables in the TCGA data. Here you need to select what kind of response variable you are interested in.",
                   "You can select the categorical variable to binarize here. In the next step, you will decide which data subsets will be classified as 1 and 0.",
-                  "In this box, you can select which data subsets will be classified as '1'. For example, if you have chosen 'meta.gender' previously, you can choose 'female' observations to belong to class-1 here. If the categorical variable you selected has multiple subsets, you can specify more than one subset as well.",
-                  "In this box, you can select which data subsets will be classified as '0'. For example, if you have chosen 'meta.gender' previously, you can choose 'male' observations to belong to class-0 here. If the categorical variable you selected has multiple subsets, you can specify more than one subset as well.",
+                  "In this box, you can select which data subsets will be classified as '1'. For example, if you have chosen 'meta.gender' previously, you can choose 'female' observations to belong to group-1 here. If the categorical variable you selected has multiple subsets, you can specify more than one subset as well.",
+                  "In this box, you can select which data subsets will be classified as '0'. For example, if you have chosen 'meta.gender' previously, you can choose 'male' observations to belong to group-0 here. If the categorical variable you selected has multiple subsets, you can specify more than one subset as well.",
                   "Here, you select the predictor variable. If you enter more than one variable, their values will be averaged.",
-                  "If desired, the average expression value of a specific MSigDB gene set can be added to the graph.",
+                  "If desired, the average expression value of a specific MSigDB gene set can be added to the graph. <i> Note: You need to click on and activate 'Add MSigDB sets as a second predictor' button</i>",
                   "If you would like to include a curve for a specific MSigDB gene set, select it here."
                 ))
               )
@@ -238,8 +238,8 @@ roc_server <- function(id, Xproj) {
                   "Select sample types here to focus the analysis on specific subsets.",
                   "ROC analysis is performed between two classes in the response variable as '1' (desired outcome group) and '0' (undesired outcome group). You can specify these classes for both categorical and numeric variables in the TCGA data. Here you need to select what kind of response variable you are interested in.",
                   "You can select the categorical variable to binarize here. In the next step, you will decide which data subsets will be classified as 1 and 0.",
-                  "In this box, you can select which data subsets will be classified as '1'. For example, if you have chosen 'meta.gender' previously, you can choose 'female' observations to belong to class-1 here. If the categorical variable you selected has multiple subsets, you can specify more than one subset as well.",
-                  "In this box, you can select which data subsets will be classified as '0'. For example, if you have chosen 'meta.gender' previously, you can choose 'male' observations to belong to class-0 here. If the categorical variable you selected has multiple subsets, you can specify more than one subset as well.",
+                  "In this box, you can select which data subsets will be classified as '1'. For example, if you have chosen 'meta.gender' previously, you can choose 'female' observations to belong to group-1 here. If the categorical variable you selected has multiple subsets, you can specify more than one subset as well.",
+                  "In this box, you can select which data subsets will be classified as '0'. For example, if you have chosen 'meta.gender' previously, you can choose 'male' observations to belong to group-0 here. If the categorical variable you selected has multiple subsets, you can specify more than one subset as well.",
                   "You can upload a xlsx/xls file including your genes of interest to see them as a ROC curve. If you enter more than one variable, their values will be averaged.",
                   "If desired, the average expression value of a specific MSigDB gene set can be added to the graph.",
                   "If you would like to include a curve for a specific MSigDB gene set, select it here."
@@ -535,8 +535,8 @@ roc_server <- function(id, Xproj) {
           
           validate(need(input$roc_definition_sel, "Please select a sample type"))
           validate(need(input$binaryone, "Please choose numeric variable to binarize"))
-          validate(need(input$binarytwo, "Please choose value(s) to classify as class-1"))
-          validate(need(input$binarythree, "Please choose value(s) to classify as class-0"))
+          validate(need(input$binarytwo, "Please choose value(s) to classify as group-1"))
+          validate(need(input$binarythree, "Please choose value(s) to classify as group-0"))
           
           if(input$roc_gene_selector == "Manually enter gene names"){
             
@@ -608,8 +608,8 @@ roc_server <- function(id, Xproj) {
         }else{
           
           validate(need(input$binaryone, "Please choose numeric variable to binarize"))
-          validate(need(input$binarytwo, "Please choose value(s) to be classified as class-1"))
-          validate(need(input$binarythree, "Choose second value(s) to be classified as class-0"))
+          validate(need(input$binarytwo, "Please choose value(s) to be classified as group-1"))
+          validate(need(input$binarythree, "Choose second value(s) to be classified as group-0"))
           
           if(input$roc_gene_selector == "Manually enter gene names"){
             
