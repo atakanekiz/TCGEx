@@ -153,7 +153,7 @@ gene_vs_gene_ui <- function(id) {
      
       # checkboxInput(ns("formula"), "Show statistics", value = T),
       actionBttn(inputId = ns("do"), 
-                 label = "Generate Correlation Plot",
+                 label = "Analyze",
                  style = "unite",
                  block = TRUE,
                  color = "primary"),
@@ -203,13 +203,13 @@ gene_vs_gene_server <- function(id,Xproj) {
           intro = paste(c(
             "This is the gene-to-gene visualization module. You can calculate the correlation between two genes and generate scatter plots. Continue with the tutorial to learn features of the module.",
             "You can select the sample type here (eg. primary and/or metastatic). Only the selected subset(s) will be used in the analysis",
-            "You can use gene expression data or meta data for x axis of the plot ",
+            "You can select gene expression or continuous metadata for the x-axis of the plot",
             "Choose a variable for the x-axis of the plot.",
-            "You can use gene expression data or meta data for y axis of the plot ",
-            "Choose a variable for the y-axis of the plot.",
-            "Here, you can select whether or not to show associated metadata when you hover the mouse cursor over data points",
+            "You can select gene expression or continuous metadata for the y-axis of the plot ",
+            "Choose a variable for the y-axis of the plot. In the optional next section marked with blue fonts, you can select more variables to depict with different point color, size, and transparency.",
+            "Here, you can select whether or not to show patient information when you hover the cursor over data points",
             "You can show or hide the best-fitting line to the data points",
-            "Enter a covariate here to plot the correlations in different data subsets (eg. male and female patients).",
+            "You can select a categorical variable here to plot correlations in different data subsets (eg. male and female patients).",
             "You can also show the correlation coefficient and the p-value of the linear regression."
           ))
           
