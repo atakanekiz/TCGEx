@@ -172,7 +172,7 @@ roc_server <- function(id, Xproj) {
               
               data.frame(
                 
-                element = paste0("#", session$ns(c(NA, "roc_definition_sel + .selectize-control", "selectore + .selectize-control", "one_gene + .selectize-control ", "hi_cutoff_covar", "lo_cutoff_covar",  "genesss + .selectize-control ", "cate + .selectize-control ", "roc_chosen_pathway + .selectize-control "))),
+                element = paste0("#", session$ns(c(NA, "roc_definition_sel + .selectize-control", "selectore + .selectize-control", "one_gene + .selectize-control ", NA, NA,  "genesss + .selectize-control ", NA, NA))),
                 
                 intro = paste(c(
                   "This is the ROC (receiver operating characteristic) analysis module. In this module, you can binarize samples based on gene expression or categorical meta data and test the predictive power of a custom variable. ROC plots show True Positive Rate (TPR) and False Positive Rate (FPR) along the y- and x-axes, respectively. A completely random classifier would appear along the diagonal line in the graph and would have Area Under the Curve (AUC) of 0.5. The curve for a good positive predictor appears in the top half of the plot (AUC > 0.5), and the curve for a good negative predictor appears in the bottom half (AUC < 0.5). Continue the tutorial to learn how to use this module.",
@@ -192,7 +192,7 @@ roc_server <- function(id, Xproj) {
               
               data.frame(
                 
-                element = paste0("#", session$ns(c(NA, "roc_definition_sel + .selectize-control", "selectore + .selectize-control", "one_gene + .selectize-control ", "hi_cutoff_covar", "lo_cutoff_covar",  "roc_csv + .selectize-control ", "cate + .selectize-control ", "roc_chosen_pathway + .selectize-control "))),
+                element = paste0("#", session$ns(c(NA, "roc_definition_sel + .selectize-control", "selectore + .selectize-control", "one_gene + .selectize-control ", NA, NA,  "roc_csv + .selectize-control ", NA, NA))),
                 
                 intro = paste(c(
                   "This is the ROC (receiver operating characteristic) analysis module. In this module, you can binarize samples based on gene expression or categorical meta data and test the predictive power of a custom variable. ROC plots show True Positive Rate (TPR) and False Positive Rate (FPR) along the y- and x-axes, respectively. A completely random classifier would appear along the diagonal line in the graph and would have Area Under the Curve (AUC) of 0.5. The curve for a good positive predictor appears in the top half of the plot (AUC > 0.5), and the curve for a good negative predictor appears in the bottom half (AUC < 0.5). Continue the tutorial to learn how to use this module.",
@@ -216,7 +216,7 @@ roc_server <- function(id, Xproj) {
               
               data.frame(
                 
-                element = paste0("#", session$ns(c(NA, "roc_definition_sel + .selectize-control", "selectore + .selectize-control", "binaryone + .selectize-control ", "binarytwo + .selectize-control ", "binarythree + .selectize-control ", "genesss + .selectize-control ", "cate + .selectize-control ", "roc_chosen_pathway + .selectize-control "))),
+                element = paste0("#", session$ns(c(NA, "roc_definition_sel + .selectize-control", "selectore + .selectize-control", "binaryone + .selectize-control ", "binarytwo + .selectize-control ", "binarythree + .selectize-control ", "genesss + .selectize-control ", NA, NA))),
                 
                 intro = paste(c(
                   "This is the ROC (receiver operating characteristic) analysis module. In this module, you can binarize samples based on gene expression or categorical meta data and test the predictive power of a custom variable. ROC plots show True Positive Rate (TPR) and False Positive Rate (FPR) along the y- and x-axes, respectively. A completely random classifier would appear along the diagonal line in the graph and would have Area Under the Curve (AUC) of 0.5. The curve for a good positive predictor appears in the top half of the plot (AUC > 0.5), and the curve for a good negative predictor appears in the bottom half (AUC < 0.5). Continue the tutorial to learn how to use this module.",
@@ -235,7 +235,7 @@ roc_server <- function(id, Xproj) {
               
               data.frame(
                 
-                element = paste0("#", session$ns(c(NA, "roc_definition_sel + .selectize-control", "selectore + .selectize-control", "binaryone + .selectize-control ", "binarytwo + .selectize-control ", "binarythree + .selectize-control ", "genesss + .selectize-control ", "cate + .selectize-control ", "roc_chosen_pathway + .selectize-control "))),
+                element = paste0("#", session$ns(c(NA, "roc_definition_sel + .selectize-control", "selectore + .selectize-control", "binaryone + .selectize-control ", "binarytwo + .selectize-control ", "binarythree + .selectize-control ", "genesss + .selectize-control ", NA, NA))),
                 
                 intro = paste(c(
                   "This is the ROC (receiver operating characteristic) analysis module. In this module, you can binarize samples based on gene expression or categorical meta data and test the predictive power of a custom variable. ROC plots show True Positive Rate (TPR) and False Positive Rate (FPR) along the y- and x-axes, respectively. A completely random classifier would appear along the diagonal line in the graph and would have Area Under the Curve (AUC) of 0.5. The curve for a good positive predictor appears in the top half of the plot (AUC > 0.5), and the curve for a good negative predictor appears in the bottom half (AUC < 0.5). Continue the tutorial to learn how to use this module.",
