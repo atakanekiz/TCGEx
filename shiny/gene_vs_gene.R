@@ -118,6 +118,18 @@ gene_vs_gene_ui <- function(id) {
          
        ),
        
+       conditionalPanel(
+         condition = "input.regline_type == 'loess'", ns=ns,
+         
+         numericInput(ns("span"),
+                      "Please pick a number for span",
+                      min = 0.01,
+                      step = 0.01,
+                      value = 0.75)
+       ),
+       
+       
+       
        colourInput(
          ns("col2"), "Please select a color for the regression line", "darkorange1",
          returnName = TRUE, 
@@ -343,9 +355,9 @@ gene_vs_gene_server <- function(id,Xproj) {
         
         # {if(input$genecor_regline) p <- p + stat_smooth(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), method = "loess", color = input$col2)}
         
-        {if(input$regline_type == "linear") p <- p + stat_smooth(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), method = "lm", color = input$col2)}   
+        {if(input$regline_type == "linear" & input$genecor_regline) p <- p + stat_smooth(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), method = "lm", color = input$col2)}   
         
-        {if(input$regline_type == "loess") p <- p + stat_smooth(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), method = "loess", color = input$col2)}   
+        {if(input$regline_type == "loess" & input$genecor_regline) p <- p + stat_smooth(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), method = "loess", color = input$col2, span = input$span)}   
         
         {if(input$facet) p <- p + facet_wrap(facet_cat(), labeller = as_labeller(dataset, default=label_wrap_gen(16)), scales = "free_y")+ 
             
