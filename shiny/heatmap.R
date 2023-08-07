@@ -113,8 +113,8 @@ heatmap_ui <- function(id, label, choices) {
       ),
       radioButtons(inputId = ns("hm_gene_categorization_button"),
                    label = "Choose if you would like to categorize genes as high/low separately or by taking the median.",
-                   c("Take the median of of all genes and calculate high/low values" = "take_median",
-                     "Calculate as high/low separately" = "take_separately"),
+                   c("Categorize genes after averaging" = "take_median",
+                     "Categorize genes separately" = "take_separately"),
                    selected = "take_separately"),
       
       selectizeInput(inputId = ns("clustering_distance_rows"), 
@@ -140,7 +140,7 @@ heatmap_ui <- function(id, label, choices) {
                      choices=c("ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid", "ward.D")),
       
       actionBttn(inputId = ns("heatmap_run"), 
-                 label = "Create Heatmap",
+                 label = "Analyze",
                  style = "unite",
                  block = TRUE,
                  color = "primary"),
@@ -188,10 +188,10 @@ heatmap_server <- function(id,Xproj) {
                 "This is the heatmap module where you can visualize expression patterns of selected genes. Continue the tutorial to learn how to use this module",
                 "You can select sample types to focus the analysis on the specific subsets",
                 "Here you can choose how you would like to select genes for the plot",
-                "You can manually type genes of interest here (for other input possibilities, go back to the previous selection box)",
-                "Next, you can apply a variance filter to keep only highly variable genes in the plot. 100 (default) means no filter is applied. If you like to see top 10% variable genes only, set this value to 10. Such filtering can help see more informative genes.",
+                "You can manually type genes of interest here (for other input possibilities (and associated tutorial steps), change the selection in the previous box)",
+                "Next, you can apply a variance filter to keep only highly variable genes in the plot. 100 (default) means no filtering is applied. If you like to see top 10% variable genes only, set this value to 10. Such filtering can help see more informative genes.",
                 "You can select categorical clinical meta data features to show as annotations on top of the heatmap.",
-                "You can also create an annotation bar by categorizing the patients based on their gene expression levels or continuous meta variables. You can specify one or more variables here. When multiple variables are entered, their average is calculated so be careful not to average the genes and meta variables since it can produce meaningles results. In that case try to view them separately by the buttons on the next input.Patients are categorized as 'high' and 'low' according to the median variable expression value",
+                "You can also create an annotation bar by categorizing the patients based on their gene expression levels. You can specify one or more genes here. When multiple genes are entered, you can categorize features separately and show them in individual annotation bars; or you can categorize after taking the overall average. Categorization is done as 'high' and 'low' at the median gene expression value",
                 "You can choose how the distance will be calculated for genes here. To learn more about the methods check following links out.
                 Dist function - https://l1nq.com/Qhchg ,
                 Clustering in Heatmaps - https://ury1.com/nnnnt ,
@@ -218,9 +218,9 @@ heatmap_server <- function(id,Xproj) {
                 "Here you can choose how you would like to select genes for the plot",
                 "If MSigDB is selected, you can specify the main MSigDB collection you are interested in here. The next selection box will allow you to select a particular gene set",
                 "When plotting gene sets from MSigDB, you can specify the particular gene set here.",
-                "Next, you can apply a variance filter to keep only highly variable genes in the plot. 100 (default) means no filter is applied. If you like to see top 10% variable genes only, set this value to 10. Such filtering can help see more informative genes.",
+                "Next, you can apply a variance filter to keep only highly variable genes in the plot. 100 (default) means no filtering is applied. If you like to see top 10% variable genes only, set this value to 10. Such filtering can help see more informative genes.",
                 "You can select categorical clinical meta data features to show as annotations on top of the heatmap.",
-                "You can also create an annotation bar by categorizing the patients based on their gene expression levels or continuous meta variables. You can specify one or more variables here. When multiple variables are entered, their average is calculated so be careful not to average the genes and meta variables since it can produce meaningles results. In that case try to view them separately by the buttons on the next input.Patients are categorized as 'high' and 'low' according to the median variable expression value",
+                "You can also create an annotation bar by categorizing the patients based on their gene expression levels. You can specify one or more genes here. When multiple genes are entered, you can categorize features separately and show them in individual annotation bars; or you can categorize after taking the overall average. Categorization is done as 'high' and 'low' at the median gene expression value",
                 "You can choose how the distance will be calculated for genes here. To learn more about the methods check following links out.
                 Dist function - https://l1nq.com/Qhchg ,
                 Clustering in Heatmaps - https://ury1.com/nnnnt ,
@@ -249,7 +249,7 @@ heatmap_server <- function(id,Xproj) {
                 "You can upload a xlsx/xls file including your genes of interest to see them on the heatmap",
                 "Next, you can apply a variance filter to keep only highly variable genes in the plot. 100 (default) means no filter is applied. If you like to see top 10% variable genes only, set this value to 10. Such filtering can help see more informative genes.",
                 "You can select categorical clinical meta data features to show as annotations on top of the heatmap.",
-                "You can also create an annotation bar by categorizing the patients based on their gene expression levels or continuous meta variables. You can specify one or more variables here. When multiple variables are entered, their average is calculated so be careful not to average the genes and meta variables since it can produce meaningles results. In that case try to view them separately by the buttons on the next input.Patients are categorized as 'high' and 'low' according to the median variable expression value",
+                "You can also create an annotation bar by categorizing the patients based on their gene expression levels. You can specify one or more genes here. When multiple genes are entered, you can categorize features separately and show them in individual annotation bars; or you can categorize after taking the overall average. Categorization is done as 'high' and 'low' at the median gene expression value",
                 "You can choose how the distance will be calculated for genes here. To learn more about the methods check following links out.
                 Dist function - https://l1nq.com/Qhchg ,
                 Clustering in Heatmaps - https://ury1.com/nnnnt ,
@@ -672,7 +672,7 @@ heatmap_server <- function(id,Xproj) {
             validate(need(input$cat, "Please select a Human MSigDB Collection"))
             validate(need(input$chosen_gse, "Please select the subset of your chosen Human MSigDB Collection"))
           }
-          validate(need(input$heatmap_run, "Please click the create heatmap button"))
+          validate(need(input$heatmap_run, "Please click the 'Analyze' button"))
           
           
           return({
@@ -716,7 +716,7 @@ heatmap_server <- function(id,Xproj) {
             validate(need(input$cat, "Please select a Human MSigDB Collection"))
             validate(need(input$chosen_gse, "Please select the subset of your chosen Human MSigDB Collection"))
           }
-          validate(need(input$heatmap_run, "Please click the create heatmap button"))
+          validate(need(input$heatmap_run, "Please click the 'Analyze' button"))
           
           if(input$clustering_distance_rows == "pearson"| input$clustering_distance_rows == "spearman" | input$clustering_distance_rows == "kendall"){
             distfun_row = function(x) as.dist(1 - cor(t(x), method=input$clustering_distance_rows))
