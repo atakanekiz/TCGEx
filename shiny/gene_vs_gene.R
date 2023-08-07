@@ -128,7 +128,11 @@ gene_vs_gene_ui <- function(id) {
                       value = 0.75)
        ),
        
-       
+       numericInput(ns("conf_lev"),
+                    "Please select the confidance interval",
+                    min = 0.01,
+                    step = 0.01,
+                    value = 0.95),
        
        colourInput(
          ns("col2"), "Please select a color for the regression line", "darkorange1",
@@ -229,6 +233,8 @@ gene_vs_gene_server <- function(id,Xproj) {
       iv$add_rule("gene_width", ~ if (input$gene_width == 0 & !anyNA(input$gene_width)) "The number must be greater than 0")
       iv$add_rule("gene_height", ~ if (input$gene_height == 0 & !anyNA(input$gene_height)) "The number must be greater than 0")
       iv$add_rule("text_size", ~ if (input$text_size == 0 & !anyNA(input$text_size)) "The number must be greater than 0")
+      iv$add_rule("span", ~ if ((input$span == 0 | input$span > 1) & !anyNA(input$span)) "The number must be in a range between 0 and 1")
+      iv$add_rule("conf_lev", ~ if ((input$conf_lev == 0 | input$conf_lev > 1) & !anyNA(input$conf_lev)) "The number must be in a range between 0 and 1")
       iv$enable()
       
       
@@ -355,9 +361,9 @@ gene_vs_gene_server <- function(id,Xproj) {
         
         # {if(input$genecor_regline) p <- p + stat_smooth(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), method = "loess", color = input$col2)}
         
-        {if(input$regline_type == "linear" & input$genecor_regline) p <- p + stat_smooth(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), method = "lm", color = input$col2)}   
+        {if(input$regline_type == "linear" & input$genecor_regline) p <- p + stat_smooth(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), method = "lm", color = input$col2, level = input$conf_lev)}   
         
-        {if(input$regline_type == "loess" & input$genecor_regline) p <- p + stat_smooth(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), method = "loess", color = input$col2, span = input$span)}   
+        {if(input$regline_type == "loess" & input$genecor_regline) p <- p + stat_smooth(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), method = "loess", color = input$col2, span = input$span, level = input$conf_lev)}   
         
         {if(input$facet) p <- p + facet_wrap(facet_cat(), labeller = as_labeller(dataset, default=label_wrap_gen(16)), scales = "free_y")+ 
             
