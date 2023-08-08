@@ -76,7 +76,7 @@ ui <- navbarPage(
   
   tabPanel(
     # "TCGEx",
-     tags$img(src = "images/left_logo.png", align = 'top', height = "30px", width = "80px"),
+     tags$img(src = "images/left_logo.png", align = 'top', height = "23px", width = "68px"),
     includeHTML("home.html"),
     tags$script(src = "plugins/scripts.js"),
     tags$head(
