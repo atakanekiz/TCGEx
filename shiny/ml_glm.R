@@ -99,6 +99,13 @@ ggplot_boxplot_variables <- function(transcript_list, pre_data) {
 dataprepInputControl_UI <- function(id) {
   ns <- NS(id)
   tagList(
+    add_busy_spinner(
+      spin = "cube-grid",
+      position = "top-right",
+      color = "#01303f",
+      margins = c(300, 500),
+      height = "60px",
+      width = "60px"),
     tags$style(type = 'text/css',
                ".selectize-input { word-wrap : break-word;} .selectize-input { word-break: break-word;} .selectize-dropdown {word-wrap : break-word;} "
     ),
@@ -297,6 +304,13 @@ ml_ui <- function(id) {
 ")),
     tabPanel(
       "Variable selection",
+      add_busy_spinner(
+        spin = "cube-grid",
+        position = "top-right",
+        color = "#01303f",
+        margins = c(300, 500),
+        height = "60px",
+        width = "60px"),
       sidebarPanel(
         dataprepInputControl_UI("ml"),
         introjsUI(),
