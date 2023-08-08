@@ -181,17 +181,11 @@ server <- function(input, output, session) {
   selected_tab <- reactiveVal()
     
     observeEvent(input$tcgex, {
-      
-      # browser()
-    
-    # if(as.character(input$tcgex) != as.character(tags$img(src = "images/left_logo.png", align = 'top', height = "23px", width = "68px"))){
-      
-    # selected_tab$keep_track <- c(selected_tab$keep_track, input$tcgex)
+
     
     selected_tab(c(selected_tab(), input$tcgex))
     
-    # }
-    
+
   })
   
   
