@@ -49,17 +49,17 @@ ui <- navbarPage(
 ),
   theme = mytheme,
 
-  tags$head(
-    tags$script(src = "https://www.googletagmanager.com/gtag/js?id=G-HWCPP52NZ2"),
-    tags$script(
-      HTML(
-        "window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-HWCPP52NZ2');"
-      )
-    )
-  ),
+  # tags$head(
+  #   tags$script(src = "https://www.googletagmanager.com/gtag/js?id=G-HWCPP52NZ2"),
+  #   tags$script(
+  #     HTML(
+  #       "window.dataLayer = window.dataLayer || [];
+  #       function gtag(){dataLayer.push(arguments);}
+  #       gtag('js', new Date());
+  #       gtag('config', 'G-HWCPP52NZ2');"
+  #     )
+  #   )
+  # ),
 
 ## gtag('config', 'G-HWCPP52NZ2') # initial tracker for single machine
 ## gtag('config', 'G-DVM1837XKH') # tracker for srv-1
@@ -193,7 +193,7 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$app_tabset, {
-    if(input$app_tabset == "COX") {cox_server("cox",Xproj=Xproj)}
+    if(input$app_tabset == "COX-PH") {cox_server("cox",Xproj=Xproj)}
   })
  
   
