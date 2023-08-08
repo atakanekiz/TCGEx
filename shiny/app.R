@@ -174,6 +174,7 @@ server <- function(input, output, session) {
   select_data_server("seldata",Xproj=Xproj)
 
   
+  
   observeEvent(input$tcgex, {
     
     if(input$tcgex == "MACHINE LEARNING") {
