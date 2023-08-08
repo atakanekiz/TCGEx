@@ -75,8 +75,8 @@ ui <- navbarPage(
 #             type = "tabs", ############################################################
   
   tabPanel(
-    # "TCGEx",
-     tags$img(src = "images/left_logo.png", align = 'top', height = "23px", width = "68px"),
+    # title = "",
+    tags$img(src = "images/left_logo.png", align = 'top', height = "23px", width = "68px"),
     includeHTML("home.html"),
     tags$script(src = "plugins/scripts.js"),
     tags$head(
@@ -174,6 +174,26 @@ server <- function(input, output, session) {
   select_data_server("seldata",Xproj=Xproj)
 
   
+
+    
+    # selected_tab <- reactiveValues(keep_track = c())
+  
+  selected_tab <- reactiveVal()
+    
+    observeEvent(input$tcgex, {
+      
+      # browser()
+    
+    # if(as.character(input$tcgex) != as.character(tags$img(src = "images/left_logo.png", align = 'top', height = "23px", width = "68px"))){
+      
+    # selected_tab$keep_track <- c(selected_tab$keep_track, input$tcgex)
+    
+    selected_tab(c(selected_tab(), input$tcgex))
+    
+    # }
+    
+  })
+  
   
   observeEvent(input$tcgex, {
     
@@ -187,13 +207,17 @@ server <- function(input, output, session) {
 
     if(input$tcgex == "ROC") {roc_server("roc",Xproj=Xproj)}
 
-    if(input$tcgex == "SCATTERPLOT") {gene_vs_gene_server("scatterplot",Xproj=Xproj)}
+    # if(input$tcgex == "SCATTERPLOT") {gene_vs_gene_server("scatterplot",Xproj=Xproj)}
+    
+    if("SCATTERPLOT" %in% selected_tab()) {gene_vs_gene_server("scatterplot",Xproj=Xproj)}
 
     if(input$tcgex == "COX-PH") {cox_server("cox",Xproj=Xproj)}
 
     if(input$tcgex == "BOXPLOT") {gene_vs_cat_server("boxplot",Xproj=Xproj)}
 
-    if(input$tcgex == "KAPLAN-MEIER") {km_server("km",Xproj=Xproj)}
+    # if(input$tcgex == "KAPLAN-MEIER") {km_server("km",Xproj=Xproj)}
+    
+    if("KAPLAN-MEIER" %in% selected_tab()) {km_server("km",Xproj=Xproj)}
 
     if(input$tcgex == "HEATMAP") {heatmap_server("heatmap",Xproj=Xproj)}
 
