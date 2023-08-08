@@ -41,25 +41,28 @@ mytheme <- create_theme(
 
 ui <- navbarPage(  
   
-  title = div(
-  tags$a(href = "https://tcgex.iyte.edu.tr/"
-         
-         # ,tags$img(src = 'images/left_logo.png', align = 'middle', height = "50px", width = "130px")
-         )
-),
+  id = "TCGEx",
+    
+#     div(
+#   tags$a(href = "https://tcgex.iyte.edu.tr/"
+#          
+#          # ,tags$img(src = 'images/left_logo.png', align = 'middle', height = "50px", width = "130px")
+#          )
+# ),
+  
   theme = mytheme,
 
-  # tags$head(
-  #   tags$script(src = "https://www.googletagmanager.com/gtag/js?id=G-HWCPP52NZ2"),
-  #   tags$script(
-  #     HTML(
-  #       "window.dataLayer = window.dataLayer || [];
-  #       function gtag(){dataLayer.push(arguments);}
-  #       gtag('js', new Date());
-  #       gtag('config', 'G-HWCPP52NZ2');"
-  #     )
-  #   )
-  # ),
+  tags$head(
+    tags$script(src = "https://www.googletagmanager.com/gtag/js?id=G-HWCPP52NZ2"),
+    tags$script(
+      HTML(
+        "window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-HWCPP52NZ2');"
+      )
+    )
+  ),
 
 ## gtag('config', 'G-HWCPP52NZ2') # initial tracker for single machine
 ## gtag('config', 'G-DVM1837XKH') # tracker for srv-1
@@ -68,8 +71,8 @@ ui <- navbarPage(
 ## gtag('config', 'G-0D1PDQNTF9') # tracker for srv-4
 
 
-tabsetPanel(id="app_tabset",
-            type = "tabs", ############################################################
+# tabsetPanel(id="app_tabset",
+#             type = "tabs", ############################################################
   
   tabPanel(
     # "TCGEx",
@@ -131,9 +134,9 @@ tabsetPanel(id="app_tabset",
   tabPanel(
     "ABOUT",
     fluidPage(includeHTML("about.html"), shinyjs::useShinyjs())
-  )
+  ),
   
-), ################################################################### tabsetpanel 
+# ), ################################################################### tabsetpanel 
 
   footer = includeHTML("footer.html")
 )
@@ -171,54 +174,54 @@ server <- function(input, output, session) {
   select_data_server("seldata",Xproj=Xproj)
 
   
-  observeEvent(input$app_tabset, {
-    if(input$app_tabset == "MACHINE LEARNING") {
+  observeEvent(input$TCGEx, {
+    if(input$TCGEx == "MACHINE LEARNING") {
       data_prep_ml_server("ml",Xproj=Xproj)
       df <- data_prep_ml_server("ml",Xproj=Xproj)
       ml_main_server("ml",regress_data  = df,Xproj=Xproj)
     }
   })
 
-  observeEvent(input$app_tabset, {
-    if(input$app_tabset == "PCA") {pca_server("pca",Xproj=Xproj)}
+  observeEvent(input$TCGEx, {
+    if(input$TCGEx == "PCA") {pca_server("pca",Xproj=Xproj)}
   })
 
-  observeEvent(input$app_tabset, {
-    if(input$app_tabset == "ROC") {roc_server("roc",Xproj=Xproj)}
+  observeEvent(input$TCGEx, {
+    if(input$TCGEx == "ROC") {roc_server("roc",Xproj=Xproj)}
   })
   
   
-  observeEvent(input$app_tabset, {
-    if(input$app_tabset == "SCATTERPLOT") {gene_vs_gene_server("scatterplot",Xproj=Xproj)}
+  observeEvent(input$TCGEx, {
+    if(input$TCGEx == "SCATTERPLOT") {gene_vs_gene_server("scatterplot",Xproj=Xproj)}
   })
   
-  observeEvent(input$app_tabset, {
-    if(input$app_tabset == "COX-PH") {cox_server("cox",Xproj=Xproj)}
+  observeEvent(input$TCGEx, {
+    if(input$TCGEx == "COX-PH") {cox_server("cox",Xproj=Xproj)}
   })
  
   
-  observeEvent(input$app_tabset, {
-    if(input$app_tabset == "BOXPLOT") {gene_vs_cat_server("boxplot",Xproj=Xproj)}
+  observeEvent(input$TCGEx, {
+    if(input$TCGEx == "BOXPLOT") {gene_vs_cat_server("boxplot",Xproj=Xproj)}
   })
   
   
-  observeEvent(input$app_tabset, {
-    if(input$app_tabset == "KAPLAN-MEIER") {km_server("km",Xproj=Xproj)}
+  observeEvent(input$TCGEx, {
+    if(input$TCGEx == "KAPLAN-MEIER") {km_server("km",Xproj=Xproj)}
     })
   
   
-  observeEvent(input$app_tabset, {
-    if(input$app_tabset == "HEATMAP") {heatmap_server("heatmap",Xproj=Xproj)}
+  observeEvent(input$TCGEx, {
+    if(input$TCGEx == "HEATMAP") {heatmap_server("heatmap",Xproj=Xproj)}
   })
   
   
-  observeEvent(input$app_tabset, {
-    if(input$app_tabset == "GSEA") {gsea_server("gsea",Xproj=Xproj)}
+  observeEvent(input$TCGEx, {
+    if(input$TCGEx == "GSEA") {gsea_server("gsea",Xproj=Xproj)}
   })
   
   
-  observeEvent(input$app_tabset, {
-    if(input$app_tabset == "CORRELATED GENES") {
+  observeEvent(input$TCGEx, {
+    if(input$TCGEx == "CORRELATED GENES") {
       gene_cor_tb_server("genecor",Xproj=Xproj)
       gene_cor_pl_server("genecor",Xproj=Xproj)
     }
