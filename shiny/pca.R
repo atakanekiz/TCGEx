@@ -745,7 +745,7 @@ pca_server <- function(id,Xproj) {
             validate(
               need(input$genecor_samp_2, 'Choose at least one sample type'),
               need(input$data, 'Please select input genes'),
-              need(input$gene, 'Please select a feature annotate (eg. specific genes or clinical meta data'),
+              need(input$gene, 'Please select a feature to annotate in the plot (eg. specific genes or clinical metadata)'),
               need(input$palette, 'Please select a color palette'),
             )
             

@@ -337,7 +337,7 @@ gene_vs_cat_server <- function(id,Xproj){
                need(input$num_plotvar, "Select numerical variable for y-axis"),
                need(input$cat_gene_run, "Click 'Analyze' button to generate the graph"),
                if(input$exprs_stats){                              ## Validation is active only when statistics button is chosen
-                 need(input$exprs_statref, "Specify the reference group or choose pairwise combinations below to show statistical comparisons")}
+                 need(input$exprs_statref, "Specify the reference group or choose pairwise combinations below to show statistical comparisons (or, simply unclick 'Show statistics?' box on the left panel to plot graphs without statistics)")}
       )
       
       if(input$facet_plotvar == "") facetvar <- NULL else facetvar <- input$facet_plotvar
