@@ -61,6 +61,12 @@ ui <- navbarPage(
     )
   ),
 
+## gtag('config', 'G-HWCPP52NZ2') # initial tracker for single machine
+## gtag('config', 'G-DVM1837XKH') # tracker for srv-1
+## gtag('config', 'G-D7TFB6PP0Y') # tracker for srv-2
+## gtag('config', 'G-BNNRL1KBD8') # tracker for srv-3
+## gtag('config', 'G-0D1PDQNTF9') # tracker for srv-4
+
 
 
   tabPanel(
@@ -78,43 +84,43 @@ ui <- navbarPage(
   ),
   tabPanel(
     "DATA SELECTION",
-    fluidPage(h1("Please select cancer project(s)"), select_data_ui("module")
+    fluidPage(h1("Please select cancer project(s)"), select_data_ui("seldata")
   )),
   tabPanel(
     "KAPLAN-MEIER",
-    fluidPage(h1("Kaplan-Meier Survival Analysis"), km_ui("module"))
+    fluidPage(h1("Kaplan-Meier Survival Analysis"), km_ui("km"))
   ),
   tabPanel(
     "COX-PH",
-    fluidPage(h1("Cox Proportional Hazards Survival Analysis"), cox_ui("module"))
+    fluidPage(h1("Cox Proportional Hazards Survival Analysis"), cox_ui("cox"))
   ),
   tabPanel(
     "BOXPLOT",
-    fluidPage(h1("Boxplot Metadata Analysis"), gene_vs_cat_ui("module"))
+    fluidPage(h1("Boxplot Metadata Analysis"), gene_vs_cat_ui("boxplot"))
   ),
   tabPanel(
     "SCATTERPLOT",
-    fluidPage(h1("Scatterplot Correlation Analysis"), gene_vs_gene_ui("module"))
+    fluidPage(h1("Scatterplot Correlation Analysis"), gene_vs_gene_ui("scatterplot"))
   ),
   tabPanel(
     "CORRELATED GENES",
-    fluidPage(h1("Correlated Gene Table Analysis"), gene_cor_UI("module"))
+    fluidPage(h1("Correlated Gene Table Analysis"), gene_cor_UI("genecor"))
   ),
   tabPanel(
     "HEATMAP",
-    fluidPage(h1("Heatmap Analysis"), heatmap_ui("module"))
+    fluidPage(h1("Heatmap Analysis"), heatmap_ui("heatmap"))
   ),
   tabPanel(
     "GSEA",
-    fluidPage(h1("Gene Sets Enrichment Analysis (GSEA)"), gsea_ui("module"))
+    fluidPage(h1("Gene Sets Enrichment Analysis (GSEA)"), gsea_ui("gsea"))
   ),
   tabPanel(
     "ROC",
-    fluidPage(h1("Receiver Operating Characteristic (ROC) Analysis"), roc_ui("module"))
+    fluidPage(h1("Receiver Operating Characteristic (ROC) Analysis"), roc_ui("roc"))
   ),
   tabPanel(
     "PCA",
-    fluidPage(h1("Principal Compenent Analysis (PCA)"), pca_ui("module_pca"))
+    fluidPage(h1("Principal Compenent Analysis (PCA)"), pca_ui("pca"))
   ),
   tabPanel(
     "MACHINE LEARNING",
@@ -158,32 +164,32 @@ server <- function(input, output, session) {
   
   Xproj<-reactiveValues()
   
-  select_data_server("module",Xproj=Xproj)
+  select_data_server("seldata",Xproj=Xproj)
   
-  heatmap_server("module",Xproj=Xproj)
+  # heatmap_server("heatmap",Xproj=Xproj)
   
   data_prep_ml_server("ml",Xproj=Xproj)
   df <- data_prep_ml_server("ml",Xproj=Xproj)
   ml_main_server("ml",regress_data  = df,Xproj=Xproj)
   
-  pca_server("module_pca",Xproj=Xproj)
+  pca_server("pca",Xproj=Xproj)
   
-  roc_server("module",Xproj=Xproj)
+  roc_server("roc",Xproj=Xproj)
   
-  gene_vs_gene_server("module",Xproj=Xproj)
+  gene_vs_gene_server("scatterplot",Xproj=Xproj)
   
-  cox_server("module",Xproj=Xproj)
+  cox_server("cox",Xproj=Xproj)
   
-  gene_vs_cat_server("module",Xproj=Xproj)
+  gene_vs_cat_server("boxplot",Xproj=Xproj)
   
-  km_server("module",Xproj=Xproj)
+  km_server("km",Xproj=Xproj)
   
-  heatmap_server("module",Xproj=Xproj)
+  heatmap_server("heatmap",Xproj=Xproj)
   
-  gsea_server("module",Xproj=Xproj)
+  gsea_server("gsea",Xproj=Xproj)
   
-  gene_cor_tb_server("module",Xproj=Xproj)
-  gene_cor_pl_server("module",Xproj=Xproj)
+  gene_cor_tb_server("genecor",Xproj=Xproj)
+  gene_cor_pl_server("genecor",Xproj=Xproj)
   
 }
 
