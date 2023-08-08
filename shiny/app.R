@@ -197,8 +197,32 @@ server <- function(input, output, session) {
     #   df <- data_prep_ml_server("ml",Xproj=Xproj)
     #   ml_main_server("ml",regress_data  = df,Xproj=Xproj)
     # }
+    #
+    # if(input$tcgex == "PCA") {pca_server("pca",Xproj=Xproj)}
+    #
+    # if(input$tcgex == "ROC") {roc_server("roc",Xproj=Xproj)}
+    #
+    # if(input$tcgex == "SCATTERPLOT") {gene_vs_gene_server("scatterplot",Xproj=Xproj)}
+    #
+    # if(input$tcgex == "COX-PH") {cox_server("cox",Xproj=Xproj)}
+    #
+    # if(input$tcgex == "BOXPLOT") {gene_vs_cat_server("boxplot",Xproj=Xproj)}
+    #
+    # if(input$tcgex == "KAPLAN-MEIER") {km_server("km",Xproj=Xproj)}
+    #
+    # if(input$tcgex == "HEATMAP") {heatmap_server("heatmap",Xproj=Xproj)}
+    #
+    # if(input$tcgex == "GSEA") {gsea_server("gsea",Xproj=Xproj)}
+    #
+    # if(input$tcgex == "CORRELATED GENES") {
+    #   gene_cor_tb_server("genecor",Xproj=Xproj)
+    #   gene_cor_pl_server("genecor",Xproj=Xproj)
+    # }
     
-    # browser()
+    
+    
+    
+    browser()
     
     if(sum(grepl("MACHINE LEARNING", selected_tab())) == 1) {
       data_prep_ml_server("ml",Xproj=Xproj)
@@ -206,45 +230,23 @@ server <- function(input, output, session) {
       ml_main_server("ml",regress_data  = df,Xproj=Xproj)
       }
     
-
-    # if(input$tcgex == "PCA") {pca_server("pca",Xproj=Xproj)}
-    
     if(sum(grepl("PCA", selected_tab())) == 1) {pca_server("pca",Xproj=Xproj)}
 
-    # if(input$tcgex == "ROC") {roc_server("roc",Xproj=Xproj)}
-    
     if(sum(grepl("ROC", selected_tab())) == 1) {roc_server("roc",Xproj=Xproj)}
 
-    # if(input$tcgex == "SCATTERPLOT") {gene_vs_gene_server("scatterplot",Xproj=Xproj)}
-    
     if(sum(grepl("SCATTERPLOT", selected_tab())) == 1) {gene_vs_gene_server("scatterplot",Xproj=Xproj)}
 
-    # if(input$tcgex == "COX-PH") {cox_server("cox",Xproj=Xproj)}
-    
     if(sum(grepl("COX-PH", selected_tab())) == 1) {cox_server("cox",Xproj=Xproj)}
 
-    # if(input$tcgex == "BOXPLOT") {gene_vs_cat_server("boxplot",Xproj=Xproj)}
-    
     if(sum(grepl("BOXPLOT", selected_tab())) == 1) {gene_vs_cat_server("boxplot",Xproj=Xproj)}
-
-    # if(input$tcgex == "KAPLAN-MEIER") {km_server("km",Xproj=Xproj)}
     
     if(sum(grepl("KAPLAN-MEIER", selected_tab())) == 1) {km_server("km",Xproj=Xproj)}
-
-    # if(input$tcgex == "HEATMAP") {heatmap_server("heatmap",Xproj=Xproj)}
     
     if(sum(grepl("HEATMAP", selected_tab())) == 1) {heatmap_server("heatmap",Xproj=Xproj)}
-
-    # if(input$tcgex == "GSEA") {gsea_server("gsea",Xproj=Xproj)}
     
     if(sum(grepl("GSEA", selected_tab())) == 1) {gsea_server("gsea",Xproj=Xproj)}
-
-    # if(input$tcgex == "CORRELATED GENES") {
-    #   gene_cor_tb_server("genecor",Xproj=Xproj)
-    #   gene_cor_pl_server("genecor",Xproj=Xproj)
-    # }
     
-        if(sum(grepl("CORRELATED GENES", selected_tab())) == 1) {
+    if(sum(grepl("CORRELATED GENES", selected_tab())) == 1) {
       gene_cor_tb_server("genecor",Xproj=Xproj)
       gene_cor_pl_server("genecor",Xproj=Xproj)
     }
