@@ -39,8 +39,8 @@ gene_vs_gene_ui <- function(id) {
         inputId = ns("Gene1"),
         label = "*Please select the x axis variable",
         choices = NULL,
-        options=list(placeholder = "eg. TSPAN6 or meta.gender",
-                     plugins = list('restore_on_backspace'))
+        # options=list(placeholder = "eg. TSPAN6 or meta.gender",
+        #              plugins = list('restore_on_backspace'))
         
       ),
       
@@ -51,8 +51,8 @@ gene_vs_gene_ui <- function(id) {
         inputId = ns("Gene2"),
         label = "*Please select the y axis variable",
         choices = NULL,
-        options=list(placeholder = "eg. TOX or meta.Histology",
-                     plugins = list('restore_on_backspace'))
+        # options=list(placeholder = "eg. TOX or meta.Histology",
+        #              plugins = list('restore_on_backspace'))
         
       ),
      
@@ -239,8 +239,57 @@ gene_vs_gene_server <- function(id,Xproj) {
       
       
       observe({updateSelectizeInput(session, "genecor_samp",choices = Xproj$a()[["meta.definition"]], server = T)})
-      observe({updateSelectizeInput(session, 'Gene1', choices = gene_choice(), server = TRUE, selected = "")})
-      observe({updateSelectizeInput(session, 'Gene2', choices = gene_choice_2(), server = TRUE, selected = "" )})
+      # observe({updateSelectizeInput(session, 'Gene1', choices = gene_choice(), server = TRUE, selected = "")})
+      observe({
+        
+        if(gvar_x() == "Gene") {
+          
+          updateSelectizeInput(session, 'Gene1', 
+                               choices = gene_choice(), 
+                               server = TRUE, 
+                               selected = "",
+                               options=list(placeholder = "eg. TSPAN6",
+                                            plugins = list('restore_on_backspace')))
+          
+        }else if(gvar_x() == "Meta"){
+          
+          updateSelectizeInput(session, 'Gene1', 
+                               choices = gene_choice(), 
+                               server = TRUE, 
+                               selected = "",
+                               options=list(placeholder = "eg. Meta.t.cells.cd8",
+                                            plugins = list('restore_on_backspace')))
+          
+        }
+        
+      })
+      #observe({updateSelectizeInput(session, 'Gene2', choices = gene_choice_2(), server = TRUE, selected = "" )})
+      
+      observe({
+        
+        if(gvar_y() == "Gene") {
+          
+          updateSelectizeInput(session, 
+                               'Gene2', 
+                               choices = gene_choice_2(), 
+                               server = TRUE, 
+                               selected = "",
+                               options=list(placeholder = "eg. TOX",
+                                            plugins = list('restore_on_backspace')))
+          
+        }else if(gvar_y() == "Meta"){
+          
+          updateSelectizeInput(session, 
+                               'Gene2', 
+                               choices = gene_choice_2(), 
+                               server = TRUE, 
+                               selected = "",
+                               options=list(placeholder = "eg. meta.Histology",
+                                            plugins = list('restore_on_backspace')))
+          
+        }
+        
+      })
       observe({updateSelectizeInput(session, 'Gene3', choices = colnames(gen_dat()), server = TRUE, selected = "")})
       observe({updateSelectizeInput(session, 'Gene4', choices = colnames(gen_dat()), server = TRUE, selected = "" )})
       observe({updateSelectizeInput(session, 'Gene5', choices = colnames(gen_dat()), server = TRUE, selected = "")})
