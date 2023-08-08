@@ -223,7 +223,7 @@ server <- function(input, output, session) {
     
     
     
-    browser()
+    # browser()
 
     if(input$tcgex == "MACHINE LEARNING" & sum(grepl("MACHINE LEARNING", selected_tab())) < 2) {
       data_prep_ml_server("ml",Xproj=Xproj)
