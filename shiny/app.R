@@ -175,56 +175,34 @@ server <- function(input, output, session) {
 
   
   observeEvent(input$tcgex, {
+    
     if(input$tcgex == "MACHINE LEARNING") {
       data_prep_ml_server("ml",Xproj=Xproj)
       df <- data_prep_ml_server("ml",Xproj=Xproj)
       ml_main_server("ml",regress_data  = df,Xproj=Xproj)
     }
-  })
 
-  observeEvent(input$tcgex, {
     if(input$tcgex == "PCA") {pca_server("pca",Xproj=Xproj)}
-  })
 
-  observeEvent(input$tcgex, {
     if(input$tcgex == "ROC") {roc_server("roc",Xproj=Xproj)}
-  })
-  
-  
-  observeEvent(input$tcgex, {
+
     if(input$tcgex == "SCATTERPLOT") {gene_vs_gene_server("scatterplot",Xproj=Xproj)}
-  })
-  
-  observeEvent(input$tcgex, {
+
     if(input$tcgex == "COX-PH") {cox_server("cox",Xproj=Xproj)}
-  })
- 
-  
-  observeEvent(input$tcgex, {
+
     if(input$tcgex == "BOXPLOT") {gene_vs_cat_server("boxplot",Xproj=Xproj)}
-  })
-  
-  
-  observeEvent(input$tcgex, {
+
     if(input$tcgex == "KAPLAN-MEIER") {km_server("km",Xproj=Xproj)}
-    })
-  
-  
-  observeEvent(input$tcgex, {
+
     if(input$tcgex == "HEATMAP") {heatmap_server("heatmap",Xproj=Xproj)}
-  })
-  
-  
-  observeEvent(input$tcgex, {
+
     if(input$tcgex == "GSEA") {gsea_server("gsea",Xproj=Xproj)}
-  })
-  
-  
-  observeEvent(input$tcgex, {
+
     if(input$tcgex == "CORRELATED GENES") {
       gene_cor_tb_server("genecor",Xproj=Xproj)
       gene_cor_pl_server("genecor",Xproj=Xproj)
     }
+    
   })
   
  
