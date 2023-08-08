@@ -43,12 +43,12 @@ ui <- navbarPage(
   
   id = "TCGEx",
     
-#     div(
-#   tags$a(href = "https://tcgex.iyte.edu.tr/"
-#          
-#          # ,tags$img(src = 'images/left_logo.png', align = 'middle', height = "50px", width = "130px")
-#          )
-# ),
+    title = div(
+  tags$a(href = "https://tcgex.iyte.edu.tr/"
+
+         # ,tags$img(src = 'images/left_logo.png', align = 'middle', height = "50px", width = "130px")
+         )
+),
   
   theme = mytheme,
 
@@ -76,7 +76,7 @@ ui <- navbarPage(
   
   tabPanel(
     # "TCGEx",
-     tags$img(src = "images/left_logo.png", height = "30px", width = "80px"),
+     tags$img(src = "images/left_logo.png", align = 'top', height = "30px", width = "80px"),
     includeHTML("home.html"),
     tags$script(src = "plugins/scripts.js"),
     tags$head(
