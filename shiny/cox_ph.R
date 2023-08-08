@@ -30,7 +30,7 @@ cox_ui <- function(id, label, choices) {
         
         condition = " output.proj_length_cox > '1' ",    
         ns=ns,                                           
-        radioButtons(inputId = ns ("choose_cox"), "Select multi-cancer analysis approach:",
+        radioButtons(inputId = ns("choose_cox"), "Select multi-cancer analysis approach:",
                      selected = "Include cancer type as covariate",
                      c("Include cancer type as covariate",
                        "Aggregate cancer types")),

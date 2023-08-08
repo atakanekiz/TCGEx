@@ -20,7 +20,7 @@ km_ui <- function(id, label, choices) {
       
       sidebarPanel(
       
-        selectizeInput(inputId = ns ("km_samptyp"), 
+        selectizeInput(inputId = ns("km_samptyp"), 
                        multiple=T,
                        label = "1. Select sample types",
                        choices=NULL, # will be updated dynamically
