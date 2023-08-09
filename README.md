@@ -1,4 +1,4 @@
-The Cancer Genome Explorer  (TCGEx)
+**The Cancer Genome Explorer  (TCGEx)**
 
 ![](graphical_abstract.png)
 
