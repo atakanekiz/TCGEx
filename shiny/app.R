@@ -41,12 +41,17 @@ mytheme <- create_theme(
 
 ui <- navbarPage(  
   
-  title = div(
+  # header = includeHTML("header.html")
+  
+  id = "tcgex",
+    
+    title = div(
   tags$a(href = "https://tcgex.iyte.edu.tr/"
-         
+
          # ,tags$img(src = 'images/left_logo.png', align = 'middle', height = "50px", width = "130px")
          )
 ),
+  
   theme = mytheme,
 
   tags$head(
@@ -68,10 +73,12 @@ ui <- navbarPage(
 ## gtag('config', 'G-0D1PDQNTF9') # tracker for srv-4
 
 
-
+# tabsetPanel(id="app_tabset",
+#             type = "tabs", ############################################################
+  
   tabPanel(
-    # "TCGEx",
-     tags$img(src = "images/left_logo.png", height = "30px", width = "80px"),
+    # title = "",
+    tags$img(src = "images/left_logo.png", align = 'top', height = "23px", width = "68px"),
     includeHTML("home.html"),
     tags$script(src = "plugins/scripts.js"),
     tags$head(
@@ -130,6 +137,8 @@ ui <- navbarPage(
     "ABOUT",
     fluidPage(includeHTML("about.html"), shinyjs::useShinyjs())
   ),
+  
+# ), ################################################################### tabsetpanel 
 
   footer = includeHTML("footer.html")
 )
@@ -165,31 +174,84 @@ server <- function(input, output, session) {
   Xproj<-reactiveValues()
   
   select_data_server("seldata",Xproj=Xproj)
+
   
-  # heatmap_server("heatmap",Xproj=Xproj)
+
+    
+    # selected_tab <- reactiveValues(keep_track = c())
   
-  data_prep_ml_server("ml",Xproj=Xproj)
-  df <- data_prep_ml_server("ml",Xproj=Xproj)
-  ml_main_server("ml",regress_data  = df,Xproj=Xproj)
+  selected_tab <- reactiveVal()
+    
+    observeEvent(input$tcgex, {
+
+    selected_tab(c(selected_tab(), input$tcgex))
+
+  })
   
-  pca_server("pca",Xproj=Xproj)
   
-  roc_server("roc",Xproj=Xproj)
+  observeEvent(input$tcgex, {
+
+    ## Code for resetting tabs (re-renders after moving to other tabs)
+    # 
+    # if(input$tcgex == "MACHINE LEARNING") {
+    #   data_prep_ml_server("ml",Xproj=Xproj)
+    #   df <- data_prep_ml_server("ml",Xproj=Xproj)
+    #   ml_main_server("ml",regress_data  = df,Xproj=Xproj)
+    # }
+    # 
+    # if(input$tcgex == "PCA") {pca_server("pca",Xproj=Xproj)}
+    # 
+    # if(input$tcgex == "ROC") {roc_server("roc",Xproj=Xproj)}
+    # 
+    # if(input$tcgex == "SCATTERPLOT") {gene_vs_gene_server("scatterplot",Xproj=Xproj)}
+    # 
+    # if(input$tcgex == "COX-PH") {cox_server("cox",Xproj=Xproj)}
+    # 
+    # if(input$tcgex == "BOXPLOT") {gene_vs_cat_server("boxplot",Xproj=Xproj)}
+    # 
+    # if(input$tcgex == "KAPLAN-MEIER") {km_server("km",Xproj=Xproj)}
+    # 
+    # if(input$tcgex == "HEATMAP") {heatmap_server("heatmap",Xproj=Xproj)}
+    # 
+    # if(input$tcgex == "GSEA") {gsea_server("gsea",Xproj=Xproj)}
+    # 
+    # if(input$tcgex == "CORRELATED GENES") {
+    #   gene_cor_tb_server("genecor",Xproj=Xproj)
+    #   gene_cor_pl_server("genecor",Xproj=Xproj)
+    # }
+    
+
+    if(input$tcgex == "MACHINE LEARNING" & sum(grepl("MACHINE LEARNING", selected_tab())) == 1) {
+      data_prep_ml_server("ml",Xproj=Xproj)
+      df <- data_prep_ml_server("ml",Xproj=Xproj)
+      ml_main_server("ml",regress_data  = df,Xproj=Xproj)
+      }
+
+    if(input$tcgex == "PCA" & sum(grepl("PCA", selected_tab())) == 1) {pca_server("pca",Xproj=Xproj)}
+
+    if(input$tcgex == "ROC" & sum(grepl("ROC", selected_tab())) == 1) {roc_server("roc",Xproj=Xproj)}
+
+    if(input$tcgex == "SCATTERPLOT" & sum(grepl("SCATTERPLOT", selected_tab())) == 1) {gene_vs_gene_server("scatterplot",Xproj=Xproj)}
+
+    if(input$tcgex == "COX-PH" & sum(grepl("COX-PH", selected_tab())) == 1) {cox_server("cox",Xproj=Xproj)}
+
+    if(input$tcgex == "BOXPLOT" & sum(grepl("BOXPLOT", selected_tab())) == 1) {gene_vs_cat_server("boxplot",Xproj=Xproj)}
+
+    if(input$tcgex == "KAPLAN-MEIER" & sum(grepl("KAPLAN-MEIER", selected_tab())) == 1) {km_server("km",Xproj=Xproj)}
+
+    if(input$tcgex == "HEATMAP" & sum(grepl("HEATMAP", selected_tab())) == 1) {heatmap_server("heatmap",Xproj=Xproj)}
+
+    if(input$tcgex == "GSEA" & sum(grepl("GSEA", selected_tab())) == 1) {gsea_server("gsea",Xproj=Xproj)}
+
+    if(input$tcgex == "CORRELATED GENES" & sum(grepl("CORRELATED GENES", selected_tab())) == 1) {
+      gene_cor_tb_server("genecor",Xproj=Xproj)
+      gene_cor_pl_server("genecor",Xproj=Xproj)
+    }
+      
+    
+  })
   
-  gene_vs_gene_server("scatterplot",Xproj=Xproj)
-  
-  cox_server("cox",Xproj=Xproj)
-  
-  gene_vs_cat_server("boxplot",Xproj=Xproj)
-  
-  km_server("km",Xproj=Xproj)
-  
-  heatmap_server("heatmap",Xproj=Xproj)
-  
-  gsea_server("gsea",Xproj=Xproj)
-  
-  gene_cor_tb_server("genecor",Xproj=Xproj)
-  gene_cor_pl_server("genecor",Xproj=Xproj)
+ 
   
 }
 
