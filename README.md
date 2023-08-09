@@ -31,8 +31,7 @@ The team behind TCGEx
 
 TCGEx was developed by the tremendous graduate and undergraduate students of the <a href="https://www.atakanekiz.com?utm_source=tcgex_source&utm_id=github"><b>Ekiz Lab</b></a> in the Department of Molecular Biology and Genetics at [Izmir Institute of Technology](https://www.iyte.edu.tr), Turkey.
 
-<img src="ekiz_lab_logo.png" alt="" width="230">
-<img src="iyte_logo-eng.png" alt="" width="250">
+<img src="ekiz_lab_logo.png" alt="" width="230"><img src="iyte_logo-eng.png" alt="" width="250">
 
 
 * * *
