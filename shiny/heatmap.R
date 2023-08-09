@@ -192,9 +192,9 @@ heatmap_server <- function(id,Xproj) {
                 "Next, you can apply a variance filter to keep only highly variable genes in the plot. 100 (default) means no filtering is applied. If you like to see top 10% variable genes only, set this value to 10. Such filtering can help see more informative genes.",
                 "You can select categorical clinical meta data features to show as annotations on top of the heatmap.",
                 "You can also create an annotation bar by categorizing the patients based on their gene expression levels. You can specify one or more genes here. When multiple genes are entered, you can categorize features separately and show them in individual annotation bars; or you can categorize after taking the overall average. Categorization is done as 'high' and 'low' at the median gene expression value",
-                "You can choose how the distance will be calculated for genes here.",
+                "You can choose how the distance will be calculated for genes here. You can read <a href='https://stat.ethz.ch/R-manual/R-devel/library/stats/html/dist.html'>R documentation</a> for further details.",
                 "You can choose how the distance will be calculated for samples here",
-                "You can choose different hierarchical clustering methods for genes here. To learn more about the methods check following links out",
+                "You can choose different hierarchical clustering methods for genes here. You can read <a href='https://stat.ethz.ch/R-manual/R-devel/library/stats/html/hclust.html'>R documentation</a> for further details.",
                 "You can choose different hierarchical clustering methods for samples here"
               ))
             )
@@ -216,11 +216,9 @@ heatmap_server <- function(id,Xproj) {
                 "Next, you can apply a variance filter to keep only highly variable genes in the plot. 100 (default) means no filtering is applied. If you like to see top 10% variable genes only, set this value to 10. Such filtering can help see more informative genes.",
                 "You can select categorical clinical meta data features to show as annotations on top of the heatmap.",
                 "You can also create an annotation bar by categorizing the patients based on their gene expression levels. You can specify one or more genes here. When multiple genes are entered, you can categorize features separately and show them in individual annotation bars; or you can categorize after taking the overall average. Categorization is done as 'high' and 'low' at the median gene expression value",
-                "You can choose how the distance will be calculated for genes here",
+                "You can choose how the distance will be calculated for genes here. You can read <a href='https://stat.ethz.ch/R-manual/R-devel/library/stats/html/dist.html'>R documentation</a> for further details.",
                 "You can choose how the distance will be calculated for samples here",
-                "You can choose different hierarchical clustering methods for genes here. To learn more about the methods check following links out. 
-                Hclust function - https://ury1.com/9i3zc ,
-                Hierarchical Clustering - https://urx1.com/xDeiP ",
+                "You can choose different hierarchical clustering methods for genes here. You can read <a href='https://stat.ethz.ch/R-manual/R-devel/library/stats/html/hclust.html'>R documentation</a> for further details.",
                 "You can choose different hierarchical clustering methods for samples here"
               ))
             )
@@ -242,11 +240,9 @@ heatmap_server <- function(id,Xproj) {
                 "Next, you can apply a variance filter to keep only highly variable genes in the plot. 100 (default) means no filter is applied. If you like to see top 10% variable genes only, set this value to 10. Such filtering can help see more informative genes.",
                 "You can select categorical clinical meta data features to show as annotations on top of the heatmap.",
                 "You can also create an annotation bar by categorizing the patients based on their gene expression levels. You can specify one or more genes here. When multiple genes are entered, you can categorize features separately and show them in individual annotation bars; or you can categorize after taking the overall average. Categorization is done as 'high' and 'low' at the median gene expression value",
-                "You can choose how the distance will be calculated for genes here",
+                 "You can choose how the distance will be calculated for genes here. You can read <a href='https://stat.ethz.ch/R-manual/R-devel/library/stats/html/dist.html'>R documentation</a> for further details.",
                 "You can choose how the distance will be calculated for samples here",
-                "You can choose different hierarchical clustering methods for genes here. To learn more about the methods check following links out. 
-                Hclust function - https://ury1.com/9i3zc ,
-                Hierarchical Clustering - https://urx1.com/xDeiP ",
+                "You can choose different hierarchical clustering methods for genes here. You can read <a href='https://stat.ethz.ch/R-manual/R-devel/library/stats/html/hclust.html'>R documentation</a> for further details.",
                 "You can choose different hierarchical clustering methods for samples here"
               ))
             )
@@ -661,8 +657,9 @@ heatmap_server <- function(id,Xproj) {
             validate(need(input$cat, "Please select a Human MSigDB Collection"))
             validate(need(input$chosen_gse, "Please select the subset of your chosen Human MSigDB Collection"))
           }
-          validate(need(input$heatmap_run, "Please click 'Analyze' button"))
-
+          validate(need(input$heatmap_run, "Please click the 'Analyze' button"))
+          
+          
           return({
             if(input$clustering_distance_rows == "pearson"| input$clustering_distance_rows == "spearman" | input$clustering_distance_rows == "kendall"){
               distfun_row = function(x) as.dist(1 - cor(t(x), method=input$clustering_distance_rows))
@@ -704,9 +701,7 @@ heatmap_server <- function(id,Xproj) {
             validate(need(input$cat, "Please select a Human MSigDB Collection"))
             validate(need(input$chosen_gse, "Please select the subset of your chosen Human MSigDB Collection"))
           }
-
-          validate(need(input$heatmap_run, "Please click 'Analyze' button"))
-
+          validate(need(input$heatmap_run, "Please click the 'Analyze' button"))
           
           if(input$clustering_distance_rows == "pearson"| input$clustering_distance_rows == "spearman" | input$clustering_distance_rows == "kendall"){
             distfun_row = function(x) as.dist(1 - cor(t(x), method=input$clustering_distance_rows))
