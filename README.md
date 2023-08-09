@@ -11,10 +11,11 @@ Intersection of disciplines
 
 Making sense of high-throughput cancer data requires a harmonious integration of molecular biology, statistics, and computer science. These advanced fields arguably differentiated from each other so much that it became necessary to establish new bridges between them to accelarate research.
 
-We developed TCGEx with this vision in our minds. Based on our prior expertise and the cancer research literature, we identified most commonly utilized analytical methods and packaged them into user-friendly modules with flexible user-selected parameters. This way, users can customize the analyses to their specific needs and utilize TCGEx in a variety of research contexts. We realize that learning software tools can be challenging, especially for researchers who have not dealt with high-throughput data previously. To ease this pain, we developed step-by-step guides in each module that introduce the necessary knobs and buttons to users to help them get started. Significantly, interactive analysis modules can be conveniently adapted to a range of study contexts leading to publication-ready plots in a few seconds. The source code for TCGEx can be found in [GitHub](https://github.com/atakanekiz/TCGA-Explorer)
+We developed TCGEx with this vision in our minds. Based on our prior expertise and the cancer research literature, we identified most commonly utilized analytical methods and packaged them into user-friendly modules with flexible user-selected parameters. This way, users can customize the analyses to their specific needs and utilize TCGEx in a variety of research contexts. We realize that learning software tools can be challenging, especially for researchers who have not dealt with high-throughput data previously. To ease this pain, we developed step-by-step guides in each module that introduce the necessary knobs and buttons to users to help them get started. Significantly, interactive analysis modules can be conveniently adapted to a range of study contexts leading to publication-ready plots in a few seconds. The source code for TCGEx can be found in GitHub.
 
 
 * * *
 
 
 -----------------------
+
