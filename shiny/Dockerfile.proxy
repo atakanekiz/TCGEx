@@ -1,0 +1,5 @@
+# ShinyProxy tabanını alın
+FROM openanalytics/shinyproxy:latest
+
+# Yapılandırma dosyasını kopyalayın
+COPY application.yml /opt/shinyproxy/application.yml

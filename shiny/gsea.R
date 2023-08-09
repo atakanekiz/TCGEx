@@ -63,9 +63,9 @@ gsea_ui <- function(id, label, choices) {
           condition = "output.gsea_var_status",
           ns=ns, 
           
-          numericInput(inputId = ns("gsea_high_cutoff"), "High cutoff percent", 50, 1, 100),
+          numericInput(inputId = ns("gsea_high_cutoff"), "High cutoff percent (Sample Group Left)", 50, 1, 100),
           
-          numericInput(inputId = ns("gsea_low_cutoff"), "Low cutoff percent", 50, 1, 100)
+          numericInput(inputId = ns("gsea_low_cutoff"), "Low cutoff percent (Reference Group Right)", 50, 1, 100)
         ),
         
         conditionalPanel(
@@ -84,7 +84,17 @@ gsea_ui <- function(id, label, choices) {
         
         hr(),
         
-        numericInput(inputId = ns("nperm"), "3. nPerm Value", min = 1000, step = 100, value = 1000),
+        numericInput(inputId = ns("nperm"), 
+                     label = tags$span(
+                       "3. nPerm Value",
+                       tags$i(
+                         class = "glyphicon glyphicon-info-sign",
+                         style = "color:#0072B2;",
+                         title = "If you increase the nPerm Value, the analysis takes more time"
+                       )),
+                     min = 1000, 
+                     step = 100, 
+                     value = 1000),
         
         radioButtons(ns("gsea_gene_sets"), "Choose gene set collection", choices = c("MSigDB", "Custom Gene Set")),
         
@@ -142,7 +152,8 @@ gsea_ui <- function(id, label, choices) {
                       class = "glyphicon glyphicon-info-sign",
                       style = "color:#0072B2;",
                       title = "The xlsx/xls file should contain two unnamed columns: the first column should contain the gene set name, and the second column should contain human gene names. Each gene should be associated with a gene set (ie. no missing data), and multiple gene sets can be provided in one file."
-                    )),
+                    ),tags$br(),
+                    a(href="sample_gsea_input.xlsx", "Sample Input File", download=NA, target="_blank")),
                     accept = c(".xls", ".xlsx" # "text/csv", "text/comma-separated-values,text/plain", ".csv"
                                )),  
           radioButtons(ns("individual_2"), "Show", choices = c("Top Pathways", "Specific Pathway"), selected = "Top Pathways"),
@@ -163,16 +174,18 @@ gsea_ui <- function(id, label, choices) {
           
         ),
         
-        numericInput(inputId = ns("gsea_width"), "Choose the width of the plot to download", min = 100, step = 10, value = 480),
-        numericInput(inputId = ns("gsea_height"), "Choose the height of the plot to download", min = 100, step = 10, value = 480),
         
         
         actionBttn(inputId = ns("gsea_run"), 
-                   label = "Perform GSEA",
+                   label = "Analyze",
                    style = "unite",
                    block = TRUE,
                    color = "primary"),
         br(),
+        
+        numericInput(inputId = ns("gsea_width"), "Choose the width of the plot to download", min = 100, step = 10, value = 480),
+        numericInput(inputId = ns("gsea_height"), "Choose the height of the plot to download", min = 100, step = 10, value = 480),
+        
         downloadButton(ns("g_downloadPlot"), "Download GSEA Plot", style="color: #eeeeee; background-color: #01303f; border-color: #01303f"),
         br(),
         br(),
@@ -182,11 +195,15 @@ gsea_ui <- function(id, label, choices) {
         downloadButton(ns("downloadData"), "Download ranked data", style="color: #eeeeee; background-color: #01303f; border-color: #01303f"),
         br(),
         br(),
+        downloadButton(ns("download_fgsea"), "Download GSEA result", style="color: #eeeeee; background-color: #01303f; border-color: #01303f"),
+        br(),
+        br(),
         #help section UI
         
         introjsUI(),
         actionButton(ns("intro3"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
         
+        width = 3
         
       ),
       
@@ -223,10 +240,10 @@ gsea_server <- function(id,Xproj) {
           element = paste0("#", session$ns(c(NA, "gsea_samptyp + .selectize-control", "gsea_feat + .selectize-control ", "nperm", "gsea_gene_sets", "individual_2"))),
           
           intro = paste(c(
-            "This is the gene set enrichment analysis (GSEA) module. Here, you can categorize samples based on a custom criteria and examine whether previously defined or user-provided gene sets are enriched in either of the data subset. <b>NOTE:</b> This module can take some time depending on the data set. Continue with the tutorial to learn more about this module.",
+            "This is the gene set enrichment analysis (GSEA) module. Here, you can categorize samples based on a custom criteria and examine whether previously defined or user-provided gene sets are enriched in either of the data subset. Continue with the tutorial to learn more about this module. <b>NOTE:</b> This module can take some time depending on the data set and user selections.",
             "You can select which sample types should be included in the analysis (eg. primary and/or metastatic).",
-            "GSEA is performed between two groups of data. If you would like to perform GSEA for a categorical clinical feature, you are expected to select two data subsets and define one of them as the 'sample' for the analysis (the other one will become reference). If you would like to perform GSEA for a numerical feature such as gene expression, then you can categorize samples based on gene expression values as 'high' and 'low' through user-defined quantiles. Setting high and low cutoff to 50, will categorize gene expression at the median value. You can set this numbers to 25 to compare the top 25% expressors to bottom 25% expressors.", 
-            "You can increase the number of permutations for preliminary estimation of P-values.",
+            "GSEA is performed between two groups of data. If you would like to perform GSEA for a categorical clinical feature, you are expected to select two data subsets and define one of them as the 'sample' for the analysis (the other one will become reference). If you would like to perform GSEA for a numerical feature such as gene expression, then you can categorize samples based on gene expression values as 'high' and 'low' through user-defined quantiles. Setting high and low cutoff to 50, will categorize gene expression at the median value. You can set these numbers to 25 to compare the top 25% expressors to bottom 25% expressors.", 
+            "You can increase the number of permutations for preliminary estimation of P-values. If you see NA's in enrichment scores and p-values during your analyses, you can try increasing this number. Note that the calculation time will be longer accordingly.",
             "You can perform GSEA using previously defined gene sets from the <a href='https://www.gsea-msigdb.org/gsea/msigdb/'>Molecular Signatures Database (MSigDB)</a> or provide your own gene sets",
             "If you select the 'Top Pathways' option, pathways with the highest and lowest enrichments are shown </i>(they may not always be significant!)</i>. If you choose 'Specific Pathway', the enrichment plot is prepared only for the pathway you select."
           ))
@@ -245,8 +262,8 @@ gsea_server <- function(id,Xproj) {
             "GSEA is performed between two groups of data. If you would like to perform GSEA for a categorical clinical feature, you are expected to select two data subsets and define one of them as the 'sample' for the analysis (the other one will become reference). If you would like to perform GSEA for a numerical feature such as gene expression, then you can categorize samples based on gene expression values as 'high' and 'low' through user-defined quantiles. Setting high and low cutoff to 50, will categorize gene expression at the median value. You can set this numbers to 25 to compare the top 25% expressors to bottom 25% expressors.",
             "You can increase the number of permutations for preliminary estimation of P-values.",
             "You can perform GSEA using previously defined gene sets from the <a href='https://www.gsea-msigdb.org/gsea/msigdb/'>Molecular Signatures Database (MSigDB)</a> or provide your own gene sets",
-            "Select MSigDB gene set collection to use in the analyses <b>NOTE:</b> Since some of these collections contain a large number of gene sets, analysis can take some time.",
-            "If you select the 'Top Pathways' option, pathways with the highest and lowest enrichments are shown </i>(they may not always be significant!)</i>. If you choose 'Specific Pathway', the enrichment plot is prepared only for the pathway you select."
+            "Select MSigDB gene set collection to use in the analyses <b>NOTE:</b> Since some of these collections (such as curated and GO gene sets) contain a large number of entries, analysis can take some time.",
+            "If you select the 'Top Pathways' option, pathways with the highest and lowest enrichments are shown </i>(please note that they may not always be significant)</i>. If you choose 'Specific Pathway', the enrichment plot is prepared only for the pathway you select."
           ))
           
         )
@@ -661,14 +678,18 @@ gsea_server <- function(id,Xproj) {
     #fgsea reactive
     
     res <- reactive({
-      
-      
-      fgsea(pathways = gene_set(), stats = preranked_genes(), minSize = 1, maxSize = ncol(gsea_dat())-3,  nPermSimple = input$nperm)
-      
-      
-      
+    
+    fgsea(pathways = gene_set(), stats = preranked_genes(), minSize = 1, maxSize = ncol(gsea_dat())-3,  nPermSimple = input$nperm)
+    
     }) 
     
+    gsea_res <- reactive({
+      
+      g_res = data.frame(res())
+      
+      g_res = select(g_res, c("pathway", "pval", "padj", "log2err", "ES", "NES"))
+      
+    })
   
     
     
@@ -701,13 +722,13 @@ gsea_server <- function(id,Xproj) {
         if (verbose)
           message(paste("Plotting", plot_ind()))
         
-        annot_padj <- signif(as.numeric(res()[res()$pathway == plot_ind(), "padj"]), digits = 2)
+        annot_pval <- signif(as.numeric(res()[res()$pathway == plot_ind(), "pval"]), digits = 2)
         annot_NES <- signif(as.numeric(res()[res()$pathway == plot_ind(), "NES"]), digits = 2)
         annot_ES <- signif(as.numeric(res()[res()$pathway == plot_ind(), "ES"]), digits = 2)
         x_pos <- length(preranked_genes())/4
         
         
-        annot_text <- paste("adj.p: ", annot_padj, "\nNES:", annot_NES)
+        annot_text <- paste("p: ", annot_pval, "\nNES:", annot_NES)
         
         
         
@@ -879,6 +900,17 @@ gsea_server <- function(id,Xproj) {
         filename = "preranked_genes.xlsx",
         content = function(file) {
           write.xlsx(ranked_data(), file, colnames = TRUE,
+                     rownames = F, append = FALSE, showNA = TRUE)
+          
+          
+        } 
+      )
+      
+      
+      output$download_fgsea <- downloadHandler(
+        filename = "GSEA_result.xlsx",
+        content = function(file) {
+          write.xlsx(gsea_res(), file, colnames = TRUE,
                      rownames = F, append = FALSE, showNA = TRUE)
           
           

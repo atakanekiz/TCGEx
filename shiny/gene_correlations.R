@@ -42,7 +42,8 @@ gene_cor_UI <- function(id) {
             inputId = ns("p_gene"),
             label = "*Please select primary gene",
             choices = NULL,
-            options=list(placeholder = "eg. TSPAN6")
+            options=list(placeholder = "eg. TSPAN6",
+                         plugins = list('restore_on_backspace'))
             
           ),
           numericInput(
@@ -63,7 +64,7 @@ gene_cor_UI <- function(id) {
           
           
           actionBttn(inputId = ns("act"),
-                     label = "Generate",
+                     label = "Analyze",
                      style = "unite",
                      block = TRUE,
                      color = "primary"),
@@ -73,8 +74,9 @@ gene_cor_UI <- function(id) {
           br(),
           #help section UI
           introjsUI(),
-          actionButton(ns("intro4"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7")
+          actionButton(ns("intro4"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
           
+          width = 3
           
         ),
         
@@ -94,6 +96,12 @@ gene_cor_UI <- function(id) {
                          choices=NULL,
                          options=list(placeholder = "eg. Primary solid tumor")),
           radioButtons(ns("corr2"), "Select correlation calculation method", choices = c("pearson", "spearman")),
+          numericInput(
+            inputId = ns("conflev"),
+            label = "Please select confidance interval",
+            value = 0.95
+          ),
+          
           checkboxInput(ns("coef"), "Show correlation coefficient on the plot", value = TRUE),
           radioButtons(ns("gen_sel"), "Select gene selection method", choices = c("Choose manually", "Upload File")),
           
@@ -104,7 +112,8 @@ gene_cor_UI <- function(id) {
               label = "*Select at least 2 genes",
               choices = NULL,
               multiple = T,
-              options=list(placeholder = "eg. TSPAN6")
+              options=list(placeholder = "eg. TSPAN6",
+                           plugins = list('restore_on_backspace'))
               
             )
             
@@ -121,21 +130,43 @@ gene_cor_UI <- function(id) {
                           class = "glyphicon glyphicon-info-sign",
                           style = "color:#0072B2;",
                           title = "The xlsx/xls file should contain a single unnamed column with human gene names."
-                        )),
+                        ), tags$br(),
+                        a(href="sample_gene_input.xlsx", "Sample Input File", download=NA, target="_blank")),
                       accept = c(".xls", ".xlsx")),  
           ),
           
+          selectInput(ns("corr_palette"),
+                      "Please select a palette",
+                      choices = c("Orange"= "Oranges" , 
+                                  "Purple" = "Purples", 
+                                  "Red" = "Reds" , 
+                                  "Blue" = "Blues" , 
+                                  "Green" = "Greens" , 
+                                  "Grey" = "Greys" , 
+                                  "Orange-Red" = "OrRd" , 
+                                  "Yellow-Orange-Red" = "YlOrRd" , 
+                                  "Yellow-Orange-Brown" = "YlOrBr" , 
+                                  "Yellow-Green" = "YlGn" ,
+                                  "Red-Blue" = "RdBu" , 
+                                  "Brown-Green" = "BrBG", 
+                                  "Pink-Green" = "PiYG" , 
+                                  "Purple-Green" = "PRGn", 
+                                  "Purple-Orange" = "PuOr" , 
+                                  "Red-Yellow-Blue" = "RdYlBu")
+            
+          ),
+          
           actionBttn(inputId = ns("act2"),
-                     label = "Generate",
+                     label = "Analyze",
                      style = "unite",
                      block = TRUE,
                      color = "primary"),
           br(),
           #help section UI
           introjsUI(),
-          actionButton(ns("intro5"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7")
+          actionButton(ns("intro5"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
           
-          
+          width = 3
           
         ),
         mainPanel(
@@ -189,7 +220,7 @@ gene_cor_tb_server <- function(id,Xproj) {
           element = paste0("#", session$ns(c(NA, "genecor_samp2 + .selectize-control","p_gene + .selectize-control ", "top_high", "top_low", "corr"))),
           
           intro = paste(c(
-            "This is the Gene Correlation Analysis module. In this first tab, you can select a gene and tabulate its top positively and negatively correlated genes. You can also visualize correlations in the second tab above. Continue the tutorial to learn the features of this module. <b>NOTE:</b> Since pair-wise correlation is calculated genome-wide, this analysis can take a some time.",
+            "This is the Gene Correlation Analysis module. In this first tab, you can select a gene and tabulate its top positively and negatively correlated genes. You can also visualize correlations in the second tab above. Continue the tutorial to learn the features of this module. <b>NOTE:</b> Since pair-wise correlation is calculated genome-wide, this analysis can take some time.",
             "Select sample type (eg. primary and/or metastatic) to focus the analysis on specific patient subsets.",
             "Select your gene of interest here.",
             "Here you can change the number of top positively correlated genes shown.",
@@ -381,26 +412,10 @@ gene_cor_tb_server <- function(id,Xproj) {
             req(input$p_gene)
             req(input$top_high)
             req(input$top_low)
-            
-            # validate(
-            #   need(input$genecor_samp2, ''),
-            #   need(input$p_gene, ''),
-            #   need(input$top_high, ''),
-            #   need(input$top_low, '')
-            # )
-
-       
-             
-            
 
             sum(pre_data()[[input$p_gene]] == 0, na.rm = T)})
           
         })
-        
-        
-        
-        
-        
         
         ##note
         
@@ -416,13 +431,6 @@ gene_cor_tb_server <- function(id,Xproj) {
             req(input$p_gene)
             req(input$top_high)
             req(input$top_low)
-            
-            # validate(
-            #   need(input$genecor_samp2, ''),
-            #   need(input$p_gene, ''),
-            #   need(input$top_high, ''),
-            #   need(input$top_low, '')
-            # )
 
             "Number of samples where the chosen gene is not expressed"
           })
@@ -485,6 +493,7 @@ gene_cor_pl_server <- function(id,Xproj) {
       
       iv <- InputValidator$new()
       iv$add_rule("p_gene2", ~ if (length(input$p_gene2) == 1  & !anyNA(length(input$p_gene2)) & input$gen_sel == 'Choose manually') "You must choose at least 2 genes")
+      iv$add_rule("conflev", ~ if ((input$conflev > 1 | input$conflev <= 0)  & !anyNA(input$conflev) ) "Please pick a number between 0 and 1")
       
       iv$enable()
       
@@ -559,7 +568,18 @@ gene_cor_pl_server <- function(id,Xproj) {
         
         cor_pd <- cor(pre_cor_dat(), method = input$corr2)
         
+        cor_pd
+        
       })
+      
+      
+      signif_dat <- reactive({
+        
+        cor.mtest(pre_cor_dat(),  method = input$corr2,conf.level = input$conflev)
+        
+        })
+      
+      
       
       #plot 
       
@@ -568,25 +588,31 @@ gene_cor_pl_server <- function(id,Xproj) {
         if(input$coef){
           
           corrplot(corre_dat(), 
-                   method= "circle",
-                   order="hclust", 
-                   type = 'upper', 
+                   order = 'original',
                    addCoef.col = "black",
                    tl.col="black", 
                    tl.srt=45, 
                    number.digits = 2,
-                   col=brewer.pal(n=8, name="BrBG"))
+                   col=brewer.pal(n=20, name=input$corr_palette),
+                   p.mat = signif_dat()$p,
+                   sig.level = 1-input$conflev,
+                   insig='blank')$corrPos -> p1
+          
+          text(p1$x, p1$y, round(p1$corr, 2))
+          
         }else {
           
           corrplot(corre_dat(), 
-                   method= "circle",
-                   order="hclust", 
-                   type = 'upper', 
+                   order = 'original',
                    addCoef.col = NULL ,
                    tl.col="black", 
                    tl.srt=45, 
                    number.digits = 2,
-                   col=brewer.pal(n=8, name="BrBG"))
+                   col=brewer.pal(n=20, name=input$corr_palette),
+                   p.mat = signif_dat()$p,
+                   sig.level = 1-input$conflev,
+                   pch.cex = 1.5,
+                   insig = 'label_sig')
         }
         
         
@@ -605,7 +631,9 @@ gene_cor_pl_server <- function(id,Xproj) {
           isolate({
             req(iv$is_valid())
             validate(
-              need(input$genecor_samp3, "Choose at least 1 sample type")
+              need(input$genecor_samp3, "Choose at least 1 sample type"),
+              need(input$conflev, "Please determine the confidance interval"),
+              need(input$corr_palette, "Please a color palette")
               
             )
             

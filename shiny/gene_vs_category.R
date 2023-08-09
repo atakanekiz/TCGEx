@@ -46,10 +46,10 @@ gene_vs_cat_ui <- function(id, label, choices){
                        choices=NULL, # will be updated dynamically
                        options = list(placeholder = "eg. meta.gender")),
         
-        checkboxInput(inputId = ns("exprs_stats"), "Show statistics?", F),
+        checkboxInput(inputId = ns("exprs_stats"), "Show statistics?", T),
         
         actionBttn(inputId = ns("cat_gene_run"), 
-                   label = "Generate Correlation Plot",
+                   label = "Analyze",
                    style = "unite",
                    block = TRUE,
                    color = "primary"),
@@ -61,6 +61,7 @@ gene_vs_cat_ui <- function(id, label, choices){
         introjsUI(),
         actionButton(ns("genecat_help"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
         
+        width = 3
         
       ),
       
@@ -234,7 +235,7 @@ gene_vs_cat_server <- function(id,Xproj){
           
           intro = c(
             "This is feature-to-metadata visualization module. You can select various data subsets and see how numeric features such as gene expression differs among these. Continue the tutorial to see how the module works.",
-            "Select sample type you would like to analyze here.",
+            "Select sample type(s) you would like to analyze here.",
             "Define which data subsets you want to include in the analysis.",
             "Here, you can select the categorical variable to place on the x-axis",
             "Select a numeric feature to plot in the y-axis",
@@ -264,7 +265,7 @@ gene_vs_cat_server <- function(id,Xproj){
     
     # Remove cols which is including more than 10 levels and numeric
     
-    hidden_cols_cat_plotvar<-reactive({"meta.definition"})
+    hidden_cols_cat_plotvar<-reactive({c("meta.definition","meta.treatments")})
     
     meta_cols_cat_plotvar <- reactive({colnames(Xproj$a())[grep("^meta\\.", colnames(Xproj$a()))]})
     
@@ -274,7 +275,21 @@ gene_vs_cat_server <- function(id,Xproj){
     
     available_cols_cat_plotvar <- reactive({setdiff(sel_cols_cat_plotvar(), c(hidden_cols_cat_plotvar(), sel_cols_cat_plotvar()[numeric_cols_cat_plotvar()]))})
     
-    #   # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
+    
+    
+    # Remove cols which is including more than 10 levels and numeric for facet_plotvar
+    
+    hidden_cols_facet_plotvar<-reactive({"meta.definition"})
+    
+    meta_cols_facet_plotvar <- reactive({colnames(Xproj$a())[grep("^meta\\.", colnames(Xproj$a()))]})
+    
+    sel_cols_facet_plotvar <- reactive({meta_cols_facet_plotvar()[unlist(lapply(Xproj$a()[, meta_cols_facet_plotvar(), with = FALSE], function(x) length(levels(x)))) < 10]})
+    
+    numeric_cols_facet_plotvar <- reactive({unlist(lapply(Xproj$a()[, sel_cols_facet_plotvar(), with = FALSE], function(x) is.numeric(x)))})
+    
+    available_cols_facet_plotvar <- reactive({setdiff(sel_cols_facet_plotvar(), c(hidden_cols_facet_plotvar(), sel_cols_facet_plotvar()[numeric_cols_facet_plotvar()]))})
+   
+     #   # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
     observe({updateSelectizeInput(session,
                                   "cat_plotvar", selected="",
                                   choices = available_cols_cat_plotvar(),
@@ -297,7 +312,7 @@ gene_vs_cat_server <- function(id,Xproj){
     # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
     observe({updateSelectizeInput(session,
                                   "facet_plotvar", selected="",
-                                  choices = colnames(Xproj$a()%>% select(starts_with("meta."))),
+                                  choices = available_cols_facet_plotvar(),
                                   server = T)})
     
     
@@ -320,9 +335,9 @@ gene_vs_cat_server <- function(id,Xproj){
       validate(need(input$exprs_samptyp, "Select sample type"),
                need(input$cat_plotvar, "Select categorical variable for x-axis"),
                need(input$num_plotvar, "Select numerical variable for y-axis"),
-               need(input$cat_gene_run, " Click generate button to generate the graph"),
+               need(input$cat_gene_run, "Click 'Analyze' button to generate the graph"),
                if(input$exprs_stats){                              ## Validation is active only when statistics button is chosen
-                 need(input$exprs_statref, "Select the reference group below")}
+                 need(input$exprs_statref, "Specify the reference group or choose pairwise combinations below to show statistical comparisons")}
       )
       
       if(input$facet_plotvar == "") facetvar <- NULL else facetvar <- input$facet_plotvar
@@ -396,6 +411,13 @@ gene_vs_cat_server <- function(id,Xproj){
       }
       
       
+      # Data validation to check if there are enough observations for the t-test
+      validate(need(nrow(df) >= 3, "Not enough observations for t-test"))
+      
+      # to ensure there are enough unique groups in the categorical variable for t-test to work
+      validate(need(length(unique(df[[input$cat_plotvar]])) >= 2, "Not enough unique groups in the categorical variable for t-test"))
+      
+      
       res <-compare_means(form, df,
                           method=input$exprs_statmethod,
                           p.adjust.method = input$exprs_padjmethod,
@@ -434,12 +456,7 @@ gene_vs_cat_server <- function(id,Xproj){
     val3 <- reactiveValues()
     
     output$exprs_plot <- renderPlot({
-      
-      
       if(input$facet_plotvar == "") facetvar <- NULL else facetvar <- input$facet_plotvar
-      
-      
-      
       
       pp <- ggboxplot(exprs_plotdat(), input$cat_plotvar, input$num_plotvar, 
                       fill = input$cat_plotvar,
@@ -449,23 +466,96 @@ gene_vs_cat_server <- function(id,Xproj){
                       add.params = list(size=input$exprs_plotaddsize,
                                         color=input$exprs_plotaddcolor),
                       outlier.shape=NA,
-                      font.x=18, font.y=18, font.tickslab = 18,
-                      panel.labs.font = list(size=16))
+                      font.x=14, font.y=14, font.tickslab = 12, # Adjust axis label and tick font size
+                      panel.labs.font = list(size=16)) # Adjust panel label font size
       
       if(input$exprs_rotatex) pp <- pp + rotate_x_text(angle=45)
       
-      if(input$exprs_stats) pp <- pp + stat_pvalue_manual(stat_layer(), size=7,
-                                                          label=input$exprs_statlabel, 
-                                                          step.increase = 0.1, 
-                                                          step.group.by = facetvar)
+      if(input$exprs_stats) {
+        pp <- pp + stat_pvalue_manual(stat_layer(), size=7,
+                                      label=input$exprs_statlabel, 
+                                      step.increase = 0.1, 
+                                      step.group.by = facetvar)
+        
+        # Move "ns" labels to the top of the plot
+        pp <- pp + theme(plot.caption = element_text(hjust = 0.5))
+      }
+      
+      # Determine the number of facets
+      num_facets <- ifelse(is.null(facetvar), 0, length(unique(exprs_plotdat()[[facetvar]])))
+      
+      # Dynamically adjust legend settings based on the number of facets
+      if (num_facets > 0) {
+        if (num_facets > 1) {
+          font_size_legend <- 12
+          legend_title_size <- 14
+          legend_position <- "bottom"
+        } else {
+          font_size_legend <- 14
+          legend_title_size <- 16
+          legend_position <- "bottom"
+        }
+        
+        # Adjust font size based on the number of facets
+        font_size_x <- switch(num_facets,
+                              1, 10,
+                              2, 9,
+                              3, 8,
+                              4, 7,
+                              5, 6,
+                              6, 5,
+                              7, 5,
+                              8, 4,
+                              9, 4,
+                              10, 4,
+                              12)
+        
+        font_size_y <- font_size_x
+        
+        # Adjust the size of facet panels based on the number of facets
+        panel_spacing <- switch(num_facets,
+                                1, 0.2,
+                                2, 0.25,
+                                3, 0.3,
+                                4, 0.35,
+                                5, 0.4,
+                                6, 0.45,
+                                7, 0.5,
+                                8, 0.55,
+                                9, 0.6,
+                                10, 0.65,
+                                12, 0.7)
+        
+        pp <- pp + theme(legend.text = element_text(size = font_size_legend),       # Font size for legend text
+                         legend.title = element_text(size = legend_title_size),     # Font size for legend title
+                         axis.text.x = element_text(size = font_size_x),            # Font size for x-axis labels
+                         axis.text.y = element_text(size = font_size_y),            # Font size for y-axis labels
+                         legend.position = legend_position,                         # Move the legend to the bottom of the plot
+                         plot.title = element_text(size = 18),                       # Increase the title font size
+                         plot.margin = unit(c(1, 1, 2, 1), "lines"),                 # Adjust the bottom margin
+                         legend.margin = margin(0, 0, 0, 0),                         # Reduce the legend margin
+                         legend.box.margin = margin(0, 0, 0, 0),                     # Reduce the legend box margin
+                         legend.spacing = unit(0.1, "lines"),                        # Reduce the legend spacing
+                         strip.text = element_text(size = font_size_x),              # Adjust facet text size
+                         panel.spacing = unit(panel_spacing, "lines"))               # Adjust the size of facet panels
+      } else {
+        pp <- pp + theme(legend.text = element_text(size = 14),                    
+                         legend.title = element_text(size = 16),
+                         axis.text.x = element_text(size = 12),                      
+                         axis.text.y = element_text(size = 12),
+                         legend.position = "bottom",                                
+                         plot.title = element_text(size = 18),                      
+                         plot.margin = unit(c(1, 1, 2, 1), "lines"),                 
+                         legend.margin = margin(0, 0, 0, 0),                        
+                         legend.box.margin = margin(0, 0, 0, 0),                     
+                         legend.spacing = unit(0.1, "lines"))                        
+      }
       
       val3$pp <- pp
       
       print(pp)
-      
-      
-      
     })
+    
     
     
     output$downloadPlot4 <- downloadHandler(

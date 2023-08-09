@@ -7,6 +7,7 @@ library(ggplot2)
 library(dplyr)
 
 ##KM survival modularization
+
 km_ui <- function(id, label, choices) {
   
   
@@ -16,9 +17,9 @@ km_ui <- function(id, label, choices) {
   tagList(
     
     ui <- fluidPage(
+      
       sidebarPanel(
-        
-        
+      
         selectizeInput(inputId = ns ("km_samptyp"), 
                        multiple=T,
                        label = "1. Select sample types",
@@ -106,7 +107,7 @@ km_ui <- function(id, label, choices) {
         ),
         
         actionBttn(inputId = ns("km_run"), 
-                   label = "Plot KM curves",
+                   label = "Analyze",
                    style = "unite",
                    block = TRUE,
                    color = "primary"),
@@ -120,11 +121,12 @@ km_ui <- function(id, label, choices) {
         introjsUI(),
         actionButton(ns("KM_help"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
         
+        width = 3
         
-      ),
+    ),
       
       mainPanel(
-        
+       
         
         plotOutput(outputId = ns("km_plot")),
         
@@ -259,13 +261,13 @@ km_server <- function(id,Xproj) {
               
               "If your numeric categorization results in three groups (ie low, middle, high), you can hide (default) or show the middle group in the graph",
               "You can add a covariate into the analysis and define data subsets as described before",
-              "You can show the risk table by clicking this box. A table will be added below the KM curves showing the number of surviving patients at different timepoints. <i>(This option will be visible after plotting the graph.)</i>",
-              "You can show the logrank p-value on the graph by clicking this box. If there are more than two groups in the analysis, the p-value is calculated by testing the null hypothesis that all the samples come from populations with identical survival. You can select two specific data subsets to show pair-wise p-values. <i>This option will be visible after plotting the graph.)</i>",
-              "Confidence interval bands can be added to the graph by clicking this box. <i>This option will be visible after plotting the graph.)</i>",
-              "You can plot dashed lines to highlight median survival in data subsets. <i>This option will be visible after plotting the graph.)</i> ",
-              "You can change the color palette of the graph here. <i>This option will be visible after plotting the graph.)</i>",
-              "You can manually change the plotted time interval here. This does not affect the results of survival analysis. <i>This option will be visible after plotting the graph.)</i>",
-              "The breaks on the x-axis can be changed here. <i>This option will be visible after plotting the graph.)</i>"
+              "<i>(This option will be visible after plotting)</i> You can show the risk table by clicking this box. A table will be added below the KM curves showing the number of surviving patients at different timepoints. ",
+              "<i>(This option will be visible after plotting)</i> You can show the logrank p-value on the graph by clicking this box. If there are more than two groups in the analysis, the p-value is calculated by testing the null hypothesis that all the samples come from populations with identical survival. You can select two specific data subsets to show pair-wise p-values. ",
+              "<i>(This option will be visible after plotting)</i> Confidence interval bands can be added to the graph by clicking this box.",
+              "<i>(This option will be visible after plotting)</i> You can plot dashed lines to highlight median survival in data subsets.",
+              "<i>(This option will be visible after plotting)</i>You can change the color palette of the graph here.",
+              "<i>(This option will be visible after plotting)</i> You can manually change the plotted time interval here. This does not affect the results of survival analysis.",
+              "<i>(This option will be visible after plotting)</i> The breaks on the x-axis can be changed here."
             ))
             
           )
@@ -279,10 +281,10 @@ km_server <- function(id,Xproj) {
             element = paste0("#", session$ns(c(NA, "km_samptyp + .selectize-control", "km_feat + .selectize-control","km_covar + .selectize-control"))),
             
             intro = paste(c(
-              "This is Kaplan-meier (KM) Survival Analysis app.Press the buttons to learn features of the app.",
-              "You can select the sample types (primary solid tumors etc.) in order to target the data subsets.",
-              "You can select the features (thousands of genes, miRNAs and clinical metadata). Numerical values such as gene expression values will be shown as low/high and the mean will be calculated eith the selected low/high percentages. Categorical choices will be shown as levels.",
-              "You can select a covariate group in order to compare it with first feature."
+              "This is Kaplan-meier (KM) survival analysis module. Here, you can examine how different data subsets differ in terms of survival. You can define data subsets by categorizing gene expression at desired cutoffs and/or use metadata features that are already categorical. The log-rank test p-value is reported on the graph and the survival model fit is shown to provide further details about the analysis. Continue tutorial to learn how to use the module. <b>Note:</b> Inputs in this interface are updated according to the user selection and new tutorial steps will be available as you perform analysis.",
+              "You can select the sample types (eg. primary and/or metastatic) to tailor the analysis to your needs.",
+              "KM analysis is performed between groups of data. You can select genes, miRNAs, or clinical meta data features here. If your selection is a categorical data type (eg. patient gender, tumor subtype), you will be asked to select which subsets to be included in the analysis. If your selection is a numerical data type (eg. gene expression), you will be asked to define quantile cutoffs to categorize gene expression as 'high' and 'low'",
+              "You can select a covariate group in order to compare it with first feature. This is optional and not needed for single feature analysis. <i>Note: Other tutorial steps will be available when you start the analysis.</i>"
             ))
           )
         )
@@ -411,7 +413,10 @@ km_server <- function(id,Xproj) {
     
     outputOptions(output, "proj_length_KM", suspendWhenHidden = FALSE)  
     
-    
+    km_feat_zero_count <- reactiveValues(value = NULL)
+    km_feat_na_count <- reactiveValues(value = NULL)
+    km_covar_zero_count <- reactiveValues(value = NULL)
+    km_covar_na_count <- reactiveValues(value = NULL)
     
     # Prepare trimmed km_dat object
     
@@ -420,13 +425,14 @@ km_server <- function(id,Xproj) {
       validate(
         need(input$km_samptyp, "Select data subsets"),
         need(input$km_feat, "Select feature"),
-        need(input$km_run, "Please click the Plot KM curves button to display KM curves"),
+        need(input$km_run, "Please click 'Analyze' button to display KM curves"),
         if(input$km_covar != ""){
           if(class(Xproj$a()[[input$km_covar]]) %in% c("character", "factor")){
             need(input$sel_covar_meta_groups, "Select at least one covariate group")}} 
       )
       
       if(Xproj$cancer_length() ==1) {
+        
         
         sel_cols <- c(input$km_feat, "meta.vital_status", "meta.days_to_event", "meta.definition", "meta.patient")
         
@@ -442,9 +448,10 @@ km_server <- function(id,Xproj) {
         
         if(is.numeric(dat[[input$km_feat]])){
           
-          km_feat_zero_count <<- sum(dat[[input$km_feat]] == 0, na.rm=T)
-          km_feat_na_count <<- sum(is.na(dat[[input$km_feat]]))
+          km_feat_zero_count$value <- sum(dat[[input$km_feat]] == 0, na.rm = TRUE)
           
+          km_feat_na_count$value <- sum(is.na(dat[[input$km_feat]]))
+  
           mid_value_feat <- ifelse(input$keep_mid, "mid", NA)
           
           dat[, (input$km_feat) := ifelse(dat[[input$km_feat]] >= quantile(dat[[input$km_feat]], (100-input$hi_cutoff)/100, na.rm = T), "high", ifelse(dat[[input$km_feat]] < quantile(dat[[input$km_feat]], input$lo_cutoff/100, na.rm = T), "low", mid_value_feat))]
@@ -479,8 +486,9 @@ km_server <- function(id,Xproj) {
           
           if(is.numeric(dat[[input$km_feat]])){
             
-            km_feat_zero_count <<- sum(dat[[input$km_feat]] == 0, na.rm=T)
-            km_feat_na_count <<- sum(is.na(dat[[input$km_feat]]))
+            km_feat_zero_count$value <- sum(dat[[input$km_feat]] == 0, na.rm = TRUE)
+            km_feat_na_count$value <- sum(is.na(dat[[input$km_feat]]))
+
             
             mid_value_feat <- ifelse(input$keep_mid, "mid", NA)
             
@@ -489,7 +497,7 @@ km_server <- function(id,Xproj) {
           } else if(is.character(dat[[input$km_feat]]) | is.factor(dat[[input$km_feat]])){
             
             
-            dat <- dat[get(input$km_feat) %in% input$sel_feat_meta_groups, ]
+            dat <- dat[get(input$km_feat) %in% input$sel_feat_meta_groups, ]   
             
           }
         } else if (input$choose_KM == "Per cancer type") {
@@ -508,8 +516,9 @@ km_server <- function(id,Xproj) {
           
           if(is.numeric(dat[[input$km_feat]])){
             
-            km_feat_zero_count <<- sum(dat[[input$km_feat]] == 0, na.rm=T)
-            km_feat_na_count <<- sum(is.na(dat[[input$km_feat]]))
+            km_feat_zero_count$value <- sum(dat[[input$km_feat]] == 0, na.rm = TRUE)
+            km_covar_na_count$value <- sum(is.na(dat[[input$km_feat]]))
+
             
             mid_value_feat <- ifelse(input$keep_mid, "mid", NA)
             
@@ -536,16 +545,17 @@ km_server <- function(id,Xproj) {
           
           covar_dat <- Xproj$a()[, ..sel_cols2][meta.definition %in% input$km_samptyp,][!duplicated(meta.patient), ]
           
-          dat[, (input$km_covar) := covar_dat[, input$km_covar, with=F]]
+          dat <- left_join(dat, covar_dat, by=c("meta.vital_status", "meta.days_to_event", "meta.definition", "meta.patient"))
           
-          km_covar_zero_count <<- sum(dat[[input$km_covar]] == 0, na.rm=T)
-          km_covar_na_count <<- sum(is.na(dat[[input$km_covar]]))
+
+          km_covar_zero_count$value <- sum(dat[[input$km_covar]] == 0, na.rm=T)
+          km_covar_na_count$value <- sum(is.na(dat[[input$km_covar]]))
           
           if(is.numeric(dat[[input$km_covar]])){
             
-            km_covar_zero_count <<- sum(dat[[input$km_covar]] == 0, na.rm=T)
-            km_covar_na_count <<- sum(is.na(dat[[input$km_covar]]))
-            
+            km_covar_zero_count$value <- sum(dat[[input$km_covar]] == 0, na.rm=T)
+            km_covar_na_count$value <- sum(is.na(dat[[input$km_covar]]))
+
             mid_value_covar <- ifelse(input$keep_mid_covar, "mid", NA)
             
             dat[, (input$km_covar) := ifelse(dat[[input$km_covar]] >= quantile(dat[[input$km_covar]], (100-input$hi_cutoff_covar)/100, na.rm = T), "high", ifelse(dat[[input$km_covar]] < quantile(dat[[input$km_covar]], input$lo_cutoff_covar/100, na.rm = T), "low", mid_value_covar))]
@@ -554,6 +564,7 @@ km_server <- function(id,Xproj) {
             
             
             dat <- dat[get(input$km_covar) %in% input$sel_covar_meta_groups, ]
+          
             
           }    
         } else if (Xproj$cancer_length() > 1) { 
@@ -564,15 +575,16 @@ km_server <- function(id,Xproj) {
             
             covar_dat <- Xproj$a()[, ..sel_cols2][meta.definition %in% input$km_samptyp,][!duplicated(meta.patient), ]
             
-            dat[, (input$km_covar) := covar_dat[, input$km_covar, with=F]]
+            dat <- left_join(dat, covar_dat, by=c("meta.vital_status", "meta.days_to_event", "meta.definition", "meta.patient"))
             
-            km_covar_zero_count <<- sum(dat[[input$km_covar]] == 0, na.rm=T)
-            km_covar_na_count <<- sum(is.na(dat[[input$km_covar]]))
+            km_covar_zero_count$value <- sum(dat[[input$km_covar]] == 0, na.rm=T)
+            km_covar_na_count$value <- sum(is.na(dat[[input$km_covar]]))
             
             if(is.numeric(dat[[input$km_covar]])){
               
-              km_covar_zero_count <<- sum(dat[[input$km_covar]] == 0, na.rm=T)
-              km_covar_na_count <<- sum(is.na(dat[[input$km_covar]]))
+              km_covar_zero_count$value <- sum(dat[[input$km_covar]] == 0, na.rm=T)
+              km_covar_na_count$value <- sum(is.na(dat[[input$km_covar]]))
+
               
               mid_value_covar <- ifelse(input$keep_mid_covar, "mid", NA)
               
@@ -590,16 +602,17 @@ km_server <- function(id,Xproj) {
             
             covar_dat <- Xproj$a()[, ..sel_cols2][meta.definition %in% input$km_samptyp,][!duplicated(meta.patient), ]
             
-            dat[, (input$km_covar) := covar_dat[, input$km_covar, with=F]]
+            dat <- left_join(dat, covar_dat, by=c("meta.vital_status", "meta.days_to_event", "meta.definition", "meta.patient", "meta.project_id"))
             
-            km_covar_zero_count <<- sum(dat[[input$km_covar]] == 0, na.rm=T)
-            km_covar_na_count <<- sum(is.na(dat[[input$km_covar]]))
+
+            km_covar_zero_count$value <- sum(dat[[input$km_covar]] == 0, na.rm=T)
+            km_covar_na_count$value <- sum(is.na(dat[[input$km_covar]]))
             
             if(is.numeric(dat[[input$km_covar]])){
               
-              km_covar_zero_count <<- sum(dat[[input$km_covar]] == 0, na.rm=T)
-              km_covar_na_count <<- sum(is.na(dat[[input$km_covar]]))
-              
+              km_covar_zero_count$value <- sum(dat[[input$km_covar]] == 0, na.rm=T)
+              km_covar_na_count$value <- sum(is.na(dat[[input$km_covar]]))
+
               mid_value_covar <- ifelse(input$keep_mid_covar, "mid", NA)
               
               #dat[, (input$km_covar) := ifelse(dat[[input$km_covar]] >= quantile(dat[[input$km_covar]], (100-input$hi_cutoff_covar)/100, na.rm = T), "high", ifelse(dat[[input$km_covar]] < quantile(dat[[input$km_covar]], input$lo_cutoff_covar/100, na.rm = T), "low", mid_value_covar))]
@@ -612,6 +625,7 @@ km_server <- function(id,Xproj) {
               
               
               dat <- dat[get(input$km_covar) %in% input$sel_covar_meta_groups, ]
+              
               
             }
             
@@ -706,24 +720,23 @@ km_server <- function(id,Xproj) {
       
       print(survdiff_txt)
       
-      
       writeLines("\n\n\n")
       
-      print(paste("Number of samples with zero counts of the numeric feature:", km_feat_zero_count))
+      print(paste("Number of samples with zero counts of the numeric feature:", km_feat_zero_count$value))
       
       writeLines("\n")
       
-      print(paste("Number of samples lacking information on selected feature:", km_feat_na_count))
+      print(paste("Number of samples lacking information on selected feature:", km_feat_na_count$value))
       
       writeLines("\n")
       
       if(input$km_covar != ""){
         
-        print(paste("Number of samples with zero counts of the numeric covariate:", km_covar_zero_count))
+        print(paste("Number of samples with zero counts of the numeric covariate:", km_covar_zero_count$value))
         
         writeLines("\n")
         
-        print(paste("Number of samples lacking information on selected covariate:", km_covar_na_count))
+        print(paste("Number of samples lacking information on selected covariate:", km_covar_na_count$value))
         
       }
     })
