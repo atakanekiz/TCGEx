@@ -17,6 +17,10 @@ library(shinyjs)
 library(shinydashboardPlus)
 library(fresh)
 
+library(shiny)
+library(shinydashboardPlus)
+library(fresh)
+
 mytheme <- create_theme(
   adminlte_color(
     light_blue = "#434C5E"
@@ -35,123 +39,101 @@ mytheme <- create_theme(
 )
 
 
-#User Interface
+ui <- navbarPage(  
+  
+  title = div(
+  tags$a(href = "https://tcgex.iyte.edu.tr/"
+         
+         # ,tags$img(src = 'images/left_logo.png', align = 'middle', height = "50px", width = "130px")
+         )
+),
+  theme = mytheme,
 
-ui <- dashboardPage(skin = "black", 
-                    title = "TCGExplorer",
-                    dashboardHeader(
-                      title = tags$a(href = "https://tcgex.iyte.edu.tr/",
-                                     tags$img(src='images/tcgex_logo_2.jpg', align = 'middle', height = '50px')
-                         )
-                      ),
-                    dashboardSidebar(
-                      minified = F,
-                      sidebarMenu(
-                        menuItem("HOMEPAGE",icon = icon("home"),tabName="home"),
-                        menuItem("DATA SELECTION",icon = icon("dna"),tabName="select_data"),
-                        menuItem("KAPLAN-MEIER",icon = icon("disease"),tabName="km"),
-                        menuItem("COX-PH",icon = icon("biohazard"),tabName="cox"),
-                        menuItem("METADATA ANALYSIS",icon = icon("chart-bar"),tabName="gene_vs_cat"),
-                        menuItem("CORRELATION ANALYSIS",icon = icon("chart-line"),tabName="gene_vs_gene"),
-                        menuItem("CORRELATED GENE TABLE",icon = icon("magnifying-glass"),tabName="gene_cor"),                        
-                        menuItem("HEATMAP",icon = icon("microscope"),tabName="heatmap"),
-                        menuItem("GSEA",icon = icon("chart-line"),tabName="gsea"),
-                        menuItem("ROC",icon = icon("capsules"),tabName="roc"),
-                        menuItem("PCA",icon = icon("circle-nodes"),tabName="pca"),
-                        menuItem("MACHINE LEARNING",icon = icon("atom"),tabName="ml"),
-                        menuItem("ABOUT",icon = icon("address-card"),tabName="about")
-                        
+  tags$head(
+    tags$script(src = "https://www.googletagmanager.com/gtag/js?id=G-HWCPP52NZ2"),
+    tags$script(
+      HTML(
+        "window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-HWCPP52NZ2');"
+      )
+    )
+  ),
 
-                        
-                        
-                      )
-                    ),
-                    dashboardBody(tags$head(
-                                    tags$script(src = "https://www.googletagmanager.com/gtag/js?id=G-HWCPP52NZ2"),
-                                    tags$script(
-                                      HTML(
-                                        "window.dataLayer = window.dataLayer || [];
-                                        function gtag(){dataLayer.push(arguments);}
-                                        gtag('js', new Date());
-                                        gtag('config', 'G-HWCPP52NZ2');"
-                                      )
-                                    )
-                                  ),
-                                  
-                                  tags$div(
-                                    id = "banner",
-                                    style = "position: fixed; bottom: 0; left: 0; right: 0; height: 45px; background-color: #AAA4A3; color: white; padding: 10px; width: 100%; z-index: 998;",
-                                    tags$p(
-                                      style = "font-size: 15px; margin: 0; display: inline-block;",
-                                      "We use Google Analytics to give you the best experience on our site and analyze traffic.",
-                                      tags$a(
-                                        href = "https://policies.google.com/technologies/cookies",
-                                        style = "color: white; font-weight: bold; margin-left: 10px; text-decoration: underline;",
-                                        "Learn more"
-                                      )
-                                    ),
-                                    tags$button(
-                                      id = "close-button",
-                                      "Got it!",
-                                      style = "float: right; background-color: #ffffff; color: #AAA4A3; border: none; border-radius: 5px; padding: 5px; font-size: 14px; margin-left: 10px; font-weight: bold;",
-                                      onclick = "this.parentNode.style.display = 'none';")
-                                  ),
-                                  
-                                  use_theme(mytheme),
-                                  tabItems(
-                                    tabItem(tabName = "about",
-                                            includeHTML("about.html"),
-                                            shinyjs::useShinyjs()),
-                                    tabItem(tabName="select_data",
-                                            fluidPage(h1("Please select the cancer data"),
-                                                      select_data_ui("module"))),
-                                    tabItem(tabName="heatmap",
-                                            fluidPage(h1("Heatmap Analysis "),
-                                                      heatmap_ui("module"))),
-                                    tabItem(tabName="ml",
-                                            fluidPage(
-                                                      ml_ui("ml"))),
-                                    tabItem(tabName="pca",
-                                            fluidPage(h1("Principal Compenent Analysis (PCA)"),
-                                                      pca_ui("module_pca"))),
-                                    tabItem(tabName="roc",
-                                            fluidPage(h1("Receiver Operating Characteristic (ROC) Analysis "),
-                                                      roc_ui("module"))),
-                                    tabItem(tabName="gene_vs_gene",
-                                            fluidPage(h1("Correlation Analysis"),
-                                                      gene_vs_gene_ui("module"))),
-                                    tabItem(tabName="cox",
-                                            fluidPage(h1("Cox Proportional Hazards Survival Analysis"),
-                                                      cox_ui("module"))),
-                                    tabItem(tabName="gene_vs_cat",
-                                            fluidPage(h1("MetaData Analysis"),
-                                                      gene_vs_cat_ui("module"))),
-                                    tabItem(tabName="km",
-                                            fluidPage(h1("Kaplan-Meier Survival Analysis "),
-                                                      km_ui("module"))),
-                                    tabItem(tabName="gsea",
-                                            fluidPage(h1("Gene Sets Enrichment Analysis (GSEA) "),
-                                                      gsea_ui("module"))),
-                                    tabItem(tabName="gene_cor",
-                                            fluidPage(h1("Correlated Gene Table Analysis "),
-                                                      gene_cor_UI("module"))),
-                                    tabItem(tabName="home",
-                                             includeHTML("home.html"),
-                                             tags$script(src = "plugins/scripts.js"),
-                                             tags$head(
-                                               tags$link(rel = "stylesheet", 
-                                                         type = "text/css", 
-                                                         href = "plugins/font-awesome-4.7.0/css/font-awesome.min.css"),
-                                               tags$link(rel = "icon", 
-                                                         type = "image/png", 
-                                                         href = "images/logo_tab_icon.png")))
-                                   ),
-                                  dashboardFooter(
-                                      includeHTML("footer.html")
-                                      )
-                                  
-                                    
-                                  ))
+## gtag('config', 'G-HWCPP52NZ2') # initial tracker for single machine
+## gtag('config', 'G-DVM1837XKH') # tracker for srv-1
+## gtag('config', 'G-D7TFB6PP0Y') # tracker for srv-2
+## gtag('config', 'G-BNNRL1KBD8') # tracker for srv-3
+## gtag('config', 'G-0D1PDQNTF9') # tracker for srv-4
+
+
+
+  tabPanel(
+    # "TCGEx",
+     tags$img(src = "images/left_logo.png", height = "30px", width = "80px"),
+    includeHTML("home.html"),
+    tags$script(src = "plugins/scripts.js"),
+    tags$head(
+      tags$link(rel = "stylesheet", 
+                type = "text/css", 
+                href = "plugins/font-awesome-4.7.0/css/font-awesome.min.css"),
+      tags$link(rel = "icon", 
+                type = "image/png", 
+                href = "images/logo_tab_icon.png"))
+  ),
+  tabPanel(
+    "DATA SELECTION",
+    fluidPage(h1("Please select cancer project(s)"), select_data_ui("seldata")
+  )),
+  tabPanel(
+    "KAPLAN-MEIER",
+    fluidPage(h1("Kaplan-Meier Survival Analysis"), km_ui("km"))
+  ),
+  tabPanel(
+    "COX-PH",
+    fluidPage(h1("Cox Proportional Hazards Survival Analysis"), cox_ui("cox"))
+  ),
+  tabPanel(
+    "BOXPLOT",
+    fluidPage(h1("Boxplot Metadata Analysis"), gene_vs_cat_ui("boxplot"))
+  ),
+  tabPanel(
+    "SCATTERPLOT",
+    fluidPage(h1("Scatterplot Correlation Analysis"), gene_vs_gene_ui("scatterplot"))
+  ),
+  tabPanel(
+    "CORRELATED GENES",
+    fluidPage(h1("Correlated Gene Table Analysis"), gene_cor_UI("genecor"))
+  ),
+  tabPanel(
+    "HEATMAP",
+    fluidPage(h1("Heatmap Analysis"), heatmap_ui("heatmap"))
+  ),
+  tabPanel(
+    "GSEA",
+    fluidPage(h1("Gene Sets Enrichment Analysis (GSEA)"), gsea_ui("gsea"))
+  ),
+  tabPanel(
+    "ROC",
+    fluidPage(h1("Receiver Operating Characteristic (ROC) Analysis"), roc_ui("roc"))
+  ),
+  tabPanel(
+    "PCA",
+    fluidPage(h1("Principal Compenent Analysis (PCA)"), pca_ui("pca"))
+  ),
+  tabPanel(
+    "MACHINE LEARNING",
+    fluidPage(ml_ui("ml"))
+  ),
+  tabPanel(
+    "ABOUT",
+    fluidPage(includeHTML("about.html"), shinyjs::useShinyjs())
+  ),
+
+  footer = includeHTML("footer.html")
+)
+
 
 #Main Server
 
@@ -182,32 +164,32 @@ server <- function(input, output, session) {
   
   Xproj<-reactiveValues()
   
-  select_data_server("module",Xproj=Xproj)
+  select_data_server("seldata",Xproj=Xproj)
   
-  heatmap_server("module",Xproj=Xproj)
+  # heatmap_server("heatmap",Xproj=Xproj)
   
   data_prep_ml_server("ml",Xproj=Xproj)
   df <- data_prep_ml_server("ml",Xproj=Xproj)
   ml_main_server("ml",regress_data  = df,Xproj=Xproj)
   
-  pca_server("module_pca",Xproj=Xproj)
+  pca_server("pca",Xproj=Xproj)
   
-  roc_server("module",Xproj=Xproj)
+  roc_server("roc",Xproj=Xproj)
   
-  gene_vs_gene_server("module",Xproj=Xproj)
+  gene_vs_gene_server("scatterplot",Xproj=Xproj)
   
-  cox_server("module",Xproj=Xproj)
+  cox_server("cox",Xproj=Xproj)
   
-  gene_vs_cat_server("module",Xproj=Xproj)
+  gene_vs_cat_server("boxplot",Xproj=Xproj)
   
-  km_server("module",Xproj=Xproj)
+  km_server("km",Xproj=Xproj)
   
-  heatmap_server("module",Xproj=Xproj)
+  heatmap_server("heatmap",Xproj=Xproj)
   
-  gsea_server("module",Xproj=Xproj)
+  gsea_server("gsea",Xproj=Xproj)
   
-  gene_cor_tb_server("module",Xproj=Xproj)
-  gene_cor_pl_server("module",Xproj=Xproj)
+  gene_cor_tb_server("genecor",Xproj=Xproj)
+  gene_cor_pl_server("genecor",Xproj=Xproj)
   
 }
 

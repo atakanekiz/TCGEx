@@ -39,8 +39,8 @@ gene_vs_gene_ui <- function(id) {
         inputId = ns("Gene1"),
         label = "*Please select the x axis variable",
         choices = NULL,
-        options=list(placeholder = "eg. TSPAN6 or meta.gender",
-                     plugins = list('restore_on_backspace'))
+        # options=list(placeholder = "eg. TSPAN6 or meta.gender",
+        #              plugins = list('restore_on_backspace'))
         
       ),
       
@@ -51,8 +51,8 @@ gene_vs_gene_ui <- function(id) {
         inputId = ns("Gene2"),
         label = "*Please select the y axis variable",
         choices = NULL,
-        options=list(placeholder = "eg. TOX or meta.Histology",
-                     plugins = list('restore_on_backspace'))
+        # options=list(placeholder = "eg. TOX or meta.Histology",
+        #              plugins = list('restore_on_backspace'))
         
       ),
      
@@ -103,10 +103,36 @@ gene_vs_gene_ui <- function(id) {
    
       
       checkboxInput(ns("notification"), "Show patient information", value = T),
-      checkboxInput(ns("genecor_regline"), "Show regression line", value = F),
+      checkboxInput(ns("genecor_regline"), "Show fitting curve", value = F),
       conditionalPanel(
        
        condition = "input.genecor_regline", ns=ns,
+       
+       radioButtons(ns("regline_type"), "Please select a fitting type", choices = c("linear", "loess")),
+       
+       conditionalPanel(
+         
+         condition = "input.regline_type == 'linear'", ns=ns,
+         
+         checkboxInput(ns("formula"), "Show statistics", value = T)
+         
+       ),
+       
+       conditionalPanel(
+         condition = "input.regline_type == 'loess'", ns=ns,
+         
+         numericInput(ns("span"),
+                      "Please pick a number for span",
+                      min = 0.01,
+                      step = 0.01,
+                      value = 0.75)
+       ),
+       
+       numericInput(ns("conf_lev"),
+                    "Please select the confidance interval",
+                    min = 0.01,
+                    step = 0.01,
+                    value = 0.95),
        
        colourInput(
          ns("col2"), "Please select a color for the regression line", "darkorange1",
@@ -129,7 +155,7 @@ gene_vs_gene_ui <- function(id) {
        
      ),
      
-      checkboxInput(ns("formula"), "Show statistics", value = T),
+      # checkboxInput(ns("formula"), "Show statistics", value = T),
       actionBttn(inputId = ns("do"), 
                  label = "Analyze",
                  style = "unite",
@@ -142,7 +168,7 @@ gene_vs_gene_ui <- function(id) {
       introjsUI(),
       actionButton(ns("intro"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
       
-      
+      width = 3
       
     ),
     
@@ -185,7 +211,7 @@ gene_vs_gene_server <- function(id,Xproj) {
             "Choose a variable for the x-axis of the plot.",
             "You can select gene expression or continuous metadata for the y-axis of the plot ",
             "Choose a variable for the y-axis of the plot. In the optional next section marked with blue fonts, you can select more variables to depict with different point color, size, and transparency.",
-            "Here, you can select whether or not to show patient information when you you hover the cursor over data points",
+            "Here, you can select whether or not to show patient information when you hover the cursor over data points",
             "You can show or hide the best-fitting line to the data points",
             "You can select a categorical variable here to plot correlations in different data subsets (eg. male and female patients).",
             "You can also show the correlation coefficient and the p-value of the linear regression."
@@ -207,12 +233,63 @@ gene_vs_gene_server <- function(id,Xproj) {
       iv$add_rule("gene_width", ~ if (input$gene_width == 0 & !anyNA(input$gene_width)) "The number must be greater than 0")
       iv$add_rule("gene_height", ~ if (input$gene_height == 0 & !anyNA(input$gene_height)) "The number must be greater than 0")
       iv$add_rule("text_size", ~ if (input$text_size == 0 & !anyNA(input$text_size)) "The number must be greater than 0")
+      iv$add_rule("span", ~ if ((input$span == 0 | input$span > 1) & !anyNA(input$span)) "The number must be in a range between 0 and 1")
+      iv$add_rule("conf_lev", ~ if ((input$conf_lev == 0 | input$conf_lev > 1) & !anyNA(input$conf_lev)) "The number must be in a range between 0 and 1")
       iv$enable()
       
       
       observe({updateSelectizeInput(session, "genecor_samp",choices = Xproj$a()[["meta.definition"]], server = T)})
-      observe({updateSelectizeInput(session, 'Gene1', choices = gene_choice(), server = TRUE, selected = "")})
-      observe({updateSelectizeInput(session, 'Gene2', choices = gene_choice_2(), server = TRUE, selected = "" )})
+      # observe({updateSelectizeInput(session, 'Gene1', choices = gene_choice(), server = TRUE, selected = "")})
+      observe({
+        
+        if(gvar_x() == "Gene") {
+          
+          updateSelectizeInput(session, 'Gene1', 
+                               choices = gene_choice(), 
+                               server = TRUE, 
+                               selected = "",
+                               options=list(placeholder = "eg. TSPAN6",
+                                            plugins = list('restore_on_backspace')))
+          
+        }else if(gvar_x() == "Meta"){
+          
+          updateSelectizeInput(session, 'Gene1', 
+                               choices = gene_choice(), 
+                               server = TRUE, 
+                               selected = "",
+                               options=list(placeholder = "eg. Meta.t.cells.cd8",
+                                            plugins = list('restore_on_backspace')))
+          
+        }
+        
+      })
+      #observe({updateSelectizeInput(session, 'Gene2', choices = gene_choice_2(), server = TRUE, selected = "" )})
+      
+      observe({
+        
+        if(gvar_y() == "Gene") {
+          
+          updateSelectizeInput(session, 
+                               'Gene2', 
+                               choices = gene_choice_2(), 
+                               server = TRUE, 
+                               selected = "",
+                               options=list(placeholder = "eg. TOX",
+                                            plugins = list('restore_on_backspace')))
+          
+        }else if(gvar_y() == "Meta"){
+          
+          updateSelectizeInput(session, 
+                               'Gene2', 
+                               choices = gene_choice_2(), 
+                               server = TRUE, 
+                               selected = "",
+                               options=list(placeholder = "eg. meta.Histology",
+                                            plugins = list('restore_on_backspace')))
+          
+        }
+        
+      })
       observe({updateSelectizeInput(session, 'Gene3', choices = colnames(gen_dat()), server = TRUE, selected = "")})
       observe({updateSelectizeInput(session, 'Gene4', choices = colnames(gen_dat()), server = TRUE, selected = "" )})
       observe({updateSelectizeInput(session, 'Gene5', choices = colnames(gen_dat()), server = TRUE, selected = "")})
@@ -329,9 +406,13 @@ gene_vs_gene_server <- function(id,Xproj) {
         {if(input$notification == F) p <- p + geom_point_interactive(aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]], alpha= dataset[[input$Gene3]]), size= dataset[[input$Gene4]], color = dataset[[input$Gene5]])}       
         
         
-        {if(input$formula) p <- p + stat_cor(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), family = "Arial", size = 7, geom = "label")}        
+        {if(input$formula & input$regline_type == 'linear') p <- p + stat_cor(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), family = "Arial", size = 7, geom = "label")}        
         
-        {if(input$genecor_regline) p <- p + stat_smooth(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), method = "loess", color = input$col2)}   
+        # {if(input$genecor_regline) p <- p + stat_smooth(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), method = "loess", color = input$col2)}
+        
+        {if(input$regline_type == "linear" & input$genecor_regline) p <- p + stat_smooth(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), method = "lm", color = input$col2, level = input$conf_lev)}   
+        
+        {if(input$regline_type == "loess" & input$genecor_regline) p <- p + stat_smooth(mapping = aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]]), method = "loess", color = input$col2, span = input$span, level = input$conf_lev)}   
         
         {if(input$facet) p <- p + facet_wrap(facet_cat(), labeller = as_labeller(dataset, default=label_wrap_gen(16)), scales = "free_y")+ 
             

@@ -151,7 +151,8 @@ dataprepInputControl_UI <- function(id) {
                                           class = "glyphicon glyphicon-info-sign", 
                                           style = "color:#0072B2;",
                                           title = "The xlsx/xls file should contain a list of gene symbols. Neither matrix/dataframe structure nor named columns are required. If a matrix/dataframe provided, first column will be extracted as a gene list."
-                                        )), 
+                                        ), tags$br(),
+                                        a(href="sample_gene_input.xlsx", "Sample Input File", download=NA, target="_blank")), 
                                         accept =  c(".xls", ".xlsx") 
                                       )
                      )
@@ -205,7 +206,8 @@ dataprepInputControl_UI <- function(id) {
                                           class = "glyphicon glyphicon-info-sign", 
                                           style = "color:#0072B2;",
                                           title = "The xlsx/xls file should contain a list of gene symbols. Neither matrix/dataframe structure nor named columns are required. If a matrix/dataframe provided, first column will be extracted as a gene list." 
-                                        )
+                                        ),tags$br(),
+                                        a(href="sample_gene_input.xlsx", "Sample Input File", download=NA, target="_blank")
                                       ), accept =  c(".xls", ".xlsx") 
                                       )
                                       
@@ -298,8 +300,9 @@ ml_ui <- function(id) {
       sidebarPanel(
         dataprepInputControl_UI("ml"),
         introjsUI(),
-        actionButton(ns("mldata_help"), "Tutorial")
+        actionButton(ns("mldata_help"), "Tutorial"),
         
+        width = 3
         
       ),
       mainPanel(
@@ -361,18 +364,18 @@ ml_ui <- function(id) {
                  materialSwitch(
                    NS(id,"plot_setting"),
                    label = "Plot selected coefficient(s)",
-                   value = TRUE,
+                   value = FALSE,
                    status = "primary"
                  )
           ),
           column(6,
                  conditionalPanel(
-                   condition = "input.plot_setting == true ", ns = ns, 
+                   condition = "input.plot_setting == false ", ns = ns, 
                    plotlyOutput(NS(id,"coef_lambda_plot"))
                    
                  ),
                  conditionalPanel(
-                   condition = "input.plot_setting == false ", ns = ns,
+                   condition = "input.plot_setting == true ", ns = ns,
                    plotlyOutput(NS(id,"coef_lambda_plot_some"))
                    
                  )
@@ -389,7 +392,7 @@ ml_ui <- function(id) {
         fluidRow(
           column(6,
                  conditionalPanel(
-                   condition = "input.plot_setting == false ", ns = ns,
+                   condition = "input.plot_setting == true ", ns = ns,
                    plotlyOutput(NS(id,"coef_box_plot"))
                    
                  )),

@@ -74,8 +74,9 @@ gene_cor_UI <- function(id) {
           br(),
           #help section UI
           introjsUI(),
-          actionButton(ns("intro4"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7")
+          actionButton(ns("intro4"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
           
+          width = 3
           
         ),
         
@@ -129,7 +130,8 @@ gene_cor_UI <- function(id) {
                           class = "glyphicon glyphicon-info-sign",
                           style = "color:#0072B2;",
                           title = "The xlsx/xls file should contain a single unnamed column with human gene names."
-                        )),
+                        ), tags$br(),
+                        a(href="sample_gene_input.xlsx", "Sample Input File", download=NA, target="_blank")),
                       accept = c(".xls", ".xlsx")),  
           ),
           
@@ -162,9 +164,9 @@ gene_cor_UI <- function(id) {
           br(),
           #help section UI
           introjsUI(),
-          actionButton(ns("intro5"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7")
+          actionButton(ns("intro5"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
           
-          
+          width = 3
           
         ),
         mainPanel(

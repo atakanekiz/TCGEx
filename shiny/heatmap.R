@@ -74,8 +74,9 @@ heatmap_ui <- function(id, label, choices) {
                     tags$i(
                       class = "glyphicon glyphicon-info-sign", 
                       style = "color:#0072B2;",
-                      title = "The xlsx/xls file should contain two unnamed columns: the first column should contain the gene set name, and the second column should contain gene names. Each gene should be associated with a gene set (ie. no missing data), and multiple gene sets can be provided in one file."
-                    )),
+                      title = "The xlsx/xls file should contain one unnamed column: the first column should contain the gene names."
+                    ), tags$br(),
+                    a(href="sample_gene_input.xlsx", "Sample Input File", download=NA, target="_blank")),
                   accept = c(".xls", ".xlsx"),
                   multiple = FALSE)
       ),
@@ -98,7 +99,13 @@ heatmap_ui <- function(id, label, choices) {
                           multiple = TRUE,
                           options=list(placeholder = "eg. meta.definition, meta.LYMPHOCYTE.SCORE etc.")),
            selectizeInput(ns("hm_categorized_gene"), 
-                          "Please select a gene/genes to be categorized as high/low (optional)", 
+                          label = tags$span(
+                            "Please select a gene/genes to be categorized as high/low (optional)",
+                            tags$i(
+                              class = "glyphicon glyphicon-info-sign",
+                              style = "color:#0072B2;",
+                              title = "Also meta variables can be added into this input box, but averaging meta variables and genes might produce meaningless results, try to examine them separately."
+                            )),
                           choices = NULL,
                           multiple = TRUE,
                           options=list(placeholder = "eg. TSPAN6, TNMD etc."))
@@ -146,6 +153,8 @@ heatmap_ui <- function(id, label, choices) {
       introjsUI(),
       actionButton(ns("heatmap_help"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
       
+      width = 3
+      
     ),
     
     mainPanel(
@@ -177,15 +186,15 @@ heatmap_server <- function(id,Xproj) {
               
               intro = paste(c(
                 "This is the heatmap module where you can visualize expression patterns of selected genes. Continue the tutorial to learn how to use this module",
-                "You can select sample types to focus the analysis on the specific subsets.",
+                "You can select sample types to focus the analysis on the specific subsets",
                 "Here you can choose how you would like to select genes for the plot",
                 "You can manually type genes of interest here (for other input possibilities (and associated tutorial steps), change the selection in the previous box)",
-                "Next, you can apply a variance filter to keep only highly variable genes in the plot. 100 (default) means no filter is applied. If you like to see top 10% variable genes only, set this value to 10. Such filtering can help see more informative genes.",
+                "Next, you can apply a variance filter to keep only highly variable genes in the plot. 100 (default) means no filtering is applied. If you like to see top 10% variable genes only, set this value to 10. Such filtering can help see more informative genes.",
                 "You can select categorical clinical meta data features to show as annotations on top of the heatmap.",
                 "You can also create an annotation bar by categorizing the patients based on their gene expression levels. You can specify one or more genes here. When multiple genes are entered, you can categorize features separately and show them in individual annotation bars; or you can categorize after taking the overall average. Categorization is done as 'high' and 'low' at the median gene expression value",
-                "You can choose how the distance will be calculated for genes here",
+                "You can choose how the distance will be calculated for genes here.",
                 "You can choose how the distance will be calculated for samples here",
-                "You can choose different hierarchical clustering methods for genes here",
+                "You can choose different hierarchical clustering methods for genes here. To learn more about the methods check following links out",
                 "You can choose different hierarchical clustering methods for samples here"
               ))
             )
@@ -209,7 +218,9 @@ heatmap_server <- function(id,Xproj) {
                 "You can also create an annotation bar by categorizing the patients based on their gene expression levels. You can specify one or more genes here. When multiple genes are entered, you can categorize features separately and show them in individual annotation bars; or you can categorize after taking the overall average. Categorization is done as 'high' and 'low' at the median gene expression value",
                 "You can choose how the distance will be calculated for genes here",
                 "You can choose how the distance will be calculated for samples here",
-                "You can choose different hierarchical clustering methods for genes here",
+                "You can choose different hierarchical clustering methods for genes here. To learn more about the methods check following links out. 
+                Hclust function - https://ury1.com/9i3zc ,
+                Hierarchical Clustering - https://urx1.com/xDeiP ",
                 "You can choose different hierarchical clustering methods for samples here"
               ))
             )
@@ -233,7 +244,9 @@ heatmap_server <- function(id,Xproj) {
                 "You can also create an annotation bar by categorizing the patients based on their gene expression levels. You can specify one or more genes here. When multiple genes are entered, you can categorize features separately and show them in individual annotation bars; or you can categorize after taking the overall average. Categorization is done as 'high' and 'low' at the median gene expression value",
                 "You can choose how the distance will be calculated for genes here",
                 "You can choose how the distance will be calculated for samples here",
-                "You can choose different hierarchical clustering methods for genes here",
+                "You can choose different hierarchical clustering methods for genes here. To learn more about the methods check following links out. 
+                Hclust function - https://ury1.com/9i3zc ,
+                Hierarchical Clustering - https://urx1.com/xDeiP ",
                 "You can choose different hierarchical clustering methods for samples here"
               ))
             )
@@ -261,10 +274,24 @@ heatmap_server <- function(id,Xproj) {
         } 
       })
       
+      
+      # Remove cols which is including more than 10 levels and numeric
+      
+      hidden_cols_heatmap_plotvar<-reactive({"meta.definition"})
+      
+      meta_cols_heatmap_plotvar <- reactive({colnames(Xproj$a())[grep("^meta\\.", colnames(Xproj$a()))]})
+      
+      sel_cols_heatmap_plotvar <- reactive({meta_cols_heatmap_plotvar()[unlist(lapply(Xproj$a()[, meta_cols_heatmap_plotvar(), with = FALSE], function(x) length(levels(x)))) < 10]})
+      
+      numeric_cols_heatmap_plotvar <- reactive({unlist(lapply(Xproj$a()[, sel_cols_heatmap_plotvar(), with = FALSE], function(x) is.numeric(x)))})
+      
+      available_cols_heatmap_plotvar <- reactive({setdiff(sel_cols_heatmap_plotvar(), c(hidden_cols_heatmap_plotvar(), sel_cols_heatmap_plotvar()[numeric_cols_heatmap_plotvar()]))})
+      
+      
       # observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "selectors", choices = c("Manually enter gene names", "MSigDB gene sets", "Upload a xlsx/xls file"), server = TRUE)})
       
       observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "genes", choices = colnames(Xproj$a()[, lapply(Xproj$a(), is.numeric) == TRUE, with = FALSE]), server = TRUE)})
-      observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "annotation", choices = colnames(Xproj$a()[, lapply(Xproj$a(), is.factor) == TRUE, with = FALSE]), selected = character(0), server = TRUE)})
+      observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "annotation", choices = available_cols_heatmap_plotvar(), selected = character(0), server = TRUE)})
       observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "hm_categorized_gene", choices = colnames(Xproj$a()[, lapply(Xproj$a(), is.numeric) == TRUE, with = FALSE]), selected = character(0), server = TRUE)})
       observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "hm_definition_sel", choices = c(Xproj$a()$meta.definition), selected = character(0), server = TRUE)})
       
@@ -453,7 +480,7 @@ heatmap_server <- function(id,Xproj) {
       })
       
       meta <- eventReactive(input$heatmap_run, {
-        
+
         # Preparing the meta data for annotation bar.
         
         req(pre_data())
@@ -478,19 +505,11 @@ heatmap_server <- function(id,Xproj) {
             
             meta <- as.data.table(meta)
             
-            if (input$hm_gene_categorization_button == "take_median"){
-              
-              if (length(as.vector(input$hm_categorized_gene)) == 1){
-                
-                setnames(meta, "meta", "hm_categorized_gene_means")
-                
-              } else {
-                
-                meta <- meta[, hm_categorized_gene_means := rowMeans(.SD, na.rm = TRUE), .SDcols = c(hm_categorized_gene)]  
-                
-              }
-              
-              
+            if (input$hm_gene_categorization_button == "take_median" & length(as.vector(input$hm_categorized_gene)) > 1){
+
+            
+              meta <- meta[, hm_categorized_gene_means := rowMeans(.SD, na.rm = TRUE), .SDcols = c(hm_categorized_gene)]  
+
               cat_gene_median <-  median(meta$hm_categorized_gene_means, na.rm = TRUE)
               
               meta <- meta[,c(hm_categorized_gene):=NULL]
@@ -498,13 +517,13 @@ heatmap_server <- function(id,Xproj) {
               meta <- as.data.frame(meta)
               
               meta <- meta %>% 
-                mutate(hm_categorized_gene_high_low = case_when(
+                mutate(categorized_gene_set_expression = case_when(
                   meta$hm_categorized_gene_means > cat_gene_median ~ "high",
                   meta$hm_categorized_gene_means < cat_gene_median ~ "low"
                 )) %>% 
                 select(-hm_categorized_gene_means)
               
-            } else if (input$hm_gene_categorization_button == "take_separately"){
+            } else if (input$hm_gene_categorization_button == "take_separately" | length(as.vector(input$hm_categorized_gene)) == 1){
               
               dat <- meta
               
@@ -574,7 +593,7 @@ heatmap_server <- function(id,Xproj) {
                 meta <- as.data.frame(meta)
                 
                 meta <- meta %>% 
-                  mutate(hm_categorized_gene_high_low = case_when(
+                  mutate(categorized_gene_set_expression = case_when(
                     meta$hm_categorized_gene_means > cat_gene_median ~ "high",
                     meta$hm_categorized_gene_means < cat_gene_median ~ "low"
                   )) %>% 
@@ -593,7 +612,7 @@ heatmap_server <- function(id,Xproj) {
                   meta <- as.data.frame(meta)
                   
                   meta <- meta %>% 
-                    mutate(hm_categorized_gene_high_low = case_when(
+                    mutate(categorized_gene_set_expression = case_when(
                       meta$hm_categorized_gene_means > cat_gene_median ~ "high",
                       meta$hm_categorized_gene_means < cat_gene_median ~ "low"
                     )) %>% 
@@ -643,8 +662,7 @@ heatmap_server <- function(id,Xproj) {
             validate(need(input$chosen_gse, "Please select the subset of your chosen Human MSigDB Collection"))
           }
           validate(need(input$heatmap_run, "Please click 'Analyze' button"))
-          
-          
+
           return({
             if(input$clustering_distance_rows == "pearson"| input$clustering_distance_rows == "spearman" | input$clustering_distance_rows == "kendall"){
               distfun_row = function(x) as.dist(1 - cor(t(x), method=input$clustering_distance_rows))
@@ -686,7 +704,9 @@ heatmap_server <- function(id,Xproj) {
             validate(need(input$cat, "Please select a Human MSigDB Collection"))
             validate(need(input$chosen_gse, "Please select the subset of your chosen Human MSigDB Collection"))
           }
+
           validate(need(input$heatmap_run, "Please click 'Analyze' button"))
+
           
           if(input$clustering_distance_rows == "pearson"| input$clustering_distance_rows == "spearman" | input$clustering_distance_rows == "kendall"){
             distfun_row = function(x) as.dist(1 - cor(t(x), method=input$clustering_distance_rows))
@@ -700,7 +720,7 @@ heatmap_server <- function(id,Xproj) {
           
           mat_data <- mat()
           
-          mat_data <- mat_data[ , colSums(is.na(mat_data))==0]
+          # mat_data <- mat_data[ , colSums(is.na(mat_data))==0]
           
           hclustfun_row = function(x) stats::hclust(x, method = input$clustering_method_rows)
           hclustfun_col = function(x) stats::hclust(x, method = input$clustering_method_columns)
