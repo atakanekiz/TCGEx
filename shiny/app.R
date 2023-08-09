@@ -41,6 +41,8 @@ mytheme <- create_theme(
 
 ui <- navbarPage(  
   
+  # header = includeHTML("header.html")
+  
   id = "tcgex",
     
     title = div(
