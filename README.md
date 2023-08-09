@@ -1,5 +1,6 @@
 TCGExplorer.  
 High-throughput cancer data analyzer
+![Açýklama metni]( graphical_abstract.png)
 ---------------------------------------------------
 
 We created TCGEx to enable wider use of TCGA data and facilitate researchers with no coding background to perform comprehensive analyses. TCGEx provides a responsive and user-friendly interface with customizable parameters that allows tailoring the analyses to different scientific contexts. This open-source tool written in R/Shiny offers a point-and-click solution for perfoming complex analyses of human cancer data and it can generate publication-ready plots to accelerate cancer research.
