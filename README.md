@@ -26,16 +26,19 @@ Making sense of high-throughput cancer data requires a harmonious integration of
 We developed TCGEx with this vision in our minds. Based on our prior expertise and the cancer research literature, we identified most commonly utilized analytical methods and packaged them into user-friendly modules with flexible user-selected parameters. This way, users can customize the analyses to their specific needs and utilize TCGEx in a variety of research contexts. We realize that learning software tools can be challenging, especially for researchers who have not dealt with high-throughput data previously. To ease this pain, we developed step-by-step guides in each module that introduce the necessary knobs and buttons to users to help them get started. Significantly, interactive analysis modules can be conveniently adapted to a range of study contexts leading to publication-ready plots in a few seconds. 
 
 
+
+Data availability
+-----------------------------------------
+
+The TCGEx webserver is accessible at https://www.tcgex.iyte.edu.tr. All code for the TCGEx app, data download, and pre-processing can be found in this GitHub repository. To facilitate local execution and code development, TCGEx docker image can be accessed at https://hub.docker.com/repository/docker/atakanekiz/tcgex/. The datasets used in TCGEx were derived from the TCGA data repository in the public domain (https://portal.gdc.cancer.gov/). Processed data files and TCGEx source code used by the TCGEx pipeline are accessible at Figshare (https://figshare.com/s/22f21b780acd57fb5dfb) (doi:10.6084/m9.figshare.23912532).
+
+
 The team behind TCGEx
 ------------------------------------------
 
 TCGEx was developed by the tremendous graduate and undergraduate students of the <a href="https://www.atakanekiz.com?utm_source=tcgex_source&utm_id=github"><b>Ekiz Lab</b></a> in the Department of Molecular Biology and Genetics at [Izmir Institute of Technology](https://www.iyte.edu.tr), Turkey.
 
 <img src="ekiz_lab_logo.png" alt="" width="230"><img src="iyte_logo-eng.png" alt="" width="250">
-
-
-* * *
-
 
 -----------------------
 
