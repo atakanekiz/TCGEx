@@ -219,6 +219,8 @@ for(i in rna_projects) {  # Some projects will fail. Can execute the loop in chu
     
     merged <- merged[, !duplicated(colnames(merged)), with=F] 
     
+    dir.create("./projects")
+    
     saveRDS(merged, paste0("projects/", i, ".rds"))
     
 }
@@ -401,7 +403,7 @@ saveRDS(skcm, "projects/SKCM.rds")
 
 ```{r}
 
-# This part is separated from this Rmd file because of the conflict issues based on specific packages, please check the "Zero_Count_Filtration_Step" Rmd file.
+# This part is separated from this Rmd file because of the conflict issues based on specific packages, please check the "zero_count_filtration_step" Rmd file.
 
 ```
 
