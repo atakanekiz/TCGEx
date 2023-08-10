@@ -14,6 +14,8 @@ output:
 
 ```{r}
 suppressPackageStartupMessages(library(TCGAbiolinks))
+suppressPackageStartupMessages(library(fs))
+
 
 tcga_projects <- getGDCprojects()
 tcga_projects <- grep("TCGA", tcga_projects$project_id, value = T)
@@ -29,19 +31,6 @@ tcga_projects <- tcga_projects[order(tcga_projects)]
 
 ```{r}
 
-
-# for(i in tcga_projects){
-#   
-#   query_harmonized_gene <- GDCquery(project = i,
-#                                     data.category = "Transcriptome Profiling",
-#                                     data.type = "Gene Expression Quantification",
-#                                     workflow.type = "HTSeq - Counts",
-#                                     legacy = FALSE)
-#   
-#   # Download all transcriptome profiling data from SKCM project(all tumors and healthy)
-#   GDCdownload(query_harmonized_gene, method="client", files.per.chunk = 10, directory = "./")
-# }
-
 for(i in tcga_projects){
   
   query_harmonized_gene <- GDCquery(project = i ,
@@ -50,11 +39,18 @@ for(i in tcga_projects){
                                     workflow.type = "STAR - Counts",
                                     experimental.strategy = "RNA-Seq")
   
-  # Download all transcriptome profiling data from SKCM project(all tumors and healthy)
+  # Download all transcriptome profiling data from TCGA project(all tumors and healthy)
+  
   GDCdownload(query_harmonized_gene,files.per.chunk = 8)
   
   rnaseq_data <- GDCprepare(query_harmonized_gene) 
   
+  current_dir <- getwd()
+
+  new_folder_path <- paste0(current_dir, "/RNAseq_RDS")
+
+  dir_create(new_folder_path)
+
   saveRDS(rnaseq_data, paste0("./RNAseq_RDS/",gsub("TCGA-", "", i), "_rnaseq.rds")) 
 }
 
@@ -131,7 +127,6 @@ tcga_projects <- getGDCprojects()
 tcga_projects <- grep("TCGA", tcga_projects$project_id, value = T)
 tcga_projects <- tcga_projects[order(tcga_projects)]
 
-# i <- "TCGA-SKCM"
 
 for(i in tcga_projects){
   
