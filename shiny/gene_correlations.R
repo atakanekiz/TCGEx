@@ -468,13 +468,14 @@ gene_cor_pl_server <- function(id,Xproj) {
         
         data.frame(
           
-          element = paste0("#", session$ns(c(NA, "genecor_samp3 + .selectize-control","corr2", "gen_sel" ))),
+          element = paste0("#", session$ns(c(NA, "genecor_samp3 + .selectize-control","corr2", "gen_sel", "corr_palette + .selectize-control" ))),
           
           intro = paste(c(
             "Here, you can visualize gene-to-gene correlations. Continue the tutorial to learn the features of this module.",
             "Select sample type (eg. primary and/or metastatic) to focus the analysis on specific patient subsets.",
             "Specify how the correlation should be calculated.",
-            "You can choose genes manually or you can upload the gene list as a xlsx/xls file. You can create xlsx/xls file in spreadsheet software by providing your genes in the first column. Please only use gene symbols and ensure that you are using the correct capitalization."
+            "You can choose genes manually or you can upload the gene list as a xlsx/xls file. You can create xlsx/xls file in spreadsheet software by providing your genes in the first column. Please only use gene symbols and ensure that you are using the correct capitalization.",
+            "You can change the color palette of the graph here."
           ))
         )
         
