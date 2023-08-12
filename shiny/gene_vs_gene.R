@@ -99,7 +99,7 @@ gene_vs_gene_ui <- function(id) {
      
      numericInput(inputId = ns("gene_width"), "Choose the width of the plot", min = 1, step = 1, value = 18),
      numericInput(inputId = ns("gene_height"), "Choose the height of the plot", min = 1, step = 1, value = 9),
-     numericInput(inputId = ns("text_size"), "Choose the text size", min = 1, step = 1, value = 25),
+     numericInput(inputId = ns("text_size"), "Choose the text size of the plot", min = 1, step = 1, value = 25),
    
       
       checkboxInput(ns("notification"), "Show patient information", value = T),
@@ -202,7 +202,7 @@ gene_vs_gene_server <- function(id,Xproj) {
         
         data.frame(
           
-          element = paste0("#", session$ns(c(NA, "genecor_samp + .selectize-control", "gvar_cat_x","Gene1 + .selectize-control ", "gvar_cat_y","Gene2+ .selectize-control ", "notification","genecor_regline", "facet", "formula"))),
+          element = paste0("#", session$ns(c(NA, "genecor_samp + .selectize-control", "gvar_cat_x","Gene1 + .selectize-control ", "gvar_cat_y","Gene2+ .selectize-control ","Gene3+ .selectize-control ","Gene4+ .selectize-control ","Gene5+ .selectize-control ","gene_width", "gene_height","text_size","notification","genecor_regline", "facet"))),
           
           intro = paste(c(
             "This is the gene-to-gene visualization module. You can calculate the correlation between two genes and generate scatter plots. Continue with the tutorial to learn features of the module.",
@@ -210,11 +210,16 @@ gene_vs_gene_server <- function(id,Xproj) {
             "You can select gene expression or continuous metadata for the x-axis of the plot",
             "Choose a variable for the x-axis of the plot.",
             "You can select gene expression or continuous metadata for the y-axis of the plot ",
-            "Choose a variable for the y-axis of the plot. In the optional next section marked with blue fonts, you can select more variables to depict with different point color, size, and transparency.",
+            "Choose a variable for the y-axis of the plot.",
+            "The size of the points on the graph changes proportionally to the selected variable.Big points indicate patients with a large amount  variable, small points with a low amount of the variable.",
+            "The transparency degree of the points on the graph changes proportionally to the selected variable. Non-transparent points indicate patients with a large amount of variable, and transparent points indicate patients with a low amount of the variable.",
+            "The shade of the points on the graph changes proportionally to the selected variable. Dark-colored points represent patients with a large amount of the variable, while light-colored points represent patients with a low amount of the variable.",
+            "You can decide the width (in.) of the plot to be displayed on the right",
+            "You can decide the height (in.) of the plot to be displayed on the right",
+            "You can decide the size of the text such as axis names in the plot.",
             "Here, you can select whether or not to show patient information when you hover the cursor over data points",
-            "You can show or hide the best-fitting line to the data points",
-            "You can select a categorical variable here to plot correlations in different data subsets (eg. male and female patients).",
-            "You can also show the correlation coefficient and the p-value of the linear regression."
+            "You can show or hide the best-fitting line or curve to the data points.If you choose to show best fitting curve, you can also show the correlation coefficient and the p-value of the linear regression. If you choose to show best fitting curve, you can decide the number of span, which gives the proportion of observations that is to be used in each local regression. In addition, you can decide on confidance interval for best fitting line or curve. ",
+            "You can select a categorical variable here to plot correlations in different data subsets (eg. male and female patients)."
           ))
           
         )
