@@ -29,27 +29,27 @@ gene_vs_gene_ui <- function(id) {
       
       
       selectizeInput(ns("genecor_samp"), multiple=T,
-                     "*Please select sample types",
+                     "Please select sample types",
                      choices=NULL,
                      options=list(placeholder = "eg. Primary solid tumor")),
       
-     radioButtons(ns("gvar_cat_x"), "Please select x variable category", choices = c("Gene", "Meta"), selected = "Gene"),
+     radioButtons(ns("gvar_cat_x"), "Please select the type of x-axis variable", choices = c("Gene", "Meta"), selected = "Gene"),
       
        selectizeInput(
         inputId = ns("Gene1"),
-        label = "*Please select the x axis variable",
+        label = "Please select the x-axis variable",
         choices = NULL,
         # options=list(placeholder = "eg. TSPAN6 or meta.gender",
         #              plugins = list('restore_on_backspace'))
         
       ),
       
-     radioButtons(ns("gvar_cat_y"), "Please select y variable category", choices = c("Gene", "Meta"), selected = "Gene"),
+     radioButtons(ns("gvar_cat_y"), "Please select the type of y-axis variable", choices = c("Gene", "Meta"), selected = "Gene"),
       
      
      selectizeInput(
         inputId = ns("Gene2"),
-        label = "*Please select the y axis variable",
+        label = "Please select the y-axis variable",
         choices = NULL,
         # options=list(placeholder = "eg. TOX or meta.Histology",
         #              plugins = list('restore_on_backspace'))
@@ -60,7 +60,7 @@ gene_vs_gene_ui <- function(id) {
           
           selectizeInput(
             inputId = ns("Gene3"),
-            label = "*Please select a gene to classify the patients by size (optional)",
+            label = "Please select a gene to change point size (optional)",
             choices = NULL,
             options=list(placeholder = "eg. WNT",
                          plugins = list('restore_on_backspace'))
@@ -74,7 +74,7 @@ gene_vs_gene_ui <- function(id) {
           
           selectizeInput(
             inputId = ns("Gene4"),
-            label = "*Please select a gene to classify the patients by transparency (optional)",
+            label = "Please select a gene to change point transparency (optional)",
             choices = NULL,
             options=list(placeholder = "eg. BRCA2",
                          plugins = list('restore_on_backspace'))
@@ -88,7 +88,7 @@ gene_vs_gene_ui <- function(id) {
           
           selectizeInput(
             inputId = ns("Gene5"),
-            label = "*Please select a gene to classify the patients by color (optional)",
+            label = "Please select a gene to change point color (optional)",
             choices = NULL,
             options=list(placeholder = "eg. MYC",
                          plugins = list('restore_on_backspace'))
@@ -211,9 +211,9 @@ gene_vs_gene_server <- function(id,Xproj) {
             "Choose a variable for the x-axis of the plot.",
             "You can select gene expression or continuous metadata for the y-axis of the plot ",
             "Choose a variable for the y-axis of the plot.",
-            "The size of the data points can be changed according to the levels of the selected variable (optional).",
-            "The transparency of the data points can be changed according to the levels of the selected variable (optional).",
-            "The color of the data points can be changed according to the levels of the selected variable (optional).",
+            "Size of the data points can be changed according to the levels of the selected variable (optional).",
+            "Transparency of the data points can be changed according to the levels of the selected variable (optional).",
+            "Color of the data points can be changed according to the levels of the selected variable (optional).",
             "You can change the plot width (in inches)",
             "You can change the plot height (in inches)",
             "You can change the font size here",
