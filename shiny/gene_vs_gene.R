@@ -211,14 +211,14 @@ gene_vs_gene_server <- function(id,Xproj) {
             "Choose a variable for the x-axis of the plot.",
             "You can select gene expression or continuous metadata for the y-axis of the plot ",
             "Choose a variable for the y-axis of the plot.",
-            "The size of the points on the graph changes proportionally to the selected variable.Big points indicate patients with a large amount  variable, small points with a low amount of the variable.",
-            "The transparency degree of the points on the graph changes proportionally to the selected variable. Non-transparent points indicate patients with a large amount of variable, and transparent points indicate patients with a low amount of the variable.",
-            "The shade of the points on the graph changes proportionally to the selected variable. Dark-colored points represent patients with a large amount of the variable, while light-colored points represent patients with a low amount of the variable.",
-            "You can decide the width (in.) of the plot to be displayed on the right",
-            "You can decide the height (in.) of the plot to be displayed on the right",
-            "You can decide the size of the text such as axis names in the plot.",
+            "The size of the data points can be changed according to the levels of the selected variable (optional).",
+            "The transparency of the data points can be changed according to the levels of the selected variable (optional).",
+            "The color of the data points can be changed according to the levels of the selected variable (optional).",
+            "You can change the plot width (in inches)",
+            "You can change the plot height (in inches)",
+            "You can change the font size here",
             "Here, you can select whether or not to show patient information when you hover the cursor over data points",
-            "You can show or hide the best-fitting line or curve to the data points.If you choose to show best fitting curve, you can also show the correlation coefficient and the p-value of the linear regression. If you choose to show best fitting curve, you can decide the number of span, which gives the proportion of observations that is to be used in each local regression. In addition, you can decide on confidance interval for best fitting line or curve. ",
+            "You can show or hide the best-fitting line or curve to the data points. If you choose to show the best-fitting curve, you can also show the correlation coefficient and the p-value of the linear regression. If you choose to show the best-fitting curve, you can change the span parameter which controls the amount of smoothing (smaller values lead to wigglier lines, larger values lead to smoother lines). In addition, you can also show confidence intervals.",
             "You can select a categorical variable here to plot correlations in different data subsets (eg. male and female patients)."
           ))
           
