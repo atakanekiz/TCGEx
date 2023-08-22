@@ -99,7 +99,7 @@ gene_vs_gene_ui <- function(id) {
      
      numericInput(inputId = ns("gene_width"), "Choose the width of the plot", min = 1, step = 1, value = 18),
      numericInput(inputId = ns("gene_height"), "Choose the height of the plot", min = 1, step = 1, value = 9),
-     numericInput(inputId = ns("text_size"), "Choose the text size of the plot", min = 1, step = 1, value = 25),
+     numericInput(inputId = ns("text_size"), "Choose the font size of the plot", min = 1, step = 1, value = 25),
    
       
       checkboxInput(ns("notification"), "Show patient information", value = T),
@@ -472,7 +472,7 @@ gene_vs_gene_server <- function(id,Xproj) {
               need(input$Gene2, "Don't forget to choose a variable for y-axis"),
               need(input$gene_width, "Don't forget to choose the width of the plot"),
               need(input$gene_height, "Don't forget to choose the height of the plot"),
-              need(input$text_size, "Don't forget to choose the text size")
+              need(input$text_size, "Don't forget to choose the font size")
             )
             
             if (input$Facet < 0  && input$facet == T ) {
