@@ -247,7 +247,7 @@ gsea_server <- function(id,Xproj) {
             "You can perform GSEA using previously defined gene sets from the <a href='https://www.gsea-msigdb.org/gsea/msigdb/'>Molecular Signatures Database (MSigDB)</a> or provide your own gene sets",
             "If you select the 'Top Pathways' option, pathways with the highest and lowest enrichments are shown </i>(they may not always be significant!)</i>. If you choose 'Specific Pathway', the enrichment plot is prepared only for the pathway you select.",
             "You can change the width (px) of the downloaded plot here. You can download the plot directly after changes by clicking on the download button without re-executing the analysis.",
-            "You can decide the height(px) of the downloaded plot here. You can download the plot directly after changes by clicking on the download button without re-executing the analysis."
+            "You can change the height(px) of the downloaded plot here. You can download the plot directly after changes by clicking on the download button without re-executing the analysis."
           ))
           
         )
@@ -267,7 +267,7 @@ gsea_server <- function(id,Xproj) {
             "Select MSigDB gene set collection to use in the analyses <b>NOTE:</b> Since some of these collections (such as curated and GO gene sets) contain a large number of entries, analysis can take some time.",
             "If you select the 'Top Pathways' option, pathways with the highest and lowest enrichments are shown </i>(please note that they may not always be significant)</i>. If you choose 'Specific Pathway', the enrichment plot is prepared only for the pathway you select.",
             "You can change the width (px) of the downloaded plot here. You can download the plot directly after changes by clicking on the download button without re-executing the analysis.",
-            "You can decide the height(px) of the downloaded plot here. You can download the plot directly after changes by clicking on the download button without re-executing the analysis."
+            "You can change the height(px) of the downloaded plot here. You can download the plot directly after changes by clicking on the download button without re-executing the analysis."
           ))
           
         )
