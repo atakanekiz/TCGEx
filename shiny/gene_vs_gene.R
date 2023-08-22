@@ -29,27 +29,27 @@ gene_vs_gene_ui <- function(id) {
       
       
       selectizeInput(ns("genecor_samp"), multiple=T,
-                     "*Please select sample types",
+                     "Please select sample types",
                      choices=NULL,
                      options=list(placeholder = "eg. Primary solid tumor")),
       
-     radioButtons(ns("gvar_cat_x"), "Please select x variable category", choices = c("Gene", "Meta"), selected = "Gene"),
+     radioButtons(ns("gvar_cat_x"), "Please select the type of x-axis variable", choices = c("Gene", "Meta"), selected = "Gene"),
       
        selectizeInput(
         inputId = ns("Gene1"),
-        label = "*Please select the x axis variable",
+        label = "Please select the x-axis variable",
         choices = NULL,
         # options=list(placeholder = "eg. TSPAN6 or meta.gender",
         #              plugins = list('restore_on_backspace'))
         
       ),
       
-     radioButtons(ns("gvar_cat_y"), "Please select y variable category", choices = c("Gene", "Meta"), selected = "Gene"),
+     radioButtons(ns("gvar_cat_y"), "Please select the type of y-axis variable", choices = c("Gene", "Meta"), selected = "Gene"),
       
      
      selectizeInput(
         inputId = ns("Gene2"),
-        label = "*Please select the y axis variable",
+        label = "Please select the y-axis variable",
         choices = NULL,
         # options=list(placeholder = "eg. TOX or meta.Histology",
         #              plugins = list('restore_on_backspace'))
@@ -60,7 +60,7 @@ gene_vs_gene_ui <- function(id) {
           
           selectizeInput(
             inputId = ns("Gene3"),
-            label = "*Please select a gene to classify the patients by size (optional)",
+            label = "Please select a gene to change point size (optional)",
             choices = NULL,
             options=list(placeholder = "eg. WNT",
                          plugins = list('restore_on_backspace'))
@@ -74,7 +74,7 @@ gene_vs_gene_ui <- function(id) {
           
           selectizeInput(
             inputId = ns("Gene4"),
-            label = "*Please select a gene to classify the patients by transparency (optional)",
+            label = "Please select a gene to change point transparency (optional)",
             choices = NULL,
             options=list(placeholder = "eg. BRCA2",
                          plugins = list('restore_on_backspace'))
@@ -88,7 +88,7 @@ gene_vs_gene_ui <- function(id) {
           
           selectizeInput(
             inputId = ns("Gene5"),
-            label = "*Please select a gene to classify the patients by color (optional)",
+            label = "Please select a gene to change point color (optional)",
             choices = NULL,
             options=list(placeholder = "eg. MYC",
                          plugins = list('restore_on_backspace'))
@@ -99,7 +99,7 @@ gene_vs_gene_ui <- function(id) {
      
      numericInput(inputId = ns("gene_width"), "Choose the width of the plot", min = 1, step = 1, value = 18),
      numericInput(inputId = ns("gene_height"), "Choose the height of the plot", min = 1, step = 1, value = 9),
-     numericInput(inputId = ns("text_size"), "Choose the text size", min = 1, step = 1, value = 25),
+     numericInput(inputId = ns("text_size"), "Choose the font size of the plot", min = 1, step = 1, value = 25),
    
       
       checkboxInput(ns("notification"), "Show patient information", value = T),
@@ -202,7 +202,7 @@ gene_vs_gene_server <- function(id,Xproj) {
         
         data.frame(
           
-          element = paste0("#", session$ns(c(NA, "genecor_samp + .selectize-control", "gvar_cat_x","Gene1 + .selectize-control ", "gvar_cat_y","Gene2+ .selectize-control ", "notification","genecor_regline", "facet", "formula"))),
+          element = paste0("#", session$ns(c(NA, "genecor_samp + .selectize-control", "gvar_cat_x","Gene1 + .selectize-control ", "gvar_cat_y","Gene2+ .selectize-control ","Gene3+ .selectize-control ","Gene4+ .selectize-control ","Gene5+ .selectize-control ","gene_width", "gene_height","text_size","notification","genecor_regline", "facet"))),
           
           intro = paste(c(
             "This is the gene-to-gene visualization module. You can calculate the correlation between two genes and generate scatter plots. Continue with the tutorial to learn features of the module.",
@@ -210,11 +210,16 @@ gene_vs_gene_server <- function(id,Xproj) {
             "You can select gene expression or continuous metadata for the x-axis of the plot",
             "Choose a variable for the x-axis of the plot.",
             "You can select gene expression or continuous metadata for the y-axis of the plot ",
-            "Choose a variable for the y-axis of the plot. In the optional next section marked with blue fonts, you can select more variables to depict with different point color, size, and transparency.",
+            "Choose a variable for the y-axis of the plot.",
+            "Size of the data points can be changed according to the levels of the selected variable (optional).",
+            "Transparency of the data points can be changed according to the levels of the selected variable (optional).",
+            "Color of the data points can be changed according to the levels of the selected variable (optional).",
+            "You can change the plot width (in inches)",
+            "You can change the plot height (in inches)",
+            "You can change the font size here",
             "Here, you can select whether or not to show patient information when you hover the cursor over data points",
-            "You can show or hide the best-fitting line to the data points",
-            "You can select a categorical variable here to plot correlations in different data subsets (eg. male and female patients).",
-            "You can also show the correlation coefficient and the p-value of the linear regression."
+            "You can show or hide the best-fitting line or curve to the data points. If you choose to show the best-fitting curve, you can also show the correlation coefficient and the p-value of the linear regression. If you choose to show the best-fitting curve, you can change the span parameter which controls the amount of smoothing (smaller values lead to wigglier lines, larger values lead to smoother lines). In addition, you can also show confidence intervals.",
+            "You can select a categorical variable here to plot correlations in different data subsets (eg. male and female patients)."
           ))
           
         )
@@ -467,7 +472,7 @@ gene_vs_gene_server <- function(id,Xproj) {
               need(input$Gene2, "Don't forget to choose a variable for y-axis"),
               need(input$gene_width, "Don't forget to choose the width of the plot"),
               need(input$gene_height, "Don't forget to choose the height of the plot"),
-              need(input$text_size, "Don't forget to choose the text size")
+              need(input$text_size, "Don't forget to choose the font size")
             )
             
             if (input$Facet < 0  && input$facet == T ) {

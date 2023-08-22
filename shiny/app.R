@@ -17,10 +17,6 @@ library(shinyjs)
 library(shinydashboardPlus)
 library(fresh)
 
-library(shiny)
-library(shinydashboardPlus)
-library(fresh)
-
 mytheme <- create_theme(
   adminlte_color(
     light_blue = "#434C5E"
