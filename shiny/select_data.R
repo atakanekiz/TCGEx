@@ -7,6 +7,7 @@ library(plotly)
 library(dplyr)
 # library(zstdlite)
 library(shinyWidgets)
+# library(shinycustomload)
 
 #ui
 
@@ -42,6 +43,7 @@ select_data_ui <- function(id) {
     br(),
       fluidRow(width = 12,
         column(6,
+               # withLoader( plotlyOutput(outputId =   ns("patient_hist")),type = "html",loader = "dnaspin")
                plotlyOutput(outputId =   ns("patient_hist")), br(),
                plotlyOutput(outputId =   ns("gender_hist"))
       ),
