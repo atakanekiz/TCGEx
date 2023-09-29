@@ -295,7 +295,7 @@ pca_server <- function(id,Xproj) {
           
         } else {
           
-          pca_path = names(msigdb_gene_sets()[[input$pca_cat]][[]])
+          pca_path = names(msigdb_gene_sets()[[input$pca_cat]][[1]])
           updateSelectizeInput(session,'pca_pathway', choices = pca_path , server = TRUE)
         }
         
@@ -308,11 +308,11 @@ pca_server <- function(id,Xproj) {
         ms = msigdb_gene_sets()
         if(input$pca_cat %in% c("C2","C3","C4","C5","C7")) {
           
-          pca_m = data.frame(gene_symbol = ms[[input$pca_cat]][[input$pca_subcat]][[input$pca_pathway]])
+          pca_m = names(ms[[input$pca_cat]][[input$pca_subcat]][[input$pca_pathway]])
           
         } else {
           
-          pca_m = data.frame(gene_symbol = ms[[input$pca_cat]][[]][[input$pca_pathway]])
+          pca_m = names(ms[[input$pca_cat]][[1]][[input$pca_pathway]])
           
         }
         

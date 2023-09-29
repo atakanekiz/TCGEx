@@ -416,7 +416,7 @@ gsea_server <- function(id,Xproj) {
         
       } else {
         
-        gsea_path = names(msigdb_gene_sets()[[input$gsea_cat]][[]])
+        gsea_path = names(msigdb_gene_sets()[[input$gsea_cat]][[1]])
         updateSelectizeInput(session,'gsea_pathway', choices = gsea_path , server = TRUE)
       }
       

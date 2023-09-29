@@ -305,12 +305,12 @@ heatmap_server <- function(id,Xproj) {
           
           if(input$cat %in% c("C2","C3","C4","C5","C7")) {
             
-            df_msigdb2 = df_msigdb[[input$cat]][[input$heatmap_subcat]]
+            df_msigdb2 = names(df_msigdb[[input$cat]][[input$heatmap_subcat]])
             
           } else {
-            df_msigdb2 = df_msigdb[[input$cat]]
+            df_msigdb2 = names(df_msigdb[[input$cat]][[1]])
           }
-          return(df_msigdb2)
+          # return(df_msigdb2)
           
         } else {
           
@@ -331,12 +331,12 @@ heatmap_server <- function(id,Xproj) {
         if(input$cat %in% c("C2","C3","C4","C5","C7")) {
           
           
-          heatmap_path = names(hm_gene_sets())
+          heatmap_path = hm_gene_sets()
           updateSelectizeInput(session,'chosen_gse', choices = heatmap_path , server = TRUE)
           
         } else {
           
-          heatmap_path = names(hm_gene_sets()[[1]])
+          heatmap_path = hm_gene_sets()
           updateSelectizeInput(session,'chosen_gse', choices = heatmap_path , server = TRUE)
         }
         

@@ -366,12 +366,12 @@ roc_server <- function(id, Xproj) {
           
             if(input$cate %in% c("C2","C3","C4","C5","C7")) {
               
-              df_msigdb2 = df_msigdb[[input$cate]][[input$roc_subcat]]
+              df_msigdb2 = names(df_msigdb[[input$cate]][[input$roc_subcat]])
               
             } else {
-              df_msigdb2 = df_msigdb[[input$cate]]
+              df_msigdb2 = names(df_msigdb[[input$cate]][[1]])
             }
-          return(df_msigdb2)
+          # return(df_msigdb2)
           
         } else if(input$show_msigdb_gene_sets == FALSE){
           
@@ -390,12 +390,12 @@ roc_server <- function(id, Xproj) {
         if(input$cate %in% c("C2","C3","C4","C5","C7")) {
           
           
-          roc_path = names(df_gene_sets())
+          roc_path = df_gene_sets()
           updateSelectizeInput(session,'roc_chosen_pathway', choices = roc_path , server = TRUE)
           
         } else {
           
-          roc_path = names(df_gene_sets()[[1]])
+          roc_path = df_gene_sets()
           updateSelectizeInput(session,'roc_chosen_pathway', choices = roc_path , server = TRUE)
         }
         
@@ -417,7 +417,7 @@ roc_server <- function(id, Xproj) {
             
           } else {
             
-            roc_msigdb_genes <- df_msigdb[[input$cate]][[]][[input$roc_chosen_pathway]]
+            roc_msigdb_genes <- df_msigdb[[input$cate]][[1]][[input$roc_chosen_pathway]]
           }
 
           #Take the subset of chosen Human MsigDB geneset.
