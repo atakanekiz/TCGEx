@@ -109,7 +109,7 @@ select_data_server<- function(id,Xproj){
     
     output$gender_hist<- renderPlotly({
       
-      validate(need(input$run, "Load TCGA project to see descriptive statistics"))
+      validate(need(input$run, ""))
       
       #gghistogram(Xproj$a(), "meta.gender", stat="count", legend="none",
                   #font.x=18, font.y=18, font.tickslab = 18,
