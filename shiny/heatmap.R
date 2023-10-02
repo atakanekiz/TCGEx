@@ -363,6 +363,8 @@ heatmap_server <- function(id,Xproj) {
       
       mat <- eventReactive(input$heatmap_run, {
         
+        # browser()
+        
         # Matching the MSigDB gene sets with selected TCGA data.
         
         req(pre_data())
@@ -381,7 +383,7 @@ heatmap_server <- function(id,Xproj) {
             
           } else {
             
-            heatmap_msigdb_genes <- heatmap_df_msigdb[[input$cat]][[]][[input$chosen_gse]]
+            heatmap_msigdb_genes <- heatmap_df_msigdb[[input$cat]][[1]][[input$chosen_gse]]
           }
           
           #Take the subset of chosen Human MsigDB geneset.
@@ -392,7 +394,7 @@ heatmap_server <- function(id,Xproj) {
           
           daf <- as.data.frame(pre_data())
           
-          rownames(daf) <- daf$meta.barcode
+          # rownames(daf) <- daf$meta.barcode
           
           same_hallmarks_names = intersect(final_gene_sets, colnames(daf))
           
@@ -406,7 +408,7 @@ heatmap_server <- function(id,Xproj) {
           
           daf <- as.data.frame(pre_data())
           
-          rownames(daf) <- daf$meta.barcode
+          # rownames(daf) <- daf$meta.barcode
           
           selected_cols <- c(input$genes)
           
@@ -417,7 +419,7 @@ heatmap_server <- function(id,Xproj) {
           
           daf <- as.data.frame(pre_data())
           
-          rownames(daf) <- daf$meta.barcode
+          # rownames(daf) <- daf$meta.barcode
           
           uploaded_heatmap_csv <- input$heatmap_csv
           

@@ -455,7 +455,7 @@ roc_server <- function(id, Xproj) {
             
           } else {
             
-            roc_msigdb_genes <- df_msigdb[[input$cate]][[]][[input$roc_chosen_pathway]]
+            roc_msigdb_genes <- df_msigdb[[input$cate]][[1]][[input$roc_chosen_pathway]]
           }
           
           #Take the subset of chosen Human MsigDB geneset.

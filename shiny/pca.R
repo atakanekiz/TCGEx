@@ -308,11 +308,11 @@ pca_server <- function(id,Xproj) {
         ms = msigdb_gene_sets()
         if(input$pca_cat %in% c("C2","C3","C4","C5","C7")) {
           
-          pca_m = names(ms[[input$pca_cat]][[input$pca_subcat]][[input$pca_pathway]])
+          pca_m = ms[[input$pca_cat]][[input$pca_subcat]][[input$pca_pathway]]
           
         } else {
           
-          pca_m = names(ms[[input$pca_cat]][[1]][[input$pca_pathway]])
+          pca_m = ms[[input$pca_cat]][[1]][[input$pca_pathway]]
           
         }
         
@@ -536,7 +536,7 @@ pca_server <- function(id,Xproj) {
           
         }else if(input$data == "MSigDB Gene Sets"){
           
-          df_pc <- all_genes()[,intersect(pca_msigdb_genes()[["gene_symbol"]], colnames(all_genes())),with=F]
+          df_pc <- all_genes()[,intersect(pca_msigdb_genes(), colnames(all_genes())),with=F]
           
           
           

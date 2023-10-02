@@ -607,7 +607,7 @@ gsea_server <- function(id,Xproj) {
             
           } else {
             
-            gene_set <- list(msigdb_gene_sets()[[input$gsea_cat]][[]][[input$gsea_pathway]])
+            gene_set <- list(msigdb_gene_sets()[[input$gsea_cat]][[1]][[input$gsea_pathway]])
             
             names(gene_set) <- input$gsea_pathway
             
