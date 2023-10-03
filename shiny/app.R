@@ -87,7 +87,7 @@ ui <- navbarPage(
   ),
   tabPanel(
     "DATA SELECTION",
-    fluidPage(h1("Please select cancer project(s)"), select_data_ui("seldata")
+    fluidPage(h1("Please Select Cancer Project(s)"), select_data_ui("seldata")
   )),
   tabPanel(
     "KAPLAN-MEIER",
