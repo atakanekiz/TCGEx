@@ -625,7 +625,7 @@ gsea_server <- function(id,Xproj) {
             
           } else {
             
-            gene_set <- msigdb_gene_sets()[[input$gsea_cat]][[]]
+            gene_set <- msigdb_gene_sets()[[input$gsea_cat]][[1]]
             
             gene_set
           }
