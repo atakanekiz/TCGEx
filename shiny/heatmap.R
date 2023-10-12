@@ -408,7 +408,9 @@ heatmap_server <- function(id,Xproj) {
           
           daf <- as.data.frame(pre_data())
           
-          # rownames(daf) <- daf$meta.barcode
+          rownames(daf)<-NULL
+          
+          rownames(daf) <- daf$meta.barcode
           
           selected_cols <- c(input$genes)
           
