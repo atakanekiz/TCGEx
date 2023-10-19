@@ -10,11 +10,11 @@ library(dplyr)
 
 km_ui <- function(id, label, choices) {
   
-  
-  
   ns <- NS(id)
   
   tagList(
+    
+    useShinyalert(),
     
     ui <- fluidPage(
       
@@ -121,6 +121,8 @@ km_ui <- function(id, label, choices) {
         introjsUI(),
         actionButton(ns("KM_help"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
         
+        textOutput(ns("filewarning_two")) ,     
+        
         width = 3
         
     ),
@@ -208,6 +210,13 @@ km_server <- function(id,Xproj) {
   moduleServer(id,function(input, output, session){
     
     ns <- session$ns
+    
+    output$filewarning_two <- renderText({
+      
+      if (!is.null(Xproj$fileInfost())) {
+        shinyalert("Warning!", "For a seamless analysis, 
+                     ensure your uploaded data includes crucial survival details like vital status and days to event for each sample.") }
+    })
     
     KM_steps <- reactive({
       

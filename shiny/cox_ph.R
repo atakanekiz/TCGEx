@@ -2,12 +2,16 @@ library(survminer)
 library(survival)
 library(data.table)
 library(shinyWidgets)
+library(shinyalert)
 
 cox_ui <- function(id, label, choices) {
   
   ns <- NS(id)
   
   tagList(
+    
+    useShinyalert(),
+    
     sidebarPanel(
       
       selectizeInput(inputId = ns("cox_samptyp"), 
@@ -64,6 +68,10 @@ cox_ui <- function(id, label, choices) {
       introjsUI(),
       actionButton(ns("COX_help"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
       
+
+      textOutput(ns("filewarning")) ,     
+      
+      
       width = 3
       
     ),
@@ -71,8 +79,8 @@ cox_ui <- function(id, label, choices) {
     
     mainPanel(
       plotOutput(outputId = ns("cox_plot")),
-      
-      verbatimTextOutput( outputId = ns("cox_text"))
+      verbatimTextOutput( outputId = ns("cox_text")),
+    
     )
   )
   
@@ -81,6 +89,13 @@ cox_ui <- function(id, label, choices) {
 
 cox_server <- function(id,Xproj) {
   moduleServer(id,function(input, output, session) {
+    
+      output$filewarning <- renderText({
+        
+        if (!is.null(Xproj$fileInfost())) {
+          shinyalert("Warning!", "For a seamless analysis, 
+                     ensure your uploaded data includes crucial survival details like vital status and days to event for each sample.") }
+      })
     
     ns <- session$ns
     
