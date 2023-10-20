@@ -93,8 +93,7 @@ cox_server <- function(id,Xproj) {
       output$filewarning <- renderText({
         
         if (!is.null(Xproj$fileInfost())) {
-          shinyalert("Warning!", "For a seamless analysis, 
-                     ensure your uploaded data includes crucial survival details like vital status and days to event for each sample.") }
+          shinyalert("Warning!", "To perform Cox Proportional-Hazard Survival analysis, the data you upload must contain columns containing survival information such as 'vital_status' and 'days _to_event'.") }
       })
     
     ns <- session$ns
