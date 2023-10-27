@@ -154,7 +154,7 @@ select_data_server <- function(id,Xproj){
 
       validate(need(input$file, ""))
       
-      if (file_type() == "rds"){
+      if (file_type() %in% c("rds","RDS","Rds")){
       
         xdata <- input$file
         ydata <- reactive({as.data.table(readRDS(paste0(input$file$datapath)))})
@@ -253,7 +253,7 @@ select_data_server <- function(id,Xproj){
           
           validate(need(input$file, ""))
           
-          if (file_type() == "rds"){
+          if (file_type() %in% c("rds","RDS","Rds")){
             
             uploaded_data <- as.data.table(readRDS(paste0(input$file$datapath)))
             
