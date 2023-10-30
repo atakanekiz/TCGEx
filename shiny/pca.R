@@ -20,6 +20,8 @@ pca_ui <- function(id) {
   ns <- NS(id)
   tagList(
     
+    useShinyalert(),
+    
     add_busy_spinner(
       spin = "cube-grid",
       position = "top-right",
@@ -189,6 +191,8 @@ pca_ui <- function(id) {
       introjsUI(),
       actionButton(ns("intro2"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
       
+      textOutput(ns("filewarning_4")) ,
+      
       width = 3
       
     ),
@@ -216,6 +220,12 @@ pca_server <- function(id,Xproj) {
   moduleServer(
     id,
     function(input, output, session) {
+      
+      output$filewarning_4 <- renderText({
+        
+        if (!is.null(Xproj$fileInfost())) {
+          shinyalert("Warning!", "To perform analysis using MsigDB gensets, please make sure that your gene names are in MsigDB format, otherwise you may receive errors.") }
+      })
       
       ## msigdb_database reading
       

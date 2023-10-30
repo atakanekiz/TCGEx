@@ -99,6 +99,9 @@ ggplot_boxplot_variables <- function(transcript_list, pre_data) {
 dataprepInputControl_UI <- function(id) {
   ns <- NS(id)
   tagList(
+    
+    useShinyalert(),
+    
     add_busy_spinner(
       spin = "cube-grid",
       position = "top-right",
@@ -316,6 +319,8 @@ ml_ui <- function(id) {
         introjsUI(),
         actionButton(ns("mldata_help"), "Tutorial"),
         
+        textOutput(ns("filewarning_7")) ,
+        
         width = 3
         
       ),
@@ -426,7 +431,11 @@ ml_ui <- function(id) {
 data_prep_ml_server <- function(id,Xproj) {
   moduleServer(id,function(input,output,session){
     
-    
+    output$filewarning_7 <- renderText({
+      
+      if (!is.null(Xproj$fileInfost())) {
+        shinyalert("Warning!", "To perform analysis using MsigDB gensets, please make sure that your gene names are in MsigDB format, otherwise you may receive errors.") }
+    })
     
     msigdb_gene_sets =  reactive({readRDS(paste0("genesets/", "msigdb_collections", ".rds"))})
     

@@ -33,6 +33,8 @@ gsea_ui <- function(id, label, choices) {
   
   tagList(
     
+    useShinyalert(),
+    
     ui <- fluidPage(
       add_busy_spinner(
         spin = "cube-grid",
@@ -203,6 +205,8 @@ gsea_ui <- function(id, label, choices) {
         introjsUI(),
         actionButton(ns("intro3"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
         
+        textOutput(ns("filewarning_3")) ,
+        
         width = 3
         
       ),
@@ -222,6 +226,12 @@ gsea_server <- function(id,Xproj) {
   moduleServer(id,function(input, output, session){
     
     ns <- session$ns
+    
+    output$filewarning_3 <- renderText({
+      
+      if (!is.null(Xproj$fileInfost())) {
+        shinyalert("Warning!", "To perform analysis using MsigDB gensets, please make sure that your gene names are in MsigDB format, otherwise you may receive errors.") }
+    })
     
     ## msigdb_database reading
     

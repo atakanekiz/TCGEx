@@ -16,6 +16,8 @@ heatmap_ui <- function(id, label, choices) {
   ns <- NS(id)
   tagList(
     
+    useShinyalert(),
+    
     add_busy_spinner(
       spin = "cube-grid",
       position = "top-right",
@@ -153,6 +155,8 @@ heatmap_ui <- function(id, label, choices) {
       introjsUI(),
       actionButton(ns("heatmap_help"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
       
+      textOutput(ns("filewarning_6")) ,
+      
       width = 3
       
     ),
@@ -169,6 +173,12 @@ heatmap_server <- function(id,Xproj) {
   moduleServer(
     id,
     function(input, output, session) {
+      
+      output$filewarning_6 <- renderText({
+        
+        if (!is.null(Xproj$fileInfost())) {
+          shinyalert("Warning!", "To perform analysis using MsigDB gensets, please make sure that your gene names are in MsigDB format, otherwise you may receive errors.") }
+      })
       
       ns <- session$ns
       
