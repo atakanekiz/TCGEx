@@ -224,7 +224,7 @@ pca_server <- function(id,Xproj) {
       output$filewarning_4 <- renderText({
         
         if (!is.null(Xproj$fileInfost())) {
-          shinyalert("Warning!", "To perform analysis using MsigDB gensets, please make sure that your gene names are in MsigDB format, otherwise you may receive errors.") }
+          shinyalert("Warning!", "To perform this analysis using MsigDB gene sets, please ensure that your uploaded data set contains gene symbols rather than Entrez or Ensembl gene IDs. Otherwise you may receive errors.") }
       })
       
       ## msigdb_database reading
