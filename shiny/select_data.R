@@ -30,35 +30,43 @@ select_data_ui <- function(id) {
       width = "60px"),
     
     useShinyjs(),
-    
-  
-        pickerInput(inputId = ns("proj"), 
-                    "Project List",
-                    choices = c("ACC-Adrenocortical carcinoma" = "ACC","BLCA-Bladder Urothelial Carcinoma" = "BLCA", "BRCA-Breast invasive carcinoma" = "BRCA", "CESC-Cervical squamous cell carcinoma and endocervical adenocarcinoma" = "CESC", "CHOL-Cholangiocarcinoma" = "CHOL", "COAD-Colon adenocarcinoma" = "COAD" ,"DLBC-Lymphoid Neoplasm Diffuse Large B-cell Lymphoma" = "DLBC", "ESCA-Esophageal carcinoma" = "ESCA", "GBM-Glioblastoma multiforme" ="GBM" , "HNSC-Head and Neck squamous cell carcinoma" = "HNSC", "KICH-Kidney Chromophobe" = "KICH", "KIRC-Kidney renal clear cell carcinoma" = "KIRC" ,"KIRP-Kidney renal papillary cell carcinoma" = "KIRP",
-                                "LAML-Acute Myeloid Leukemia" = "LAML", "LGG-Brain Lower Grade Glioma" = "LGG" , "LIHC-Liver hepatocellular carcinoma" = "LIHC", "LUAD-Lung adenocarcinoma" = "LUAD","LUSC-	Lung squamous cell carcinoma" = "LUSC", "MESO-Mesothelioma" ="MESO", "OV-Ovarian serous cystadenocarcinoma" ="OV",   "PAAD-	Pancreatic adenocarcinoma" = "PAAD", "PCPG-Pheochromocytoma and Paraganglioma" = "PCPG", "PRAD-Prostate adenocarcinoma" = "PRAD",
-                                "READ-Rectum adenocarcinoma" = "READ", "SARC-Sarcoma" = "SARC", "SKCM-Skin Cutaneous Melanoma" = "SKCM" ,"STAD-Stomach adenocarcinoma" = "STAD", "TGCT-Testicular Germ Cell Tumors" = "TGCT", "THCA-Thyroid carcinoma" = "THCA", "THYM-Thymoma" = "THYM", "UCEC-Uterine Corpus Endometrial Carcinoma" = "UCEC", "UCS-Uterine Carcinosarcoma" = "UCS",  "UVM-Uveal Melanoma" = "UVM"),
-                    #selectize = T,
-                    # options = list('actions-box' = TRUE), #build buttons for collective selection
-                    multiple = TRUE),
-    
-    # fileInput(inputId = ns("file"),
-    #           label = "Also You Can Upload Your RDS or Excel Data Less Than 250 MB",  #I changed this part to below.
-    #           accept = c(".rds", ".xlsx", ".xls"),
-    #           multiple = FALSE),
-    
-    
-    fileInput(ns("file"), 
-              label = tags$span(
-                "Also You Can Upload Your RDS or Excel Data Less Than 250 MB", 
-                tags$i(
-                  class = "glyphicon glyphicon-info-sign", 
-                  style = "color:#0072B2;",
-                  title = "Please check sample data for your analysis. The rds/xlsx/xls file should contain gene and category names. Clinical datas should contain 'meta.' before column names, 'meta.gender' etc."
-                ), tags$br(),
-                a(href="sample_data_for_loading.rds", "Sample Input File", download=NA, target="_blank")),
-              accept = c(".rds", ".xlsx", ".xls"),
-              multiple = FALSE),
-  
+
+    conditionalPanel(
+      condition = "input.select_data_upload_user_data == false",
+      ns = ns,
+      pickerInput(inputId = ns("proj"), 
+                  "Project List",
+                  choices = c("ACC-Adrenocortical carcinoma" = "ACC","BLCA-Bladder Urothelial Carcinoma" = "BLCA", "BRCA-Breast invasive carcinoma" = "BRCA", "CESC-Cervical squamous cell carcinoma and endocervical adenocarcinoma" = "CESC", "CHOL-Cholangiocarcinoma" = "CHOL", "COAD-Colon adenocarcinoma" = "COAD" ,"DLBC-Lymphoid Neoplasm Diffuse Large B-cell Lymphoma" = "DLBC", "ESCA-Esophageal carcinoma" = "ESCA", "GBM-Glioblastoma multiforme" ="GBM" , "HNSC-Head and Neck squamous cell carcinoma" = "HNSC", "KICH-Kidney Chromophobe" = "KICH", "KIRC-Kidney renal clear cell carcinoma" = "KIRC" ,"KIRP-Kidney renal papillary cell carcinoma" = "KIRP",
+                              "LAML-Acute Myeloid Leukemia" = "LAML", "LGG-Brain Lower Grade Glioma" = "LGG" , "LIHC-Liver hepatocellular carcinoma" = "LIHC", "LUAD-Lung adenocarcinoma" = "LUAD","LUSC-	Lung squamous cell carcinoma" = "LUSC", "MESO-Mesothelioma" ="MESO", "OV-Ovarian serous cystadenocarcinoma" ="OV",   "PAAD-	Pancreatic adenocarcinoma" = "PAAD", "PCPG-Pheochromocytoma and Paraganglioma" = "PCPG", "PRAD-Prostate adenocarcinoma" = "PRAD",
+                              "READ-Rectum adenocarcinoma" = "READ", "SARC-Sarcoma" = "SARC", "SKCM-Skin Cutaneous Melanoma" = "SKCM" ,"STAD-Stomach adenocarcinoma" = "STAD", "TGCT-Testicular Germ Cell Tumors" = "TGCT", "THCA-Thyroid carcinoma" = "THCA", "THYM-Thymoma" = "THYM", "UCEC-Uterine Corpus Endometrial Carcinoma" = "UCEC", "UCS-Uterine Carcinosarcoma" = "UCS",  "UVM-Uveal Melanoma" = "UVM"),
+                  #selectize = T,
+                  # options = list('actions-box' = TRUE), #build buttons for collective selection
+                  multiple = TRUE)
+    ),
+    materialSwitch(inputId = ns("select_data_upload_user_data"),
+                   label = "Upload your own dataset",
+                   status = "info",
+                   value = FALSE),
+    conditionalPanel(
+      condition = "input.select_data_upload_user_data == true",
+      ns = ns,
+      # fileInput(inputId = ns("file"),
+      #           label = "Also You Can Upload Your RDS or Excel Data Less Than 250 MB",  #I changed this part to below.
+      #           accept = c(".rds", ".xlsx", ".xls"),
+      #           multiple = FALSE),
+
+      fileInput(ns("file"), 
+                label = tags$span(
+                  "Also You Can Upload Your RDS or Excel Data Less Than 250 MB", 
+                  tags$i(
+                    class = "glyphicon glyphicon-info-sign", 
+                    style = "color:#0072B2;",
+                    title = "Please check sample data for your analysis. The rds/xlsx/xls file should contain gene and category names. Clinical datas should contain 'meta.' before column names, 'meta.gender' etc."
+                  ), tags$br(),
+                  a(href="sample_data_for_loading.rds", "Sample Input File", download=NA, target="_blank")),
+                accept = c(".rds", ".xlsx", ".xls"),
+                multiple = FALSE),  
+      ),
     
     actionButton(inputId = ns("resetBtn"), label = "Clear Uploaded Data"),
     
