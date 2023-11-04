@@ -41,10 +41,24 @@ select_data_ui <- function(id) {
                     # options = list('actions-box' = TRUE), #build buttons for collective selection
                     multiple = TRUE),
     
-    fileInput(inputId = ns("file"),
-              label = "Also You Can Upload Your RDS or Excel Data Less Than 250 MB",
+    # fileInput(inputId = ns("file"),
+    #           label = "Also You Can Upload Your RDS or Excel Data Less Than 250 MB",  #I changed this part to below.
+    #           accept = c(".rds", ".xlsx", ".xls"),
+    #           multiple = FALSE),
+    
+    
+    fileInput(ns("file"), 
+              label = tags$span(
+                "Also You Can Upload Your RDS or Excel Data Less Than 250 MB", 
+                tags$i(
+                  class = "glyphicon glyphicon-info-sign", 
+                  style = "color:#0072B2;",
+                  title = "Please check sample data for your analysis. The rds/xlsx/xls file should contain gene and category names. Clinical datas should contain 'meta.' before column names, 'meta.gender' etc."
+                ), tags$br(),
+                a(href="sample_data_for_loading.rds", "Sample Input File", download=NA, target="_blank")),
               accept = c(".rds", ".xlsx", ".xls"),
               multiple = FALSE),
+  
     
     actionButton(inputId = ns("resetBtn"), label = "Clear Uploaded Data"),
     
