@@ -57,7 +57,7 @@ select_data_ui <- function(id) {
 
       fileInput(ns("file"), 
                 label = tags$span(
-                  "Also You Can Upload Your RDS or Excel Data Less Than 250 MB", 
+                  "You Can Upload Your RDS or Excel Data Less Than 250 MB", 
                   tags$i(
                     class = "glyphicon glyphicon-info-sign", 
                     style = "color:#0072B2;",
@@ -68,9 +68,9 @@ select_data_ui <- function(id) {
                 multiple = FALSE),  
       ),
     
-    actionButton(inputId = ns("resetBtn"), label = "Clear Uploaded Data"),
+    # actionButton(inputId = ns("resetBtn"), label = "Clear Uploaded Data"),
     
-    textOutput(ns("fileInfos")),
+    # textOutput(ns("fileInfos")),
     
     br(),
     
@@ -110,37 +110,37 @@ select_data_server <- function(id,Xproj){
     
     Xproj$fileInfost <- reactive({input$file$name})
     
-    observeEvent(input$file,{
-      
-      if (!is.null(input$file)) {
-      
-      # Update the pickerInput choices
-      updatePickerInput(session, "proj", choices = c(paste0(Xproj$fileInfost())))
-      }
-      })
+    # observeEvent(input$file,{
+    #   
+    #   if (!is.null(input$file)) {
+    #   
+    #   # Update the pickerInput choices
+    #   updatePickerInput(session, "proj", choices = c(paste0(Xproj$fileInfost())))
+    #   }
+    #   })
     
-    observeEvent(input$resetBtn,{
-
-        # Update the pickerInput choices
-        updatePickerInput(session, "proj", choices = c("ACC-Adrenocortical carcinoma" = "ACC","BLCA-Bladder Urothelial Carcinoma" = "BLCA", "BRCA-Breast invasive carcinoma" = "BRCA", "CESC-Cervical squamous cell carcinoma and endocervical adenocarcinoma" = "CESC", "CHOL-Cholangiocarcinoma" = "CHOL", "COAD-Colon adenocarcinoma" = "COAD" ,"DLBC-Lymphoid Neoplasm Diffuse Large B-cell Lymphoma" = "DLBC", "ESCA-Esophageal carcinoma" = "ESCA", "GBM-Glioblastoma multiforme" ="GBM" , "HNSC-Head and Neck squamous cell carcinoma" = "HNSC", "KICH-Kidney Chromophobe" = "KICH", "KIRC-Kidney renal clear cell carcinoma" = "KIRC" ,"KIRP-Kidney renal papillary cell carcinoma" = "KIRP",
-                                                       "LAML-Acute Myeloid Leukemia" = "LAML", "LGG-Brain Lower Grade Glioma" = "LGG" , "LIHC-Liver hepatocellular carcinoma" = "LIHC", "LUAD-Lung adenocarcinoma" = "LUAD","LUSC-	Lung squamous cell carcinoma" = "LUSC", "MESO-Mesothelioma" ="MESO", "OV-Ovarian serous cystadenocarcinoma" ="OV",   "PAAD-	Pancreatic adenocarcinoma" = "PAAD", "PCPG-Pheochromocytoma and Paraganglioma" = "PCPG", "PRAD-Prostate adenocarcinoma" = "PRAD",
-                                                       "READ-Rectum adenocarcinoma" = "READ", "SARC-Sarcoma" = "SARC", "SKCM-Skin Cutaneous Melanoma" = "SKCM" ,"STAD-Stomach adenocarcinoma" = "STAD", "TGCT-Testicular Germ Cell Tumors" = "TGCT", "THCA-Thyroid carcinoma" = "THCA", "THYM-Thymoma" = "THYM", "UCEC-Uterine Corpus Endometrial Carcinoma" = "UCEC", "UCS-Uterine Carcinosarcoma" = "UCS",  "UVM-Uveal Melanoma" = "UVM"))
-      
-    })
+    # observeEvent(input$resetBtn,{
+    # 
+    #     # Update the pickerInput choices
+    #     updatePickerInput(session, "proj", choices = c("ACC-Adrenocortical carcinoma" = "ACC","BLCA-Bladder Urothelial Carcinoma" = "BLCA", "BRCA-Breast invasive carcinoma" = "BRCA", "CESC-Cervical squamous cell carcinoma and endocervical adenocarcinoma" = "CESC", "CHOL-Cholangiocarcinoma" = "CHOL", "COAD-Colon adenocarcinoma" = "COAD" ,"DLBC-Lymphoid Neoplasm Diffuse Large B-cell Lymphoma" = "DLBC", "ESCA-Esophageal carcinoma" = "ESCA", "GBM-Glioblastoma multiforme" ="GBM" , "HNSC-Head and Neck squamous cell carcinoma" = "HNSC", "KICH-Kidney Chromophobe" = "KICH", "KIRC-Kidney renal clear cell carcinoma" = "KIRC" ,"KIRP-Kidney renal papillary cell carcinoma" = "KIRP",
+    #                                                    "LAML-Acute Myeloid Leukemia" = "LAML", "LGG-Brain Lower Grade Glioma" = "LGG" , "LIHC-Liver hepatocellular carcinoma" = "LIHC", "LUAD-Lung adenocarcinoma" = "LUAD","LUSC-	Lung squamous cell carcinoma" = "LUSC", "MESO-Mesothelioma" ="MESO", "OV-Ovarian serous cystadenocarcinoma" ="OV",   "PAAD-	Pancreatic adenocarcinoma" = "PAAD", "PCPG-Pheochromocytoma and Paraganglioma" = "PCPG", "PRAD-Prostate adenocarcinoma" = "PRAD",
+    #                                                    "READ-Rectum adenocarcinoma" = "READ", "SARC-Sarcoma" = "SARC", "SKCM-Skin Cutaneous Melanoma" = "SKCM" ,"STAD-Stomach adenocarcinoma" = "STAD", "TGCT-Testicular Germ Cell Tumors" = "TGCT", "THCA-Thyroid carcinoma" = "THCA", "THYM-Thymoma" = "THYM", "UCEC-Uterine Corpus Endometrial Carcinoma" = "UCEC", "UCS-Uterine Carcinosarcoma" = "UCS",  "UVM-Uveal Melanoma" = "UVM"))
+    #   
+    # })
     
-    observeEvent(input$file,{ 
+    # observeEvent(input$file,{ 
+    # 
+    # output$fileInfos <- renderText({
+    #   
+    #   if (!is.null(Xproj$fileInfost())) {
+    #     paste("Now You Can Select Your Data On Project List and Click Load Data")
+    #   } else {
+    #     "No file uploaded"
+    #   }
+    # })
+    # })
     
-    output$fileInfos <- renderText({
-      
-      if (!is.null(Xproj$fileInfost())) {
-        paste("Now You Can Select Your Data On Project List and Click Load Data")
-      } else {
-        "No file uploaded"
-      }
-    })
-    })
-    
-    observeEvent(input$resetBtn, {
+    observeEvent(input$select_data_upload_user_data, {
       
       validate(need(input$file, ""))
       
@@ -149,7 +149,7 @@ select_data_server <- function(id,Xproj){
       shinyjs::reset(Xproj$fileInfost())
       # Xproj$fileInfost()<-NULL,
       
-      shinyjs::reset("fileInfos")
+      # shinyjs::reset("fileInfos")
       shinyjs::reset("fileInfos2")
       shinyjs::reset("fileInfos3")
       shinyjs::reset("fileInfos4")
@@ -165,23 +165,47 @@ select_data_server <- function(id,Xproj){
       # output$definition_hist <- renderPlotly({NULL})
       # output$age_hist <- renderPlotly({NULL})
 
-      output$fileInfos <- renderText({NULL})
+      # output$fileInfos <- renderText({NULL})
       output$fileInfos2 <- renderText({NULL})
       output$fileInfos3 <- renderText({NULL})
       output$fileInfos4 <- renderDataTable({NULL})
       output$fileInfos5 <- renderText({NULL})
     })
     
+    observeEvent(input$select_data_upload_user_data, {
+      
+      # validate(need(input$select_data_upload_user_data, ""))
+      
+      shinyjs::reset("proj")
+      # shinyjs::reset(Xproj$a())
+
+      shinyjs::reset("patient_hist")
+      shinyjs::reset("gender_hist")
+      shinyjs::reset("definition_hist")
+      shinyjs::reset("age_hist")
+      
+      shinyjs::reset("fileInfos2")
+      shinyjs::reset("fileInfos3")
+      shinyjs::reset("fileInfos4")
+      shinyjs::reset("fileInfos5")
+      
+      output$fileInfos2 <- renderText({NULL})
+      output$fileInfos3 <- renderText({NULL})
+      output$fileInfos4 <- renderDataTable({NULL})
+      output$fileInfos5 <- renderText({NULL})
+    })
+    
+    
     observeEvent(input$run,{
 
       validate(need(input$file, ""))
       
-      if (file_type() %in% c("rds","RDS","Rds")){
+      if (!is.null(input$file) && is.null(input$proj) ){
       
         xdata <- input$file
         ydata <- reactive({as.data.table(readRDS(paste0(input$file$datapath)))})
 
-        if (!is.null(input$file) && all(!(input$proj %in% c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM")))) {
+        if (file_type() %in% c("rds","RDS","Rds")) {
 
           file_size <- round(xdata$size / (1024^2), 2)
           num_rows <- nrow(ydata())
@@ -211,14 +235,11 @@ select_data_server <- function(id,Xproj){
             "The first 100 rows and first 100 columns of your data are shown..."
           })
         }
-      }
       
-      else {
+      else if ((file_type() %in% c("xlsx", "xls"))) {
         
         xdata <- input$file
         ydata <- reactive({as.data.table(read_excel(paste0(input$file$datapath)))})
-        
-        if (!is.null(input$file) && all(!(input$proj %in% c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM")))) {
           
           file_size <- round(xdata$size / (1024^2), 2)
           num_rows <- nrow(ydata())
@@ -259,9 +280,9 @@ select_data_server <- function(id,Xproj){
 
       validate(need(input$run, ""))
 
-      if(Xproj$cancer_length() == 1)  {
+      if(!is.null(input$proj))  {
 
-        if (any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
+        if (Xproj$cancer_length() == 1 ){
       
       readRDS(paste0("projects/", input$proj, ".rds"))
       
@@ -269,9 +290,42 @@ select_data_server <- function(id,Xproj){
       #
       # zstd_unserialize(compressed
       
-    }
+        }
+        
+        
+        else if (!(Xproj$cancer_length() == 1) && any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj)) {
+          
+          validate(need(input$run, ""))
+          
+          # browser()
+          
+          dflist <- list()
+          
+          for (i in 1:length(input$proj)) {
+            
+            dflist[[i]] <- readRDS(paste0("projects/", input$proj[[i]], ".rds"))
+            
+            # compressed_data<-readRDS(paste0("projects/", input$proj[[i]], ".rds"))
+            #
+            # dflist[[i]] <- zstd_unserialize(compressed_data)
+          }
+          
+          same_columns <- Reduce(function(x, y){intersect(x, names(y))}, dflist, init = names(dflist[[1]]))
+          
+          for (i in 1:length(input$proj)) {
+            
+            dflist[[i]] <- dflist[[i]][, ..same_columns] ## we added .. this to same columns, as syntax
+            
+          }
+          
+          big_data = do.call(rbind, dflist)
+          
+          return(big_data)
+          
+          
+        }}
     
-        else if (all(!(input$proj %in% c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM")))) {
+        else if (!is.null(input$file)) {
           
           validate(need(input$file, ""))
           
@@ -301,39 +355,8 @@ select_data_server <- function(id,Xproj){
 
           
         }
-      }
 
-      else if (!(Xproj$cancer_length() == 1) && any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj)) {
-        
-        validate(need(input$run, ""))
-        
-        # browser()
-        
-        dflist <- list()
-
-        for (i in 1:length(input$proj)) {
-
-          dflist[[i]] <- readRDS(paste0("projects/", input$proj[[i]], ".rds"))
-
-          # compressed_data<-readRDS(paste0("projects/", input$proj[[i]], ".rds"))
-          #
-          # dflist[[i]] <- zstd_unserialize(compressed_data)
-        }
-
-        same_columns <- Reduce(function(x, y){intersect(x, names(y))}, dflist, init = names(dflist[[1]]))
-
-        for (i in 1:length(input$proj)) {
-
-          dflist[[i]] <- dflist[[i]][, ..same_columns] ## we added .. this to same columns, as syntax
-
-        }
-
-        big_data = do.call(rbind, dflist)
-
-        return(big_data)
-
-
-      }
+      
     })
 
     output$gender_hist<- renderPlotly({
