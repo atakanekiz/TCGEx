@@ -296,17 +296,8 @@ select_data_server <- function(id,Xproj){
             
             uploaded_data <- as.data.table(readRDS(paste0(input$file$datapath)))
             
+            colnames(uploaded_data)<- gsub("-", ".", colnames(uploaded_data), fixed = TRUE)
             
-            if ("-" %in% names(uploaded_data)) {
-  
-            for (i in seq_along (names(uploaded_data))) {
-              
-            colnames(uploaded_data) <- gsub("-", ".", colnames(uploaded_data))
-              
-            }
-            
-              
-            }
             
             if (!"meta.definition" %in% names(uploaded_data)) {
               uploaded_data[, meta.definition := "All Samples"]
