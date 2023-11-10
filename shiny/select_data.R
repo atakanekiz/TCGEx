@@ -65,7 +65,13 @@ select_data_ui <- function(id) {
                   ), tags$br(),
                   a(href="sample_data_for_loading.rds", "Sample Input File", download=NA, target="_blank")),
                 accept = c(".rds", ".xlsx", ".xls"),
-                multiple = FALSE),  
+                multiple = FALSE),
+      
+      materialSwitch(inputId = ns("nrm_dat"),
+                     label = "Normalize the data",
+                     status = "info",
+                     value = FALSE),
+  
       ),
     
     # actionButton(inputId = ns("resetBtn"), label = "Clear Uploaded Data"),
@@ -227,7 +233,7 @@ select_data_server <- function(id,Xproj){
 
           output$fileInfos4 <- renderDataTable({
             validate(need(input$run, ""))
-            ydata()[1:100,1:100]
+            Xproj$a()[1:100,1:100]
 
             })
           output$fileInfos5 <- renderText({
@@ -277,6 +283,8 @@ select_data_server <- function(id,Xproj){
     Xproj$cancer_length <- reactive({length(as.vector(input$proj))}) ## a reactive that created for other modules to use the length information for several cancers(Cagatay)
     
     Xproj$a<- eventReactive(list(input$run, input$file, input$proj), {
+      
+      # browser()
 
       validate(need(input$run, ""))
 
@@ -327,7 +335,10 @@ select_data_server <- function(id,Xproj){
     
         else if (!is.null(input$file)) {
           
+          # browser()
+          
           validate(need(input$file, ""))
+          
           
           if (file_type() %in% c("rds","RDS","Rds")){
             
@@ -337,7 +348,28 @@ select_data_server <- function(id,Xproj){
               uploaded_data[, meta.definition := "All Samples"]
             }
             
+            if(input$nrm_dat == TRUE){
+              
+              # browser()
+              
+              df_num = uploaded_data %>% select(where(is.numeric))
+              df_nonnum = uploaded_data %>% select(-where(is.numeric))
+              
+              df_nongene = df_num %>% select(where(~length(unique(.))< 10))
+              
+              df_gene = df_num %>% select(-where(~length(unique(.))< 10))
+              
+              df_gene = log(df_gene)
+              
+              uploaded_data = cbind(df_gene, df_nonnum,df_nongene)
+              
+              uploaded_data
+              
+            }
+            
             return(uploaded_data)
+            
+            # uploaded_data
             
           }
           
@@ -349,7 +381,27 @@ select_data_server <- function(id,Xproj){
               uploaded_data_xl[, meta.definition := "All Samples"]
             }
             
+            if(input$nrm_dat == TRUE){
+              # browser()
+              
+              df_num = uploaded_data_xl %>% select(where(is.numeric))
+              df_nonnum = uploaded_data_xl %>% select(-where(is.numeric))
+              
+              df_nongene = df_num %>% select(where(~length(unique(.))< 10))
+              
+              df_gene = df_num %>% select(-where(~length(unique(.))< 10))
+              
+              df_gene = log(df_gene)
+              
+              uploaded_data_xl = cbind(df_gene, df_nonnum,df_nongene)
+              
+              uploaded_data_xl
+              
+            }
+            
             return(uploaded_data_xl)
+            
+            # uploaded_data_xl
           }
           
 
