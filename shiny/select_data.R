@@ -276,7 +276,7 @@ select_data_server <- function(id,Xproj){
     
     Xproj$cancer_length <- reactive({length(as.vector(input$proj))}) ## a reactive that created for other modules to use the length information for several cancers(Cagatay)
     
-    Xproj$a<- eventReactive(input$run, {
+    Xproj$a<- eventReactive(list(input$run, input$file, input$proj), {
 
       validate(need(input$run, ""))
 

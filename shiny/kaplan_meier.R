@@ -439,10 +439,12 @@ km_server <- function(id,Xproj) {
             need(input$sel_covar_meta_groups, "Select at least one covariate group")}} 
       )
       
-      if(Xproj$cancer_length() ==1) {
+      if(Xproj$cancer_length() ==1 | !is.null(Xproj$fileInfost())) {
         
         
         sel_cols <- c(input$km_feat, "meta.vital_status", "meta.days_to_event", "meta.definition", "meta.patient")
+        
+        # browser()
         
         dat <- Xproj$a()[, ..sel_cols]
         

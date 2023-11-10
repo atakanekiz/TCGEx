@@ -489,7 +489,7 @@ data_prep_ml_server <- function(id,Xproj) {
     observe({
       if (!is.null(Xproj$a())) {
         
-        updateSelectizeInput(session,'sample_type_reg', choices = names(table(Xproj$a()$meta.sample_type)),selected = "", server = TRUE)
+        updateSelectizeInput(session,'sample_type_reg', choices = names(table(Xproj$a()$meta.definition)),selected = "", server = TRUE)
         cibersort_metrics <- available_cibersort()$available
         genelist <- available_genelist()$available
         updateSelectizeInput(session,'gene_list_response', choices = genelist, selected = "", server = TRUE)
@@ -698,7 +698,7 @@ data_prep_ml_server <- function(id,Xproj) {
       clean_response_set = response_det()$c
       clean_predictor_set = predictor_det()$c
       
-      filtered_data = Xproj$a() %>% filter(meta.sample_type %in% input$sample_type_reg)
+      filtered_data = Xproj$a() %>% filter(meta.definition %in% input$sample_type_reg)
       
       select(filtered_data, clean_response_set[,1], clean_predictor_set[,1]) %>%
         
