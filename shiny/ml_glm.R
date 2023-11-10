@@ -434,7 +434,9 @@ data_prep_ml_server <- function(id,Xproj) {
     output$filewarning_7 <- renderText({
       
       if (!is.null(Xproj$fileInfost())) {
-        shinyalert("Warning!", "To perform this analysis using MsigDB gene sets, please ensure that your uploaded data set contains gene symbols rather than Entrez or Ensembl gene IDs. Otherwise you may receive errors.") }
+        shinyalert("Warning!", "To perform this analysis using MsigDB gene sets, please ensure that your uploaded data set contains gene symbols rather than Entrez or Ensembl gene IDs. Otherwise you may receive errors.
+                  
+                  To perform miRNA-based analysis, remember that the miRNA columns in your data must start with 'hsa.miR.' . Example miRNA column names: 'hsa.miR.155.5p', 'hsa.miR.142.3p', 'hsa.miR.107'. ") }
     })
     
     msigdb_gene_sets =  reactive({readRDS(paste0("genesets/", "msigdb_collections", ".rds"))})

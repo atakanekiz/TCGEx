@@ -50,11 +50,6 @@ select_data_ui <- function(id) {
     conditionalPanel(
       condition = "input.select_data_upload_user_data == true",
       ns = ns,
-      # fileInput(inputId = ns("file"),
-      #           label = "Also You Can Upload Your RDS or Excel Data Less Than 250 MB",  #I changed this part to below.
-      #           accept = c(".rds", ".xlsx", ".xls"),
-      #           multiple = FALSE),
-
       fileInput(ns("file"), 
                 label = tags$span(
                   "You Can Upload Your RDS or Excel Data Less Than 250 MB", 
@@ -73,11 +68,7 @@ select_data_ui <- function(id) {
                      value = FALSE),
   
       ),
-    
-    # actionButton(inputId = ns("resetBtn"), label = "Clear Uploaded Data"),
-    
-    # textOutput(ns("fileInfos")),
-    
+  
     br(),
     
     actionBttn(inputId = ns("run"), 
@@ -116,36 +107,6 @@ select_data_server <- function(id,Xproj){
     
     Xproj$fileInfost <- reactive({input$file$name})
     
-    # observeEvent(input$file,{
-    #   
-    #   if (!is.null(input$file)) {
-    #   
-    #   # Update the pickerInput choices
-    #   updatePickerInput(session, "proj", choices = c(paste0(Xproj$fileInfost())))
-    #   }
-    #   })
-    
-    # observeEvent(input$resetBtn,{
-    # 
-    #     # Update the pickerInput choices
-    #     updatePickerInput(session, "proj", choices = c("ACC-Adrenocortical carcinoma" = "ACC","BLCA-Bladder Urothelial Carcinoma" = "BLCA", "BRCA-Breast invasive carcinoma" = "BRCA", "CESC-Cervical squamous cell carcinoma and endocervical adenocarcinoma" = "CESC", "CHOL-Cholangiocarcinoma" = "CHOL", "COAD-Colon adenocarcinoma" = "COAD" ,"DLBC-Lymphoid Neoplasm Diffuse Large B-cell Lymphoma" = "DLBC", "ESCA-Esophageal carcinoma" = "ESCA", "GBM-Glioblastoma multiforme" ="GBM" , "HNSC-Head and Neck squamous cell carcinoma" = "HNSC", "KICH-Kidney Chromophobe" = "KICH", "KIRC-Kidney renal clear cell carcinoma" = "KIRC" ,"KIRP-Kidney renal papillary cell carcinoma" = "KIRP",
-    #                                                    "LAML-Acute Myeloid Leukemia" = "LAML", "LGG-Brain Lower Grade Glioma" = "LGG" , "LIHC-Liver hepatocellular carcinoma" = "LIHC", "LUAD-Lung adenocarcinoma" = "LUAD","LUSC-	Lung squamous cell carcinoma" = "LUSC", "MESO-Mesothelioma" ="MESO", "OV-Ovarian serous cystadenocarcinoma" ="OV",   "PAAD-	Pancreatic adenocarcinoma" = "PAAD", "PCPG-Pheochromocytoma and Paraganglioma" = "PCPG", "PRAD-Prostate adenocarcinoma" = "PRAD",
-    #                                                    "READ-Rectum adenocarcinoma" = "READ", "SARC-Sarcoma" = "SARC", "SKCM-Skin Cutaneous Melanoma" = "SKCM" ,"STAD-Stomach adenocarcinoma" = "STAD", "TGCT-Testicular Germ Cell Tumors" = "TGCT", "THCA-Thyroid carcinoma" = "THCA", "THYM-Thymoma" = "THYM", "UCEC-Uterine Corpus Endometrial Carcinoma" = "UCEC", "UCS-Uterine Carcinosarcoma" = "UCS",  "UVM-Uveal Melanoma" = "UVM"))
-    #   
-    # })
-    
-    # observeEvent(input$file,{ 
-    # 
-    # output$fileInfos <- renderText({
-    #   
-    #   if (!is.null(Xproj$fileInfost())) {
-    #     paste("Now You Can Select Your Data On Project List and Click Load Data")
-    #   } else {
-    #     "No file uploaded"
-    #   }
-    # })
-    # })
-    
     observeEvent(input$select_data_upload_user_data, {
       
       validate(need(input$file, ""))
@@ -153,9 +114,7 @@ select_data_server <- function(id,Xproj){
       shinyjs::reset("proj")
       shinyjs::reset("file")
       shinyjs::reset(Xproj$fileInfost())
-      # Xproj$fileInfost()<-NULL,
-      
-      # shinyjs::reset("fileInfos")
+
       shinyjs::reset("fileInfos2")
       shinyjs::reset("fileInfos3")
       shinyjs::reset("fileInfos4")
@@ -165,13 +124,7 @@ select_data_server <- function(id,Xproj){
       shinyjs::reset("gender_hist")
       shinyjs::reset("definition_hist")
       shinyjs::reset("age_hist")
-
-      # output$patient_hist <- renderPlotly({NULL})
-      # output$gender_hist <- renderPlotly({NULL})
-      # output$definition_hist <- renderPlotly({NULL})
-      # output$age_hist <- renderPlotly({NULL})
-
-      # output$fileInfos <- renderText({NULL})
+      
       output$fileInfos2 <- renderText({NULL})
       output$fileInfos3 <- renderText({NULL})
       output$fileInfos4 <- renderDataTable({NULL})
@@ -180,10 +133,8 @@ select_data_server <- function(id,Xproj){
     
     observeEvent(input$select_data_upload_user_data, {
       
-      # validate(need(input$select_data_upload_user_data, ""))
-      
       shinyjs::reset("proj")
-      # shinyjs::reset(Xproj$a())
+      shinyjs::reset("file")
 
       shinyjs::reset("patient_hist")
       shinyjs::reset("gender_hist")
@@ -340,9 +291,22 @@ select_data_server <- function(id,Xproj){
           validate(need(input$file, ""))
           
           
-          if (file_type() %in% c("rds","RDS","Rds")){
+          if (file_type() %in% c("rds","RDS","Rds","rDs","rDS","rdS","RDs","RdS")){
+            
             
             uploaded_data <- as.data.table(readRDS(paste0(input$file$datapath)))
+            
+            
+            if ("-" %in% names(uploaded_data)) {
+  
+            for (i in seq_along (names(uploaded_data))) {
+              
+            colnames(uploaded_data) <- gsub("-", ".", colnames(uploaded_data))
+              
+            }
+            
+              
+            }
             
             if (!"meta.definition" %in% names(uploaded_data)) {
               uploaded_data[, meta.definition := "All Samples"]
