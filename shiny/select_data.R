@@ -359,7 +359,7 @@ select_data_server <- function(id,Xproj){
               
               df_gene = df_num %>% select(-where(~length(unique(.))< 10))
               
-              df_gene = log(df_gene)
+              df_gene = log(df_gene+1, base = 10)
               
               uploaded_data = cbind(df_gene, df_nonnum,df_nongene)
               
@@ -391,7 +391,7 @@ select_data_server <- function(id,Xproj){
               
               df_gene = df_num %>% select(-where(~length(unique(.))< 10))
               
-              df_gene = log(df_gene)
+              df_gene = log(df_gene+1, base = 10)
               
               uploaded_data_xl = cbind(df_gene, df_nonnum,df_nongene)
               
