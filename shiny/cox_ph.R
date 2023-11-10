@@ -100,7 +100,7 @@ cox_server <- function(id,Xproj) {
     
     COX_steps <- reactive({
       
-      if(Xproj$cancer_length() ==1) {
+      if(Xproj$cancer_length() ==1 | !is.null(Xproj$fileInfost()) ) {
         
         return(
           
@@ -200,7 +200,7 @@ cox_server <- function(id,Xproj) {
       
       validate(need(cox_dat(), ""))
       
-      if(Xproj$cancer_length() ==1) {                     ## in order to avoid zero length warning when there is only one cancer
+      if(Xproj$cancer_length() ==1 | !is.null(Xproj$fileInfost()) ) {                     ## in order to avoid zero length warning when there is only one cancer
         
         predvars <- paste(input$cox_feat, collapse="+") 
         

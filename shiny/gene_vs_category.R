@@ -46,7 +46,7 @@ gene_vs_cat_ui <- function(id, label, choices){
                        choices=NULL, # will be updated dynamically
                        options = list(placeholder = "eg. meta.gender")),
         
-        checkboxInput(inputId = ns("exprs_stats"), "Show statistics?", T),
+        checkboxInput(inputId = ns("exprs_stats"), "Show statistics?", F),
         
         actionBttn(inputId = ns("cat_gene_run"), 
                    label = "Analyze",
@@ -60,6 +60,8 @@ gene_vs_cat_ui <- function(id, label, choices){
         
         introjsUI(),
         actionButton(ns("genecat_help"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
+        
+        textOutput(ns("filewarning_box")) ,     
         
         width = 3
         
@@ -215,6 +217,13 @@ gene_vs_cat_ui <- function(id, label, choices){
 gene_vs_cat_server <- function(id,Xproj){
   
   moduleServer(id,function(input, output, session){
+    
+    
+    output$filewarning_box <- renderText({
+      
+      if (!is.null(Xproj$fileInfost())) {
+        shinyalert("Warning!", "Please ensure that the column names containing clinic information in your data start with 'meta.' . Otherwise, you will not be able to use this analysis module.") }
+    })
     
     
     genecat_steps <- reactive({

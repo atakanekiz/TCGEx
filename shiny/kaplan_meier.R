@@ -219,7 +219,7 @@ km_server <- function(id,Xproj) {
     
     KM_steps <- reactive({
       
-      if(Xproj$cancer_length() ==1 & input$km_feat != "") {
+      if(Xproj$cancer_length() ==1 & input$km_feat != "" | !is.null(Xproj$fileInfost())) {
         
         return(
           
@@ -475,7 +475,7 @@ km_server <- function(id,Xproj) {
       }
       
       
-      else if (Xproj$cancer_length() > 1) {
+      else if (Xproj$cancer_length() > 1){
         
         validate(
           need(input$choose_KM, "Please select categorization rule"))
@@ -549,7 +549,7 @@ km_server <- function(id,Xproj) {
       if(input$km_covar != "") {
         
         
-        if(Xproj$cancer_length() ==1) {
+        if(Xproj$cancer_length() ==1 | !is.null(Xproj$fileInfost())) {
           
           sel_cols2 <- c(input$km_covar, "meta.vital_status", "meta.days_to_event", "meta.definition", "meta.patient")
           
@@ -577,7 +577,7 @@ km_server <- function(id,Xproj) {
           
             
           }    
-        } else if (Xproj$cancer_length() > 1) { 
+        } else if (Xproj$cancer_length() > 1 ) { 
           
           
           if(input$choose_KM == "Aggregated") {
