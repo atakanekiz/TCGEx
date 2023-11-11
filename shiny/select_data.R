@@ -66,6 +66,11 @@ select_data_ui <- function(id) {
                      label = "Normalize the data",
                      status = "info",
                      value = FALSE),
+      
+      materialSwitch(inputId = ns("flt_dat"),
+                     label = "Filter the data",
+                     status = "info",
+                     value = FALSE),
   
       ),
   
@@ -165,8 +170,8 @@ select_data_server <- function(id,Xproj){
         if (file_type() %in% c("rds","RDS","Rds")) {
 
           file_size <- round(xdata$size / (1024^2), 2)
-          num_rows <- nrow(ydata())
-          num_cols <- ncol(ydata())
+          num_rows <- nrow(Xproj$a())
+          num_cols <- ncol(Xproj$a())
 
           file_info <- paste("Size of Uploaded RDS File:", file_size, "MB")
           file_info <- paste(file_info, "Number of Rows:", num_rows)
@@ -199,8 +204,8 @@ select_data_server <- function(id,Xproj){
         ydata <- reactive({as.data.table(read_excel(paste0(input$file$datapath)))})
           
           file_size <- round(xdata$size / (1024^2), 2)
-          num_rows <- nrow(ydata())
-          num_cols <- ncol(ydata())
+          num_rows <- nrow(Xproj$a())
+          num_cols <- ncol(Xproj$a())
           
           file_info <- paste("Size of Uploaded EXCEL File:", file_size, "MB")
           file_info <- paste(file_info, "Number of Rows:", num_rows)
@@ -218,7 +223,7 @@ select_data_server <- function(id,Xproj){
           
           output$fileInfos4 <- renderDataTable({
             validate(need(input$run, ""))
-            ydata()[1:100,1:100]
+            Xproj$a()[1:100,1:100]
             
           })
           output$fileInfos5 <- renderText({
@@ -310,9 +315,9 @@ select_data_server <- function(id,Xproj){
               df_num = uploaded_data %>% select(where(is.numeric))
               df_nonnum = uploaded_data %>% select(-where(is.numeric))
               
-              df_nongene = df_num %>% select(where(~length(unique(.))< 10))
+              df_nongene = df_num %>% select(starts_with("meta."))
               
-              df_gene = df_num %>% select(-where(~length(unique(.))< 10))
+              df_gene = df_num %>% select(-starts_with("meta."))
               
               df_gene = log(df_gene+1, base = 10)
               
@@ -321,6 +326,30 @@ select_data_server <- function(id,Xproj){
               uploaded_data
               
             }
+            
+            
+            if(input$flt_dat == TRUE){
+              
+              df_num = uploaded_data %>% select(where(is.numeric))
+              
+              df_nonnum = uploaded_data %>% select(-where(is.numeric))
+              
+              df_nongene = df_num %>% select(starts_with("meta."))
+              
+              df_gene = df_num %>% select(-starts_with("meta."))
+              
+              na_zero_percent <- apply(df_gene, 2, function(x) mean(is.na(x) | x == 0))
+              
+              selected_columns <- names(df_gene)[na_zero_percent < 0.25]
+              
+              df_gene <- df_gene[, ..selected_columns]
+              
+              uploaded_data = cbind(df_gene, df_nonnum,df_nongene)
+              
+              uploaded_data
+              
+            }
+            
             
             return(uploaded_data)
             
@@ -342,11 +371,33 @@ select_data_server <- function(id,Xproj){
               df_num = uploaded_data_xl %>% select(where(is.numeric))
               df_nonnum = uploaded_data_xl %>% select(-where(is.numeric))
               
-              df_nongene = df_num %>% select(where(~length(unique(.))< 10))
+              df_nongene = df_num %>% select(starts_with("meta."))
               
-              df_gene = df_num %>% select(-where(~length(unique(.))< 10))
+              df_gene = df_num %>% select(-starts_with("meta."))
               
               df_gene = log(df_gene+1, base = 10)
+              
+              uploaded_data_xl = cbind(df_gene, df_nonnum,df_nongene)
+              
+              uploaded_data_xl
+              
+            }
+            
+            if(input$flt_dat == TRUE){
+              
+              df_num = uploaded_data_xl %>% select(where(is.numeric))
+              
+              df_nonnum = uploaded_data_xl %>% select(-where(is.numeric))
+              
+              df_nongene = df_num %>% select(starts_with("meta."))
+              
+              df_gene = df_num %>% select(-starts_with("meta."))
+              
+              na_zero_percent <- apply(df_gene, 2, function(x) mean(is.na(x) | x == 0))
+              
+              selected_columns <- names(df_gene)[na_zero_percent < 0.25]
+              
+              df_gene <- df_gene[, ..selected_columns]
               
               uploaded_data_xl = cbind(df_gene, df_nonnum,df_nongene)
               
