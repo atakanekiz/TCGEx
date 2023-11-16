@@ -189,12 +189,12 @@ select_data_server <- function(id,Xproj){
 
           output$fileInfos4 <- renderDataTable({
             validate(need(input$run, ""))
-            Xproj$a()[1:100,1:100]
+            Xproj$a()[1:10,1:15]
 
             })
           output$fileInfos5 <- renderText({
             validate(need(input$run, ""))
-            "The first 100 rows and first 100 columns of your data are shown..."
+            "The first 10 rows and first 15 columns of your data are shown..."
           })
         }
       
@@ -223,12 +223,12 @@ select_data_server <- function(id,Xproj){
           
           output$fileInfos4 <- renderDataTable({
             validate(need(input$run, ""))
-            Xproj$a()[1:100,1:100]
+            Xproj$a()[1:10,1:15]
             
           })
           output$fileInfos5 <- renderText({
             validate(need(input$run, ""))
-            "The first 100 rows and first 100 columns of your data are shown..."
+            "The first 10 rows and first 15 columns of your data are shown..."
           })
         }
         
