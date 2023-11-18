@@ -319,7 +319,9 @@ select_data_server <- function(id,Xproj){
               
               df_gene = df_num %>% select(-starts_with("meta."))
               
-              df_gene = log(df_gene+1, base = 10)
+              df_gene <- df_gene[, apply(df_gene,2,var)!=0, with=F]
+              
+              df_gene = log(cpm(df_gene, prior.count=0)+1, base=10)
               
               uploaded_data = cbind(df_gene, df_nonnum,df_nongene)
               
@@ -375,7 +377,11 @@ select_data_server <- function(id,Xproj){
               
               df_gene = df_num %>% select(-starts_with("meta."))
               
-              df_gene = log(df_gene+1, base = 10)
+              df_gene <- df_gene[, apply(df_gene, 2, var) !=0, with=F]
+              
+              #filter out all-zero columns
+              
+              df_gene = log(cpm(df_gene, prior.count=0)+1, base=10)
               
               uploaded_data_xl = cbind(df_gene, df_nonnum,df_nongene)
               
