@@ -63,12 +63,24 @@ select_data_ui <- function(id) {
                 multiple = FALSE),
       
       materialSwitch(inputId = ns("nrm_dat"),
-                     label = "Normalize the data",
+                     label = tags$span(
+                       "Normalize the data", 
+                       tags$i(
+                         class = "glyphicon glyphicon-info-sign", 
+                         style = "color:#0072B2;",
+                         title = "Data normalization is a process used in data preprocessing to standardize the range of independent variables or features of a dataset. Log10 transformation is used for the normalization process."
+                       )),
                      status = "info",
                      value = FALSE),
       
       materialSwitch(inputId = ns("flt_dat"),
-                     label = "Filter the data",
+                     label = tags$span(
+                       "Filter the data", 
+                       tags$i(
+                         class = "glyphicon glyphicon-info-sign", 
+                         style = "color:#0072B2;",
+                         title = "The columns containing more than 25% NA are removed from the dataset."
+                       )),
                      status = "info",
                      value = FALSE),
   
