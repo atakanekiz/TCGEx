@@ -211,11 +211,31 @@ km_server <- function(id,Xproj) {
     
     ns <- session$ns
     
+    # v <- eventReactive(Xproj$fileInfost(), {
+    #   
+    # 
+    #   shinyalert("Warning!", "To perform Kaplan-Meier Survival analysis, the data you upload must contain columns containing survival information such as 'vital_status' and 'days _to_event'.",html = FALSE,imageUrl = "",closeOnEsc = TRUE,
+    #                          closeOnClickOutside = TRUE)
+    #   
+    # })
+    # 
+    # output$filewarning_two <- renderText({
+    #   v()
+    # })
+    # 
+
+    
+    observeEvent(Xproj$fileInfost(),{
+
     output$filewarning_two <- renderText({
-      
+
       if (!is.null(Xproj$fileInfost())) {
-        shinyalert("Warning!", "To perform Kaplan-Meier Survival analysis, the data you upload must contain columns containing survival information such as 'vital_status' and 'days _to_event'.") }
-    })
+        shinyalert("Warning!", "To perform Kaplan-Meier Survival analysis, the data you upload must contain columns containing survival information such as 'vital_status' and 'days _to_event'.",html = FALSE,imageUrl = "",closeOnEsc = TRUE,
+                   closeOnClickOutside = TRUE)
+
+        # tags$style(HTML(".km-shinyalert-12a326a245e24d08919ea6ee5a3110e7 { display: none !important; }"))
+      }
+    }) })
     
     KM_steps <- reactive({
       

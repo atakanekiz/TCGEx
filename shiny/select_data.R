@@ -64,7 +64,7 @@ select_data_ui <- function(id) {
       
       materialSwitch(inputId = ns("nrm_dat"),
                      label = tags$span(
-                       "Normalize the data", 
+                       "Normalize data", 
                        tags$i(
                          class = "glyphicon glyphicon-info-sign", 
                          style = "color:#0072B2;",
@@ -75,7 +75,7 @@ select_data_ui <- function(id) {
       
       materialSwitch(inputId = ns("flt_dat"),
                      label = tags$span(
-                       "Filter the data", 
+                       "Filter  data", 
                        tags$i(
                          class = "glyphicon glyphicon-info-sign", 
                          style = "color:#0072B2;",
