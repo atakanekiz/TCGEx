@@ -79,7 +79,7 @@ select_data_ui <- function(id) {
                        tags$i(
                          class = "glyphicon glyphicon-info-sign", 
                          style = "color:#0072B2;",
-                         title = "The columns containing more than 25% NA are removed from the dataset."
+                         title = "The columns containing more than 25% NA and/or zero counts are removed from the dataset."
                        )),
                      status = "info",
                      value = FALSE),
