@@ -571,6 +571,8 @@ km_server <- function(id,Xproj) {
         
         if(Xproj$cancer_length() ==1 | !is.null(Xproj$fileInfost())) {
           
+          browser()
+          
           sel_cols2 <- c(input$km_covar, "meta.vital_status", "meta.days_to_event", "meta.definition", "meta.patient")
           
           covar_dat <- Xproj$a()[, ..sel_cols2][meta.definition %in% input$km_samptyp,][!duplicated(meta.patient), ]
