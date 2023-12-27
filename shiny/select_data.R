@@ -350,9 +350,15 @@ select_data_server <- function(id,Xproj){
               
               df_nonnum = uploaded_data %>% select(-where(is.numeric))
               
-              df_nongene = df_num %>% select(starts_with("meta."))
+              # df_nongene = df_num %>% select(starts_with("meta."))
+              # 
+              # df_gene = df_num %>% select(-starts_with("meta."))
               
-              df_gene = df_num %>% select(-starts_with("meta."))
+              df_nongene = df_num %>% 
+                select(starts_with("meta."),starts_with("meta_"))
+              
+              df_gene <- df_num %>%
+                select(-starts_with("meta."), -starts_with("meta_"))
               
               na_zero_percent <- apply(df_gene, 2, function(x) mean(is.na(x) | x == 0))
               
@@ -411,9 +417,15 @@ select_data_server <- function(id,Xproj){
               
               df_nonnum = uploaded_data_xl %>% select(-where(is.numeric))
               
-              df_nongene = df_num %>% select(starts_with("meta."))
+              # df_nongene = df_num %>% select(starts_with("meta."))
+              # 
+              # df_gene = df_num %>% select(-starts_with("meta."))
               
-              df_gene = df_num %>% select(-starts_with("meta."))
+              df_nongene = df_num %>% 
+                select(starts_with("meta."),starts_with("meta_"))
+              
+              df_gene <- df_num %>%
+                select(-starts_with("meta."), -starts_with("meta_"))
               
               na_zero_percent <- apply(df_gene, 2, function(x) mean(is.na(x) | x == 0))
               
