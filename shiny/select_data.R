@@ -68,7 +68,7 @@ select_data_ui <- function(id) {
                        tags$i(
                          class = "glyphicon glyphicon-info-sign", 
                          style = "color:#0072B2;",
-                         title = "Data normalization is a process used in data preprocessing to standardize the range of independent variables or features of a dataset. If you have raw data, you can click this buttun and normalize your data by using log(CPM+1) normalization method"
+                         title = "Data normalization is a process used in data preprocessing to standardize the range of independent variables or features of a dataset. If you have raw data, you can click this button and normalize your data by using log(CPM+1) normalization method"
                        )),
                      status = "info",
                      value = FALSE),
@@ -88,7 +88,7 @@ select_data_ui <- function(id) {
         ns=ns,
         condition = "input.flt_dat == true",
         sliderInput(inputId = ns("filter_percentage"),
-                    label = "Select filtering percentage:",
+                    label = "Select filtering percentage to filter your data:",
                     min = 0,
                     max = 100,
                     value = 25))
