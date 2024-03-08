@@ -68,7 +68,7 @@ select_data_ui <- function(id) {
                        tags$i(
                          class = "glyphicon glyphicon-info-sign", 
                          style = "color:#0072B2;",
-                         title = "Data normalization is a process used in data preprocessing to standardize the range of independent variables or features of a dataset. Log10 transformation is used for the normalization process."
+                         title = "Data normalization is a process used in data preprocessing to standardize the range of independent variables or features of a dataset. If you have raw data, you can click this button and normalize your data by using log(CPM+1) normalization method"
                        )),
                      status = "info",
                      value = FALSE),
@@ -79,10 +79,20 @@ select_data_ui <- function(id) {
                        tags$i(
                          class = "glyphicon glyphicon-info-sign", 
                          style = "color:#0072B2;",
-                         title = "The columns containing more than 25% NA and/or zero counts are removed from the dataset."
+                         title = "Genes containing a percentage of 'NA' and 'zero count' greater than that specified by the slider will be filtered out and excluded from the data."
                        )),
                      status = "info",
                      value = FALSE),
+      
+      conditionalPanel(
+        ns=ns,
+        condition = "input.flt_dat == true",
+        sliderInput(inputId = ns("filter_percentage"),
+                    label = "Select filtering percentage to filter your data:",
+                    min = 0,
+                    max = 100,
+                    value = 25))
+      
   
       ),
   
@@ -171,7 +181,7 @@ select_data_server <- function(id,Xproj){
     
     
     observeEvent(input$run,{
-
+      
       validate(need(input$file, ""))
       
       if (!is.null(input$file) && is.null(input$proj) ){
@@ -303,6 +313,8 @@ select_data_server <- function(id,Xproj){
     
         else if (!is.null(input$file)) {
           
+          # filter_per<-reactive({input$filter_percentage})
+          
           # browser()
           
           validate(need(input$file, ""))
@@ -346,21 +358,25 @@ select_data_server <- function(id,Xproj){
             
             if(input$flt_dat == TRUE){
               
+              filter_percentage <- reactive ({input$filter_percentage / 100})
+              
               df_num = uploaded_data %>% select(where(is.numeric))
               
               df_nonnum = uploaded_data %>% select(-where(is.numeric))
               
               # df_nongene = df_num %>% select(starts_with("meta."))
-              
-              df_nongene = df_num %>% select(matches("^meta_|^meta\\."))
-              
+              # 
               # df_gene = df_num %>% select(-starts_with("meta."))
               
-              df_gene = df_num %>% select(-matches("^meta_|^meta\\."))
+              df_nongene = df_num %>% 
+                select(starts_with("meta."),starts_with("meta_"))
+              
+              df_gene <- df_num %>%
+                select(-starts_with("meta."), -starts_with("meta_"))
               
               na_zero_percent <- apply(df_gene, 2, function(x) mean(is.na(x) | x == 0))
               
-              selected_columns <- names(df_gene)[na_zero_percent < 0.25]
+              selected_columns <- names(df_gene)[na_zero_percent < filter_percentage()]
               
               df_gene <- df_gene[, ..selected_columns]
               
@@ -411,17 +427,25 @@ select_data_server <- function(id,Xproj){
             
             if(input$flt_dat == TRUE){
               
+              filter_percentage <- reactive ({input$filter_percentage / 100})
+              
               df_num = uploaded_data_xl %>% select(where(is.numeric))
               
               df_nonnum = uploaded_data_xl %>% select(-where(is.numeric))
               
-              df_nongene = df_num %>% select(starts_with("meta."))
+              # df_nongene = df_num %>% select(starts_with("meta."))
+              # 
+              # df_gene = df_num %>% select(-starts_with("meta."))
               
-              df_gene = df_num %>% select(-starts_with("meta."))
+              df_nongene = df_num %>% 
+                select(starts_with("meta."),starts_with("meta_"))
+              
+              df_gene <- df_num %>%
+                select(-starts_with("meta."), -starts_with("meta_"))
               
               na_zero_percent <- apply(df_gene, 2, function(x) mean(is.na(x) | x == 0))
               
-              selected_columns <- names(df_gene)[na_zero_percent < 0.25]
+              selected_columns <- names(df_gene)[na_zero_percent < filter_percentage()]
               
               df_gene <- df_gene[, ..selected_columns]
               
