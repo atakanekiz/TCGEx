@@ -260,7 +260,7 @@ regression_sidecontrols <- function(id) {
                              style = "color:#0072B2;",
                              title = "Value of 1 corresponds to LASSO regression where some coefficients will be shrunken (ie. penalized) all the way to zero. Value of 0 corresponds to Ridge regression where some coefficients will converge to (but not reach) zero. Other values correspond to elastic net regression where the penalty is a mixture of the previous approaches."
                              
-                           )), min = 0, max = 1, value = 1, step = 0.2
+                           )), min = 0, max = 1, value = 1, step = 0.1
                          
                          
                          
