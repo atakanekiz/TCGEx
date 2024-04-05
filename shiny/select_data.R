@@ -90,7 +90,7 @@ select_data_ui <- function(id) {
         sliderInput(inputId = ns("filter_percentage"),
                     label = "Filtering (Keep genes that are expressed in at least n% of the samples)",
                     min = 0,
-                    max = 100,
+                    max = 100, step = 5,
                     value = 25))
       
   
