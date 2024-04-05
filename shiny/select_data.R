@@ -88,7 +88,7 @@ select_data_ui <- function(id) {
         ns=ns,
         condition = "input.flt_dat == true",
         sliderInput(inputId = ns("filter_percentage"),
-                    label = "Select filtering percentage to filter your data:",
+                    label = "Filtering (Keep genes that are expressed in at least n% of the samples)",
                     min = 0,
                     max = 100,
                     value = 25))
@@ -358,7 +358,9 @@ select_data_server <- function(id,Xproj){
             
             if(input$flt_dat == TRUE){
               
-              filter_percentage <- reactive ({input$filter_percentage / 100})
+              filter_percentage <- reactive ({1-(input$filter_percentage / 100)})
+              
+              # filter_percentage <- reactive ({input$filter_percentage / 100})
               
               df_num = uploaded_data %>% select(where(is.numeric))
               
@@ -373,6 +375,8 @@ select_data_server <- function(id,Xproj){
               
               df_gene <- df_num %>%
                 select(-starts_with("meta."), -starts_with("meta_"))
+              
+              # browser()
               
               na_zero_percent <- apply(df_gene, 2, function(x) mean(is.na(x) | x == 0))
               
