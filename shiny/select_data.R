@@ -87,31 +87,56 @@ select_data_ui <- function(id) {
                          title = "Data normalization is a process used in data preprocessing to standardize the range of independent variables or features of a dataset. If you have raw data, you can click this button and normalize your data by using log(CPM+1) normalization method"
                        )),
                      status = "info",
-                     value = FALSE),
+                     value = FALSE)
       
-      materialSwitch(inputId = ns("flt_dat"),
-                     label = tags$span(
-                       "Filter  data", 
-                       tags$i(
-                         class = "glyphicon glyphicon-info-sign", 
-                         style = "color:#0072B2;",
-                         title = "Genes containing a percentage of 'NA' and 'zero count' greater than that specified by the slider will be filtered out and excluded from the data."
-                       )),
-                     status = "info",
-                     value = FALSE),
-      
-      conditionalPanel(
-        ns=ns,
-        condition = "input.flt_dat == true",
-        sliderInput(inputId = ns("filter_percentage"),
-                    label = "Filtering (Keep genes that are expressed in at least n% of the samples)",
-                    min = 0,
-                    max = 100, step = 5,
-                    value = 25))
-      
+      #'[#### THIS COMMENTED OUT]
+      # materialSwitch(inputId = ns("flt_dat"),
+      #                label = tags$span(
+      #                  "Filter  data", 
+      #                  tags$i(
+      #                    class = "glyphicon glyphicon-info-sign", 
+      #                    style = "color:#0072B2;",
+      #                    title = "Genes containing a percentage of 'NA' and 'zero count' greater than that specified by the slider will be filtered out and excluded from the data."
+      #                  )),
+      #                status = "info",
+      #                value = FALSE),
+      # 
+      # 
+      # conditionalPanel(
+      #   ns=ns,
+      #   condition = "input.flt_dat == true",
+      #   sliderInput(inputId = ns("filter_percentage"),
+      #               label = "Filtering (Keep genes that are expressed in at least n% of the samples)",
+      #               min = 0,
+      #               max = 100, step = 5,
+      #               value = 25))
+      #'[#### THIS COMMENTED OUT]
       
     ),
     
+    #'[#### THIS MOVED HERE]
+    materialSwitch(inputId = ns("flt_dat"),
+                   label = tags$span(
+                     "Filter  data", 
+                     tags$i(
+                       class = "glyphicon glyphicon-info-sign", 
+                       style = "color:#0072B2;",
+                       title = "Genes containing a percentage of 'NA' and 'zero count' greater than that specified by the slider will be filtered out and excluded from the data."
+                     )),
+                   status = "info",
+                   value = FALSE),
+    
+    
+    conditionalPanel(
+      ns=ns,
+      condition = "input.flt_dat == true",
+      sliderInput(inputId = ns("filter_percentage"),
+                  label = "Filtering (Keep genes that are expressed in at least n% of the samples)",
+                  min = 0,
+                  max = 100, step = 5,
+                  value = 25)),
+    #'[#### THIS MOVED HERE]
+    #'
     br(),
     
     actionBttn(inputId = ns("run"), 
