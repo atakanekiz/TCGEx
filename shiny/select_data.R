@@ -30,7 +30,7 @@ select_data_ui <- function(id) {
       width = "60px"),
     
     useShinyjs(),
-
+    
     conditionalPanel(
       condition = "input.select_data_upload_user_data == false",
       ns = ns,
@@ -38,7 +38,23 @@ select_data_ui <- function(id) {
                   "Project List",
                   choices = c("ACC-Adrenocortical carcinoma" = "ACC","BLCA-Bladder Urothelial Carcinoma" = "BLCA", "BRCA-Breast invasive carcinoma" = "BRCA", "CESC-Cervical squamous cell carcinoma and endocervical adenocarcinoma" = "CESC", "CHOL-Cholangiocarcinoma" = "CHOL", "COAD-Colon adenocarcinoma" = "COAD" ,"DLBC-Lymphoid Neoplasm Diffuse Large B-cell Lymphoma" = "DLBC", "ESCA-Esophageal carcinoma" = "ESCA", "GBM-Glioblastoma multiforme" ="GBM" , "HNSC-Head and Neck squamous cell carcinoma" = "HNSC", "KICH-Kidney Chromophobe" = "KICH", "KIRC-Kidney renal clear cell carcinoma" = "KIRC" ,"KIRP-Kidney renal papillary cell carcinoma" = "KIRP",
                               "LAML-Acute Myeloid Leukemia" = "LAML", "LGG-Brain Lower Grade Glioma" = "LGG" , "LIHC-Liver hepatocellular carcinoma" = "LIHC", "LUAD-Lung adenocarcinoma" = "LUAD","LUSC-	Lung squamous cell carcinoma" = "LUSC", "MESO-Mesothelioma" ="MESO", "OV-Ovarian serous cystadenocarcinoma" ="OV",   "PAAD-	Pancreatic adenocarcinoma" = "PAAD", "PCPG-Pheochromocytoma and Paraganglioma" = "PCPG", "PRAD-Prostate adenocarcinoma" = "PRAD",
-                              "READ-Rectum adenocarcinoma" = "READ", "SARC-Sarcoma" = "SARC", "SKCM-Skin Cutaneous Melanoma" = "SKCM" ,"STAD-Stomach adenocarcinoma" = "STAD", "TGCT-Testicular Germ Cell Tumors" = "TGCT", "THCA-Thyroid carcinoma" = "THCA", "THYM-Thymoma" = "THYM", "UCEC-Uterine Corpus Endometrial Carcinoma" = "UCEC", "UCS-Uterine Carcinosarcoma" = "UCS",  "UVM-Uveal Melanoma" = "UVM"),
+                              "READ-Rectum adenocarcinoma" = "READ", "SARC-Sarcoma" = "SARC", "SKCM-Skin Cutaneous Melanoma" = "SKCM" ,"STAD-Stomach adenocarcinoma" = "STAD", "TGCT-Testicular Germ Cell Tumors" = "TGCT", "THCA-Thyroid carcinoma" = "THCA", "THYM-Thymoma" = "THYM", "UCEC-Uterine Corpus Endometrial Carcinoma" = "UCEC", "UCS-Uterine Carcinosarcoma" = "UCS",  "UVM-Uveal Melanoma" = "UVM",
+                              #'[#### THIS ADDED]
+                              "Choueiri_CCR_2016" = "Choueiri_CCR_2016", 
+                              "Gide_Cell_2019" =  "Gide_Cell_2019", 
+                              "HugoLo_IPRES_2016" = "HugoLo_IPRES_2016",
+                              "IMmotion150" = "IMmotion150", 
+                              "IMVigor210" = "IMVigor210", 
+                              "Kim_NatMed_2018" =  "Kim_NatMed_2018", 
+                              "Liu_NatMed_2019" = "Liu_NatMed_2019", 
+                              "Miao_Science_2018" = "Miao_Science_2018", 
+                              "Prins_GBM_2019" = "Prins_GBM_2019",
+                              "Riaz_Nivolumab_2017"  = "Riaz_Nivolumab_2017",
+                              "VanAllen_antiCTLA4_2015" = "VanAllen_antiCTLA4_2015", 
+                              "Zhao_NatMed_2019" = "Zhao_NatMed_2019"
+                              #'[#### THIS ADDED]
+                              
+                  ),
                   #selectize = T,
                   # options = list('actions-box' = TRUE), #build buttons for collective selection
                   multiple = TRUE)
@@ -93,9 +109,9 @@ select_data_ui <- function(id) {
                     max = 100, step = 5,
                     value = 25))
       
-  
-      ),
-  
+      
+    ),
+    
     br(),
     
     actionBttn(inputId = ns("run"), 
@@ -113,23 +129,28 @@ select_data_ui <- function(id) {
     dataTableOutput(ns("fileInfos4")),
     textOutput(ns("fileInfos5")),
     
-      fluidRow(width = 12,
-        column(6,
-               # withLoader( plotlyOutput(outputId =   ns("patient_hist")),type = "html",loader = "dnaspin")
-               plotlyOutput(outputId =   ns("patient_hist")), br(),
-               plotlyOutput(outputId =   ns("gender_hist"))
-      ),
-        column(6,
-               plotlyOutput(outputId =   ns("definition_hist")), br(),
-               plotlyOutput(outputId =   ns("age_hist"))
-      ))
-)}
+    fluidRow(width = 12,
+             column(6,
+                    # withLoader( plotlyOutput(outputId =   ns("patient_hist")),type = "html",loader = "dnaspin")
+                    plotlyOutput(outputId =   ns("patient_hist")), br(),
+                    plotlyOutput(outputId =   ns("gender_hist"))
+             ),
+             column(6,
+                    plotlyOutput(outputId =   ns("definition_hist")), br(),
+                    plotlyOutput(outputId =   ns("age_hist"))
+             ))
+  )}
 
 #server
 
 select_data_server <- function(id,Xproj){
   moduleServer(id, function(input, output, session) {
-   
+    
+    
+    #'[#### THIS ADDED]
+    all_projects <- c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM",  "Choueiri_CCR_2016", "Gide_Cell_2019","HugoLo_IPRES_2016","IMmotion150","IMVigor210","Kim_NatMed_2018","Liu_NatMed_2019","Miao_Science_2018","Prins_GBM_2019","Riaz_Nivolumab_2017", "VanAllen_antiCTLA4_2015", "Zhao_NatMed_2019")
+    #'[#### THIS ADDED]
+    
     file_type <- reactive({file_ext(input$file$name)})
     
     Xproj$fileInfost <- reactive({input$file$name})
@@ -141,7 +162,7 @@ select_data_server <- function(id,Xproj){
       shinyjs::reset("proj")
       shinyjs::reset("file")
       shinyjs::reset(Xproj$fileInfost())
-
+      
       shinyjs::reset("fileInfos2")
       shinyjs::reset("fileInfos3")
       shinyjs::reset("fileInfos4")
@@ -162,7 +183,7 @@ select_data_server <- function(id,Xproj){
       
       shinyjs::reset("proj")
       shinyjs::reset("file")
-
+      
       shinyjs::reset("patient_hist")
       shinyjs::reset("gender_hist")
       shinyjs::reset("definition_hist")
@@ -185,45 +206,45 @@ select_data_server <- function(id,Xproj){
       validate(need(input$file, ""))
       
       if (!is.null(input$file) && is.null(input$proj) ){
-      
+        
         xdata <- input$file
         ydata <- reactive({as.data.table(readRDS(paste0(input$file$datapath)))})
-
+        
         if (file_type() %in% c("rds","RDS","Rds")) {
-
+          
           file_size <- round(xdata$size / (1024^2), 2)
           num_rows <- nrow(Xproj$a())
           num_cols <- ncol(Xproj$a())
-
+          
           file_info <- paste("Size of Uploaded RDS File:", file_size, "MB")
           file_info <- paste(file_info, "Number of Rows:", num_rows)
           file_info <- paste(file_info, "Number of Columns:", num_cols)
-
+          
           output$fileInfos2 <- renderText({
             validate(need(input$run, ""))
             file_info
           })
-
+          
           output$fileInfos3 <- renderText({
             validate(need(input$run, ""))
             "You Can Start Analyzing Your Data by Switching the Tab"
           })
-
+          
           output$fileInfos4 <- renderDataTable({
             validate(need(input$run, ""))
             Xproj$a()[1:10,1:15]
-
-            })
+            
+          })
           output$fileInfos5 <- renderText({
             validate(need(input$run, ""))
             "The first 10 rows and first 15 columns of your data are shown..."
           })
         }
-      
-      else if ((file_type() %in% c("xlsx", "xls"))) {
         
-        xdata <- input$file
-        ydata <- reactive({as.data.table(read_excel(paste0(input$file$datapath)))})
+        else if ((file_type() %in% c("xlsx", "xls"))) {
+          
+          xdata <- input$file
+          ydata <- reactive({as.data.table(read_excel(paste0(input$file$datapath)))})
           
           file_size <- round(xdata$size / (1024^2), 2)
           num_rows <- nrow(Xproj$a())
@@ -256,30 +277,34 @@ select_data_server <- function(id,Xproj){
         
       }
       
-      })
+    })
     
     Xproj$cancer_length <- reactive({length(as.vector(input$proj))}) ## a reactive that created for other modules to use the length information for several cancers(Cagatay)
     
     Xproj$a<- eventReactive(list(input$run, input$file, input$proj), {
       
       # browser()
-
+      
       validate(need(input$run, ""))
-
+      
       if(!is.null(input$proj))  {
-
+        
         if (Xproj$cancer_length() == 1 ){
-      
-      readRDS(paste0("projects/", input$proj, ".rds"))
-      
-      # compressed<-readRDS(paste0("projects/", input$proj, ".rds"))
-      #
-      # zstd_unserialize(compressed
-      
+          
+          readRDS(paste0("projects/", input$proj, ".rds"))
+          
+          # compressed<-readRDS(paste0("projects/", input$proj, ".rds"))
+          #
+          # zstd_unserialize(compressed
+          
         }
         
+        #'[ ##### THIS ADDED]
+        # else if (!(Xproj$cancer_length() == 1) && any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj)) {
         
-        else if (!(Xproj$cancer_length() == 1) && any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj)) {
+        else if (!(Xproj$cancer_length() == 1) && any(all_projects %in% input$proj)) {
+          
+          #'[ ##### THIS ADDED]
           
           validate(need(input$run, ""))
           
@@ -310,207 +335,216 @@ select_data_server <- function(id,Xproj){
           
           
         }}
-    
-        else if (!is.null(input$file)) {
+      
+      else if (!is.null(input$file)) {
+        
+        # filter_per<-reactive({input$filter_percentage})
+        
+        # browser()
+        
+        validate(need(input$file, ""))
+        
+        
+        if (file_type() %in% c("rds","RDS","Rds","rDs","rDS","rdS","RDs","RdS")){
           
-          # filter_per<-reactive({input$filter_percentage})
           
-          # browser()
+          uploaded_data <- as.data.table(readRDS(paste0(input$file$datapath)))
           
-          validate(need(input$file, ""))
+          colnames(uploaded_data)<- gsub("-", ".", colnames(uploaded_data), fixed = TRUE)
           
           
-          if (file_type() %in% c("rds","RDS","Rds","rDs","rDS","rdS","RDs","RdS")){
+          if (!"meta.definition" %in% names(uploaded_data)) {
+            uploaded_data[, meta.definition := "All Samples"]
+          }
+          
+          if(input$nrm_dat == TRUE){
             
+            # browser()
             
-            uploaded_data <- as.data.table(readRDS(paste0(input$file$datapath)))
+            df_num = uploaded_data %>% select(where(is.numeric))
+            df_nonnum = uploaded_data %>% select(-where(is.numeric))
             
-            colnames(uploaded_data)<- gsub("-", ".", colnames(uploaded_data), fixed = TRUE)
+            df_nongene = df_num %>% 
+              select(starts_with("meta."),starts_with("meta_"))
             
+            df_gene <- df_num %>%
+              select(-starts_with("meta."), -starts_with("meta_"))
             
-            if (!"meta.definition" %in% names(uploaded_data)) {
-              uploaded_data[, meta.definition := "All Samples"]
-            }
+            df_gene <- df_gene[, apply(df_gene,2,var)!=0, with=F]
             
-            if(input$nrm_dat == TRUE){
-              
-              # browser()
-              
-              df_num = uploaded_data %>% select(where(is.numeric))
-              df_nonnum = uploaded_data %>% select(-where(is.numeric))
-              
-              df_nongene = df_num %>% 
-                select(starts_with("meta."),starts_with("meta_"))
-              
-              df_gene <- df_num %>%
-                select(-starts_with("meta."), -starts_with("meta_"))
-              
-              df_gene <- df_gene[, apply(df_gene,2,var)!=0, with=F]
-              
-              df_gene = log(cpm(df_gene, prior.count=0)+1, base=10)
-              
-              uploaded_data = cbind(df_gene, df_nonnum,df_nongene)
-              
-              uploaded_data
-              
-            }
+            df_gene = log(cpm(df_gene, prior.count=0)+1, base=10)
             
+            uploaded_data = cbind(df_gene, df_nonnum,df_nongene)
             
-            if(input$flt_dat == TRUE){
-              
-              filter_percentage <- reactive ({1-(input$filter_percentage / 100)})
-              
-              # filter_percentage <- reactive ({input$filter_percentage / 100})
-              
-              df_num = uploaded_data %>% select(where(is.numeric))
-              
-              df_nonnum = uploaded_data %>% select(-where(is.numeric))
-              
-              # df_nongene = df_num %>% select(starts_with("meta."))
-              # 
-              # df_gene = df_num %>% select(-starts_with("meta."))
-              
-              df_nongene = df_num %>% 
-                select(starts_with("meta."),starts_with("meta_"))
-              
-              df_gene <- df_num %>%
-                select(-starts_with("meta."), -starts_with("meta_"))
-              
-              # browser()
-              
-              na_zero_percent <- apply(df_gene, 2, function(x) mean(is.na(x) | x == 0))
-              
-              selected_columns <- names(df_gene)[na_zero_percent < filter_percentage()]
-              
-              df_gene <- df_gene[, ..selected_columns]
-              
-              uploaded_data = cbind(df_gene, df_nonnum,df_nongene)
-              
-              uploaded_data
-              
-            }
-            
-            
-            return(uploaded_data)
-            
-            # uploaded_data
+            uploaded_data
             
           }
           
-          else if (file_type() %in% c("xlsx", "xls")){
+          
+          if(input$flt_dat == TRUE){
             
-            uploaded_data_xl<- as.data.table(read_excel(input$file$datapath))
+            filter_percentage <- reactive ({1-(input$filter_percentage / 100)})
             
-            if (!"meta.definition" %in% names(uploaded_data_xl)) {
-              uploaded_data_xl[, meta.definition := "All Samples"]
-            }
+            # filter_percentage <- reactive ({input$filter_percentage / 100})
             
-            if(input$nrm_dat == TRUE){
-              # browser()
-              
-              df_num = uploaded_data_xl %>% select(where(is.numeric))
-              df_nonnum = uploaded_data_xl %>% select(-where(is.numeric))
-              
-              df_nongene = df_num %>% 
-                select(starts_with("meta."),starts_with("meta_"))
-              
-              df_gene <- df_num %>%
-                select(-starts_with("meta."), -starts_with("meta_"))
-              
-              df_gene <- df_gene[, apply(df_gene, 2, var) !=0, with=F]
-              
-              #filter out all-zero columns
-              
-              df_gene = log(cpm(df_gene, prior.count=0)+1, base=10)
-              
-              uploaded_data_xl = cbind(df_gene, df_nonnum,df_nongene)
-              
-              uploaded_data_xl
-              
-            }
+            df_num = uploaded_data %>% select(where(is.numeric))
             
-            if(input$flt_dat == TRUE){
-              
-              filter_percentage <- reactive ({input$filter_percentage / 100})
-              
-              df_num = uploaded_data_xl %>% select(where(is.numeric))
-              
-              df_nonnum = uploaded_data_xl %>% select(-where(is.numeric))
-              
-              # df_nongene = df_num %>% select(starts_with("meta."))
-              # 
-              # df_gene = df_num %>% select(-starts_with("meta."))
-              
-              df_nongene = df_num %>% 
-                select(starts_with("meta."),starts_with("meta_"))
-              
-              df_gene <- df_num %>%
-                select(-starts_with("meta."), -starts_with("meta_"))
-              
-              na_zero_percent <- apply(df_gene, 2, function(x) mean(is.na(x) | x == 0))
-              
-              selected_columns <- names(df_gene)[na_zero_percent < filter_percentage()]
-              
-              df_gene <- df_gene[, ..selected_columns]
-              
-              uploaded_data_xl = cbind(df_gene, df_nonnum,df_nongene)
-              
-              uploaded_data_xl
-              
-            }
+            df_nonnum = uploaded_data %>% select(-where(is.numeric))
             
-            return(uploaded_data_xl)
+            # df_nongene = df_num %>% select(starts_with("meta."))
+            # 
+            # df_gene = df_num %>% select(-starts_with("meta."))
             
-            # uploaded_data_xl
+            df_nongene = df_num %>% 
+              select(starts_with("meta."),starts_with("meta_"))
+            
+            df_gene <- df_num %>%
+              select(-starts_with("meta."), -starts_with("meta_"))
+            
+            # browser()
+            
+            na_zero_percent <- apply(df_gene, 2, function(x) mean(is.na(x) | x == 0))
+            
+            selected_columns <- names(df_gene)[na_zero_percent < filter_percentage()]
+            
+            df_gene <- df_gene[, ..selected_columns]
+            
+            uploaded_data = cbind(df_gene, df_nonnum,df_nongene)
+            
+            uploaded_data
+            
           }
           
-
+          
+          return(uploaded_data)
+          
+          # uploaded_data
           
         }
-
+        
+        else if (file_type() %in% c("xlsx", "xls")){
+          
+          uploaded_data_xl<- as.data.table(read_excel(input$file$datapath))
+          
+          if (!"meta.definition" %in% names(uploaded_data_xl)) {
+            uploaded_data_xl[, meta.definition := "All Samples"]
+          }
+          
+          if(input$nrm_dat == TRUE){
+            # browser()
+            
+            df_num = uploaded_data_xl %>% select(where(is.numeric))
+            df_nonnum = uploaded_data_xl %>% select(-where(is.numeric))
+            
+            df_nongene = df_num %>% 
+              select(starts_with("meta."),starts_with("meta_"))
+            
+            df_gene <- df_num %>%
+              select(-starts_with("meta."), -starts_with("meta_"))
+            
+            df_gene <- df_gene[, apply(df_gene, 2, var) !=0, with=F]
+            
+            #filter out all-zero columns
+            
+            df_gene = log(cpm(df_gene, prior.count=0)+1, base=10)
+            
+            uploaded_data_xl = cbind(df_gene, df_nonnum,df_nongene)
+            
+            uploaded_data_xl
+            
+          }
+          
+          if(input$flt_dat == TRUE){
+            
+            filter_percentage <- reactive ({input$filter_percentage / 100})
+            
+            df_num = uploaded_data_xl %>% select(where(is.numeric))
+            
+            df_nonnum = uploaded_data_xl %>% select(-where(is.numeric))
+            
+            # df_nongene = df_num %>% select(starts_with("meta."))
+            # 
+            # df_gene = df_num %>% select(-starts_with("meta."))
+            
+            df_nongene = df_num %>% 
+              select(starts_with("meta."),starts_with("meta_"))
+            
+            df_gene <- df_num %>%
+              select(-starts_with("meta."), -starts_with("meta_"))
+            
+            na_zero_percent <- apply(df_gene, 2, function(x) mean(is.na(x) | x == 0))
+            
+            selected_columns <- names(df_gene)[na_zero_percent < filter_percentage()]
+            
+            df_gene <- df_gene[, ..selected_columns]
+            
+            uploaded_data_xl = cbind(df_gene, df_nonnum,df_nongene)
+            
+            uploaded_data_xl
+            
+          }
+          
+          return(uploaded_data_xl)
+          
+          # uploaded_data_xl
+        }
+        
+        
+        
+      }
+      
       
     })
-
+    
     output$gender_hist<- renderPlotly({
       
       validate(need(input$run, ""))
       
-     if (any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
-      
-      #gghistogram(Xproj$a(), "meta.gender", stat="count", legend="none",
-                  #font.x=18, font.y=18, font.tickslab = 18,
-                  #fill="meta.gender", palette = c("skyblue", "coral", "gold"))
-      
-      fig_gender <- plot_ly(Xproj$a(),  labels = ~meta.gender, type = 'pie',
-                            marker = list(color = viridis::viridis_pal(begin = 0.2, end = 0.8)(4)))
-      
-      fig_gender <- fig_gender %>% layout(title = 'Gender Statistics For Chosen Data',
-                            xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
-                            yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+      #'[#### THIS ADDED]
+      # if (any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
         
-      fig_gender
-     }
+        if (any(all_projects %in% input$proj) ){
+          #'[#### THIS ADDED]
+          
+        #gghistogram(Xproj$a(), "meta.gender", stat="count", legend="none",
+        #font.x=18, font.y=18, font.tickslab = 18,
+        #fill="meta.gender", palette = c("skyblue", "coral", "gold"))
+        
+        fig_gender <- plot_ly(Xproj$a(),  labels = ~meta.gender, type = 'pie',
+                              marker = list(color = viridis::viridis_pal(begin = 0.2, end = 0.8)(4)))
+        
+        fig_gender <- fig_gender %>% layout(title = 'Gender Statistics For Chosen Data',
+                                            xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+                                            yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+        
+        fig_gender
+      }
       
       else {
-            return(NULL)
+        return(NULL)
       }
       
     })
     
     output$patient_hist <- renderPlotly({
       
-      if (any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
+      #'[#### THIS CHANGED]
+      # if (any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
         
-      validate(need(input$run, "Load TCGA project to see descriptive statistics"))
-      
-      fig_patient <- plot_ly(Xproj$a(),  labels = ~meta.project_id, type = 'pie',
-                             marker = list(color = viridis::viridis_pal(begin = 0.2, end = 0.8)(4)))
-      
-      fig_patient <- fig_patient %>% layout(title = 'Total Patient Number For Chosen Data',
-                                          xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
-                                          yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
-      
-      fig_patient
+        if (any(all_projects %in% input$proj) ){
+        
+        #'[#### THIS CHANGED]
+        
+        validate(need(input$run, "Load TCGA project to see descriptive statistics"))
+        
+        fig_patient <- plot_ly(Xproj$a(),  labels = ~meta.project_id, type = 'pie',
+                               marker = list(color = viridis::viridis_pal(begin = 0.2, end = 0.8)(4)))
+        
+        fig_patient <- fig_patient %>% layout(title = 'Total Patient Number For Chosen Data',
+                                              xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+                                              yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+        
+        fig_patient
       }
       else {
         return(NULL)
@@ -520,20 +554,25 @@ select_data_server <- function(id,Xproj){
     
     output$definition_hist <- renderPlotly({
       
-      if (any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
+      #'[THIS CHANGED]
+      # if (any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
+      
+      if (any(all_projects %in% input$proj) ){
         
-      validate(need(input$run, ""))
-      
-      #gghistogram(Xproj$a(), "meta.definition", stat="count",
-                  #font.x=18, font.y=18, font.tickslab = 18,
-                  #fill="meta.definition", legend="none") +
+        #'[THIS CHANGED]
+        
+        validate(need(input$run, ""))
+        
+        #gghistogram(Xproj$a(), "meta.definition", stat="count",
+        #font.x=18, font.y=18, font.tickslab = 18,
+        #fill="meta.definition", legend="none") +
         #rotate_x_text(45)
-      
-      Xproj$a() %>%
-        plot_ly(x = ~meta.definition,
-                textangle = 45,
-                marker = list(color = viridis::viridis_pal(option = "C", direction = -1)(10)))%>%
-        add_histogram()
+        
+        Xproj$a() %>%
+          plot_ly(x = ~meta.definition,
+                  textangle = 45,
+                  marker = list(color = viridis::viridis_pal(option = "C", direction = -1)(10)))%>%
+          add_histogram()
       }
       else {
         return(NULL)
@@ -542,26 +581,29 @@ select_data_server <- function(id,Xproj){
     
     output$age_hist <- renderPlotly({
       
-      if (any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
+      #'[THIS CHANGED]
+      # if (any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
+      if (any(all_projects %in% input$proj) ){
         
-      validate(need(input$run, ""))
-      
-      ##gghistogram(Xproj$a(), "meta.age_at_diagnosis", fill="gold", bins=50,
-                  #font.x=18, font.y=18,  font.tickslab = 18)
-      #Xproj$a() %>%
-       # plot_ly(x = ~meta.age_at_diagnosis,
+        #'[THIS CHANGED]
+        validate(need(input$run, ""))
+        
+        ##gghistogram(Xproj$a(), "meta.age_at_diagnosis", fill="gold", bins=50,
+        #font.x=18, font.y=18,  font.tickslab = 18)
+        #Xproj$a() %>%
+        # plot_ly(x = ~meta.age_at_diagnosis,
         #        textangle = 45,
-         #       marker = list(color = viridis::viridis_pal(option = "C", direction = -1)(4)))%>%
+        #       marker = list(color = viridis::viridis_pal(option = "C", direction = -1)(4)))%>%
         #add_histogram()
-     fig_age_hist <- plot_ly(Xproj$a(), x = ~ meta.age_at_diagnosis, type = 'histogram',
-              marker = list(color = viridis::viridis_pal(option = "C", direction = -1)(40)))
-     fig_age_hist
-    }
+        fig_age_hist <- plot_ly(Xproj$a(), x = ~ meta.age_at_diagnosis, type = 'histogram',
+                                marker = list(color = viridis::viridis_pal(option = "C", direction = -1)(40)))
+        fig_age_hist
+      }
       else {
         return(NULL)
       } 
-      })
-  
+    })
+    
     
   }
   )}
