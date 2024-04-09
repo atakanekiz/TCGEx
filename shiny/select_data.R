@@ -35,10 +35,19 @@ select_data_ui <- function(id) {
       condition = "input.select_data_upload_user_data == false",
       ns = ns,
       pickerInput(inputId = ns("proj"), 
-                  "Project List",
+                  # "Project List",
+                  
+                  label = tags$span(
+                    "Project List",
+                    tags$i(
+                      class = "glyphicon glyphicon-info-sign",
+                      style = "color:#0072B2;",
+                      title = "Please note that all TCGA data have been normalized using the CPM method. However, the normalization method for immunotherapy data is specified in the options. Be cautious when merging and analyzing datasets with different normalization methods, as this may introduce biases into your analysis results."
+                    )),
+                  
                   choices = c("ACC-Adrenocortical carcinoma" = "ACC","BLCA-Bladder Urothelial Carcinoma" = "BLCA", "BRCA-Breast invasive carcinoma" = "BRCA", "CESC-Cervical squamous cell carcinoma and endocervical adenocarcinoma" = "CESC", "CHOL-Cholangiocarcinoma" = "CHOL", "COAD-Colon adenocarcinoma" = "COAD" ,"DLBC-Lymphoid Neoplasm Diffuse Large B-cell Lymphoma" = "DLBC", "ESCA-Esophageal carcinoma" = "ESCA", "GBM-Glioblastoma multiforme" ="GBM" , "HNSC-Head and Neck squamous cell carcinoma" = "HNSC", "KICH-Kidney Chromophobe" = "KICH", "KIRC-Kidney renal clear cell carcinoma" = "KIRC" ,"KIRP-Kidney renal papillary cell carcinoma" = "KIRP",
                               "LAML-Acute Myeloid Leukemia" = "LAML", "LGG-Brain Lower Grade Glioma" = "LGG" , "LIHC-Liver hepatocellular carcinoma" = "LIHC", "LUAD-Lung adenocarcinoma" = "LUAD","LUSC-	Lung squamous cell carcinoma" = "LUSC", "MESO-Mesothelioma" ="MESO", "OV-Ovarian serous cystadenocarcinoma" ="OV",   "PAAD-	Pancreatic adenocarcinoma" = "PAAD", "PCPG-Pheochromocytoma and Paraganglioma" = "PCPG", "PRAD-Prostate adenocarcinoma" = "PRAD",
-                              "READ-Rectum adenocarcinoma" = "READ", "SARC-Sarcoma" = "SARC", "SKCM-Skin Cutaneous Melanoma" = "SKCM" ,"STAD-Stomach adenocarcinoma" = "STAD", "TGCT-Testicular Germ Cell Tumors" = "TGCT", "THCA-Thyroid carcinoma" = "THCA", "THYM-Thymoma" = "THYM", "UCEC-Uterine Corpus Endometrial Carcinoma" = "UCEC", "UCS-Uterine Carcinosarcoma" = "UCS",  "UVM-Uveal Melanoma" = "UVM"),
+                              "READ-Rectum adenocarcinoma" = "READ", "SARC-Sarcoma" = "SARC", "SKCM-Skin Cutaneous Melanoma" = "SKCM" ,"STAD-Stomach adenocarcinoma" = "STAD", "TGCT-Testicular Germ Cell Tumors" = "TGCT", "THCA-Thyroid carcinoma" = "THCA", "THYM-Thymoma" = "THYM", "UCEC-Uterine Corpus Endometrial Carcinoma" = "UCEC", "UCS-Uterine Carcinosarcoma" = "UCS",  "UVM-Uveal Melanoma" = "UVM", "SKCM-Van_Allen_2015 (CTLA-4, FPKM Normalized)"="skcm_dfci_2015_tcgex","MEL-Snyder_2014 (CTLA-4, RPKM Normalized)"="msk_2014_tcgex","SKCM-Hugo_2016 (PD-1, RPKM Normalized)"="mel_ucla_2016_tcgex","ACRM-Liang_2017 (CTLA-4, PD-1, FPKM Normalized)"="mel_tsam_liang_2017_tcgex","MEL-Liu_2019 (PD-1, TPM Normalized)"="mel_dfci_2019_tcgex","PAN-CANCER-ICI-STUDIES (CTLA-4, PD-1, Upper Quartile Normalized)"="all_icb_tcgex","SKCM-Riaz_2017 (CTLA-4, FPKM Normalized)"="riaz_2017_tcgex","SKCM-Gide_2019 (CTLA-4+PD-1, CPM Normalized)"="dual_gide_tcgex","SKCM-Gide_2019 (PD-1, CPM Normalized)"="pd1_gide_tcgex"),
                   #selectize = T,
                   # options = list('actions-box' = TRUE), #build buttons for collective selection
                   multiple = TRUE)
@@ -279,7 +288,7 @@ select_data_server <- function(id,Xproj){
         }
         
         
-        else if (!(Xproj$cancer_length() == 1) && any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj)) {
+        else if (!(Xproj$cancer_length() == 1) && any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM","skcm_dfci_2015_tcgex","msk_2014_tcgex","mel_ucla_2016_tcgex","mel_tsam_liang_2017_tcgex","mel_dfci_2019_tcgex","all_icb_tcgex","riaz_2017_tcgex","dual_gide_tcgex","pd1_gide_tcgex") %in% input$proj)) {
           
           validate(need(input$run, ""))
           
@@ -471,7 +480,7 @@ select_data_server <- function(id,Xproj){
       
       validate(need(input$run, ""))
       
-     if (any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
+     if (any(c("dual_gide_tcgex","pd1_gide_tcgex","all_icb_tcgex","mel_tsam_liang_2017_tcgex","mel_dfci_2019_tcgex","skcm_dfci_2015_tcgex","msk_2014_tcgex","mel_ucla_2016_tcgex","ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
       
       #gghistogram(Xproj$a(), "meta.gender", stat="count", legend="none",
                   #font.x=18, font.y=18, font.tickslab = 18,
@@ -495,9 +504,9 @@ select_data_server <- function(id,Xproj){
     
     output$patient_hist <- renderPlotly({
       
-      if (any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
+      if (any(c("dual_gide_tcgex","pd1_gide_tcgex","riaz_2017_tcgex","all_icb_tcgex","mel_tsam_liang_2017_tcgex","mel_dfci_2019_tcgex","skcm_dfci_2015_tcgex","msk_2014_tcgex","mel_ucla_2016_tcgex","ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
         
-      validate(need(input$run, "Load TCGA project to see descriptive statistics"))
+      validate(need(input$run, "Load project to see descriptive statistics"))
       
       fig_patient <- plot_ly(Xproj$a(),  labels = ~meta.project_id, type = 'pie',
                              marker = list(color = viridis::viridis_pal(begin = 0.2, end = 0.8)(4)))
@@ -516,7 +525,7 @@ select_data_server <- function(id,Xproj){
     
     output$definition_hist <- renderPlotly({
       
-      if (any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
+      if (any(c("dual_gide_tcgex","pd1_gide_tcgex","riaz_2017_tcgex","all_icb_tcgex","mel_tsam_liang_2017_tcgex","mel_dfci_2019_tcgex","skcm_dfci_2015_tcgex","msk_2014_tcgex","mel_ucla_2016_tcgex","ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
         
       validate(need(input$run, ""))
       
@@ -538,7 +547,7 @@ select_data_server <- function(id,Xproj){
     
     output$age_hist <- renderPlotly({
       
-      if (any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
+      if (any(c("dual_gide_tcgex","pd1_gide_tcgex","all_icb_tcgex","mel_tsam_liang_2017_tcgex","skcm_dfci_2015_tcgex","msk_2014_tcgex","mel_ucla_2016_tcgex","ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
         
       validate(need(input$run, ""))
       
