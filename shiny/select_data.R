@@ -81,17 +81,17 @@ select_data_ui <- function(id) {
                                      "UVM-Uveal Melanoma" = "UVM"),
                                  #'[#### THIS ADDED]
                                  "Immune checkpoint inhibition studies (CRI-iAtlas, quartile normalized)" =
-                                   c("KIRC-Choueiri_CCR_2016 (PD-1)" = "Choueiri_CCR_2016", 
-                                     "SKCM-Gide_Cell_2019 (PD-1, PD-1+CTLA-4)" =  "Gide_Cell_2019", 
+                                   c("SKCM-Gide_Cell_2019 (PD-1, PD-1+CTLA-4)" =  "Gide_Cell_2019", 
                                      "SKCM-Hugo_Cell_2016 (PD-1)" = "HugoLo_IPRES_2016",
+                                     "SKCM-Liu_NatMed_2019 (PD-1)" = "Liu_NatMed_2019", 
+                                     "SKCM-Riaz_Nivolumab_2017 (PD-1)"  = "Riaz_Nivolumab_2017",
+                                     "SKCM-VanAllen_Science_2015 (CTLA-4)" = "VanAllen_antiCTLA4_2015", 
+                                     "KIRC-Miao_Science_2018 (PD-1, PD-1+CTLA-4, PD-L1)" = "Miao_Science_2018", 
+                                     "KIRC-Choueiri_CCR_2016 (PD-1)" = "Choueiri_CCR_2016", 
                                      "KIRC-McDermott_NatMed_2018 (PD-L1)" = "IMmotion150", 
                                      "BLCA-Balar_Lancet_2017 (PD-L1)" = "IMVigor210", 
                                      "STAD-Kim_NatMed_2018 (PD-1)" =  "Kim_NatMed_2018", 
-                                     "SKCM-Liu_NatMed_2019 (PD-1)" = "Liu_NatMed_2019", 
-                                     "KIRC-Miao_Science_2018 (PD-1, PD-1+CTLA-4, PD-L1)" = "Miao_Science_2018", 
                                      "GBM-Cloughesy_NatMed_2019 (PD-1)" = "Prins_GBM_2019",
-                                     "SKCM-Riaz_Nivolumab_2017 (PD-1)"  = "Riaz_Nivolumab_2017",
-                                     "SKCM-VanAllen_Science_2015 (CTLA-4)" = "VanAllen_antiCTLA4_2015", 
                                      "GBM-Zhao_NatMed_2019 (PD-1)" = "Zhao_NatMed_2019",
                                      "PAN-CANCER-CRI (PD-1, CTLA-4, PD-L1)"="all_icb_tcgex_ICI_TRT"),
                                  #'[#### THIS ADDED]
