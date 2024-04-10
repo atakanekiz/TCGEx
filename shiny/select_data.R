@@ -394,7 +394,7 @@ select_data_server <- function(id,Xproj){
           
           big_data <- do.call(rbind, dflist)
           
-          #'[ ####### THIS CHANGED]
+          #'[ ####### THIS CHANGED. CONSIDER MOVING THIS INTO PREVIOUS CHUNK TO APPLY FILTERING TO EACH DATASET SEPARATELY]
           
           if(input$flt_dat == TRUE){
             
