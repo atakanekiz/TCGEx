@@ -222,6 +222,11 @@ select_data_ui <- function(id) {
 select_data_server <- function(id,Xproj){
   moduleServer(id, function(input, output, session) {
     
+    
+    #'[#### THIS ADDED]
+    all_projects <- c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM",  "Choueiri_CCR_2016", "Gide_Cell_2019","HugoLo_IPRES_2016","IMmotion150","IMVigor210","Kim_NatMed_2018","Liu_NatMed_2019","Miao_Science_2018","Prins_GBM_2019","Riaz_Nivolumab_2017", "VanAllen_antiCTLA4_2015", "Zhao_NatMed_2019","skcm_dfci_2015_tcgex","msk_2014_tcgex","mel_ucla_2016_tcgex","mel_tsam_liang_2017_tcgex","mel_dfci_2019_tcgex","all_icb_tcgex","riaz_2017_tcgex","dual_gide_tcgex","pd1_gide_tcgex")
+    #'[#### THIS ADDED]
+    
     file_type <- reactive({file_ext(input$file$name)})
     
     Xproj$fileInfost <- reactive({input$file$name})
@@ -371,7 +376,7 @@ select_data_server <- function(id,Xproj){
         }
         
         
-        else if (!(Xproj$cancer_length() == 1) && any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM","skcm_dfci_2015_tcgex","msk_2014_tcgex","mel_ucla_2016_tcgex","mel_tsam_liang_2017_tcgex","mel_dfci_2019_tcgex","all_icb_tcgex","riaz_2017_tcgex","dual_gide_tcgex","pd1_gide_tcgex") %in% input$proj)) {
+        else if (!(Xproj$cancer_length() == 1) && any(all_projects %in% input$proj)) {
           
           validate(need(input$run, ""))
           
@@ -563,7 +568,7 @@ select_data_server <- function(id,Xproj){
       
       validate(need(input$run, ""))
       
-      if (any(c("dual_gide_tcgex","pd1_gide_tcgex","all_icb_tcgex","mel_tsam_liang_2017_tcgex","mel_dfci_2019_tcgex","skcm_dfci_2015_tcgex","msk_2014_tcgex","mel_ucla_2016_tcgex","ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
+      if (any(all_projects %in% input$proj) ){
         
         #gghistogram(Xproj$a(), "meta.gender", stat="count", legend="none",
         #font.x=18, font.y=18, font.tickslab = 18,
@@ -587,7 +592,7 @@ select_data_server <- function(id,Xproj){
     
     output$patient_hist <- renderPlotly({
       
-      if (any(c("dual_gide_tcgex","pd1_gide_tcgex","riaz_2017_tcgex","all_icb_tcgex","mel_tsam_liang_2017_tcgex","mel_dfci_2019_tcgex","skcm_dfci_2015_tcgex","msk_2014_tcgex","mel_ucla_2016_tcgex","ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
+      if (any(all_projects %in% input$proj) ){
         
         validate(need(input$run, "Load project to see descriptive statistics"))
         
@@ -608,7 +613,7 @@ select_data_server <- function(id,Xproj){
     
     output$definition_hist <- renderPlotly({
       
-      if (any(c("dual_gide_tcgex","pd1_gide_tcgex","riaz_2017_tcgex","all_icb_tcgex","mel_tsam_liang_2017_tcgex","mel_dfci_2019_tcgex","skcm_dfci_2015_tcgex","msk_2014_tcgex","mel_ucla_2016_tcgex","ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
+      if (any(all_projects %in% input$proj) ){
         
         validate(need(input$run, ""))
         
@@ -630,7 +635,7 @@ select_data_server <- function(id,Xproj){
     
     output$age_hist <- renderPlotly({
       
-      if (any(c("dual_gide_tcgex","pd1_gide_tcgex","all_icb_tcgex","mel_tsam_liang_2017_tcgex","skcm_dfci_2015_tcgex","msk_2014_tcgex","mel_ucla_2016_tcgex","ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
+      if (any(all_projects %in% input$proj) ){
         
         validate(need(input$run, ""))
         
