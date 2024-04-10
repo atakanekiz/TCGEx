@@ -367,7 +367,45 @@ select_data_server <- function(id,Xproj){
         
         if (Xproj$cancer_length() == 1 ){
           
-          readRDS(paste0("projects/", input$proj, ".rds"))
+          # readRDS(paste0("projects/", input$proj, ".rds"))
+          
+          #'[ ####### THIS CHANGED]
+          preloaded_data <-  readRDS(paste0("projects/", input$proj, ".rds"))
+          
+          if(input$flt_dat == TRUE){
+            
+            filter_percentage <- reactive ({1-(input$filter_percentage / 100)})
+            
+            # filter_percentage <- reactive ({input$filter_percentage / 100})
+            
+            df_num = preloaded_data %>% select(where(is.numeric))
+            
+            df_nonnum = preloaded_data %>% select(-where(is.numeric))
+            
+            # df_nongene = df_num %>% select(starts_with("meta."))
+            # 
+            # df_gene = df_num %>% select(-starts_with("meta."))
+            
+            df_nongene = df_num %>% 
+              select(starts_with("meta."),starts_with("meta_"))
+            
+            df_gene <- df_num %>%
+              select(-starts_with("meta."), -starts_with("meta_"))
+            
+            # browser()
+            
+            na_zero_percent <- apply(df_gene, 2, function(x) mean(is.na(x) | x == 0))
+            
+            selected_columns <- names(df_gene)[na_zero_percent < filter_percentage()]
+            
+            df_gene <- df_gene[, ..selected_columns]
+            
+            preloaded_data = cbind(df_gene, df_nonnum,df_nongene)
+            
+            preloaded_data
+            
+          }
+          #'[ ####### THIS CHANGED]
           
           # compressed<-readRDS(paste0("projects/", input$proj, ".rds"))
           #
