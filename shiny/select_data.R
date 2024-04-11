@@ -36,24 +36,66 @@ select_data_ui <- function(id) {
       ns = ns,
       pickerInput(inputId = ns("proj"), 
                   "Project List",
-                  choices = list("TCGA datasets" = c("ACC-Adrenocortical carcinoma" = "ACC","BLCA-Bladder Urothelial Carcinoma" = "BLCA", "BRCA-Breast invasive carcinoma" = "BRCA", "CESC-Cervical squamous cell carcinoma and endocervical adenocarcinoma" = "CESC", "CHOL-Cholangiocarcinoma" = "CHOL", "COAD-Colon adenocarcinoma" = "COAD" ,"DLBC-Lymphoid Neoplasm Diffuse Large B-cell Lymphoma" = "DLBC", "ESCA-Esophageal carcinoma" = "ESCA", "GBM-Glioblastoma multiforme" ="GBM" , "HNSC-Head and Neck squamous cell carcinoma" = "HNSC", "KICH-Kidney Chromophobe" = "KICH", "KIRC-Kidney renal clear cell carcinoma" = "KIRC" ,"KIRP-Kidney renal papillary cell carcinoma" = "KIRP",
-                              "LAML-Acute Myeloid Leukemia" = "LAML", "LGG-Brain Lower Grade Glioma" = "LGG" , "LIHC-Liver hepatocellular carcinoma" = "LIHC", "LUAD-Lung adenocarcinoma" = "LUAD","LUSC-	Lung squamous cell carcinoma" = "LUSC", "MESO-Mesothelioma" ="MESO", "OV-Ovarian serous cystadenocarcinoma" ="OV",   "PAAD-	Pancreatic adenocarcinoma" = "PAAD", "PCPG-Pheochromocytoma and Paraganglioma" = "PCPG", "PRAD-Prostate adenocarcinoma" = "PRAD",
-                              "READ-Rectum adenocarcinoma" = "READ", "SARC-Sarcoma" = "SARC", "SKCM-Skin Cutaneous Melanoma" = "SKCM" ,"STAD-Stomach adenocarcinoma" = "STAD", "TGCT-Testicular Germ Cell Tumors" = "TGCT", "THCA-Thyroid carcinoma" = "THCA", "THYM-Thymoma" = "THYM", "UCEC-Uterine Corpus Endometrial Carcinoma" = "UCEC", "UCS-Uterine Carcinosarcoma" = "UCS",  "UVM-Uveal Melanoma" = "UVM"), "Immune checkpoint inhibition studies" =
-                              #'[#### THIS ADDED]
-                              c("Choueiri_CCR_2016" = "Choueiri_CCR_2016", 
-                              "Gide_Cell_2019" =  "Gide_Cell_2019", 
-                              "HugoLo_IPRES_2016" = "HugoLo_IPRES_2016",
-                              "IMmotion150" = "IMmotion150", 
-                              "IMVigor210" = "IMVigor210", 
-                              "Kim_NatMed_2018" =  "Kim_NatMed_2018", 
-                              "Liu_NatMed_2019" = "Liu_NatMed_2019", 
-                              "Miao_Science_2018" = "Miao_Science_2018", 
-                              "Prins_GBM_2019" = "Prins_GBM_2019",
-                              "Riaz_Nivolumab_2017"  = "Riaz_Nivolumab_2017",
-                              "VanAllen_antiCTLA4_2015" = "VanAllen_antiCTLA4_2015", 
-                              "Zhao_NatMed_2019" = "Zhao_NatMed_2019")
-                              #'[#### THIS ADDED]
-                              
+                  choices = list("TCGA Datasets" = 
+                                   c("ACC-Adrenocortical carcinoma" = "ACC",
+                                     "BLCA-Bladder Urothelial Carcinoma" = "BLCA", 
+                                     "BRCA-Breast invasive carcinoma" = "BRCA", 
+                                     "CESC-Cervical squamous cell carcinoma and endocervical adenocarcinoma" = "CESC", 
+                                     "CHOL-Cholangiocarcinoma" = "CHOL", 
+                                     "COAD-Colon adenocarcinoma" = "COAD" ,
+                                     "DLBC-Lymphoid Neoplasm Diffuse Large B-cell Lymphoma" = "DLBC", 
+                                     "ESCA-Esophageal carcinoma" = "ESCA", 
+                                     "GBM-Glioblastoma multiforme" ="GBM" , 
+                                     "HNSC-Head and Neck squamous cell carcinoma" = "HNSC", 
+                                     "KICH-Kidney Chromophobe" = "KICH", 
+                                     "KIRC-Kidney renal clear cell carcinoma" = "KIRC" ,
+                                     "KIRP-Kidney renal papillary cell carcinoma" = "KIRP",
+                                     "LAML-Acute Myeloid Leukemia" = "LAML", 
+                                     "LGG-Brain Lower Grade Glioma" = "LGG" , 
+                                     "LIHC-Liver hepatocellular carcinoma" = "LIHC", 
+                                     "LUAD-Lung adenocarcinoma" = "LUAD",
+                                     "LUSC-Lung squamous cell carcinoma" = "LUSC", 
+                                     "MESO-Mesothelioma" ="MESO",
+                                     "OV-Ovarian serous cystadenocarcinoma" ="OV",
+                                     "PAAD-	Pancreatic adenocarcinoma" = "PAAD",
+                                     "PCPG-Pheochromocytoma and Paraganglioma" = "PCPG",
+                                     "PRAD-Prostate adenocarcinoma" = "PRAD",
+                                     "READ-Rectum adenocarcinoma" = "READ",
+                                     "SARC-Sarcoma" = "SARC",
+                                     "SKCM-Skin Cutaneous Melanoma" = "SKCM",
+                                     "STAD-Stomach adenocarcinoma" = "STAD", 
+                                     "TGCT-Testicular Germ Cell Tumors" = "TGCT", 
+                                     "THCA-Thyroid carcinoma" = "THCA", 
+                                     "THYM-Thymoma" = "THYM", 
+                                     "UCEC-Uterine Corpus Endometrial Carcinoma" = "UCEC", 
+                                     "UCS-Uterine Carcinosarcoma" = "UCS", 
+                                     "UVM-Uveal Melanoma" = "UVM"),
+                                 #'[#### THIS ADDED]
+                                 "Immune checkpoint inhibition studies (CRI-iAtlas, quartile normalized)" =
+                                   c("SKCM-Gide_Cell_2019 (PD-1, PD-1+CTLA-4)" =  "Gide_Cell_2019", 
+                                     "SKCM-Hugo_Cell_2016 (PD-1)" = "HugoLo_IPRES_2016",
+                                     "SKCM-Liu_NatMed_2019 (PD-1)" = "Liu_NatMed_2019", 
+                                     "SKCM-Riaz_Nivolumab_2017 (PD-1)"  = "Riaz_Nivolumab_2017",
+                                     "SKCM-VanAllen_Science_2015 (CTLA-4)" = "VanAllen_antiCTLA4_2015", 
+                                     "KIRC-Miao_Science_2018 (PD-1, PD-1+CTLA-4, PD-L1)" = "Miao_Science_2018", 
+                                     "KIRC-Choueiri_CCR_2016 (PD-1)" = "Choueiri_CCR_2016", 
+                                     "KIRC-McDermott_NatMed_2018 (PD-L1)" = "IMmotion150", 
+                                     "BLCA-Balar_Lancet_2017 (PD-L1)" = "IMVigor210", 
+                                     "STAD-Kim_NatMed_2018 (PD-1)" =  "Kim_NatMed_2018", 
+                                     "GBM-Cloughesy_NatMed_2019 (PD-1)" = "Prins_GBM_2019",
+                                     "GBM-Zhao_NatMed_2019 (PD-1)" = "Zhao_NatMed_2019",
+                                     "PAN-CANCER-CRI (PD-1, CTLA-4, PD-L1)"="all_icb_tcgex_ICI_TRT"),
+                                 #'[#### THIS ADDED]
+                                 "Immune checkpoint inhibition studies (cBioPortal)" = 
+                                   c("SKCM-Van_Allen_2015 (CTLA-4, FPKM Normalized)"="skcm_dfci_2015_tcgex",
+                                     "SKCM-Snyder_2014 (CTLA-4, RPKM Normalized)"="msk_2014_tcgex",
+                                     "SKCM-Hugo_2016 (PD-1, RPKM Normalized)"="mel_ucla_2016_tcgex",
+                                     "ACRM-Liang_2017 (CTLA-4, PD-1, FPKM Normalized)"="mel_tsam_liang_2017_tcgex",
+                                     "SKCM-Liu_2019 (PD-1, TPM Normalized)"="mel_dfci_2019_tcgex",
+                                     "SKCM-Riaz_2017 (CTLA-4, FPKM Normalized)"="riaz_2017_tcgex",
+                                     "SKCM-Gide_2019 (CTLA-4+PD-1, CPM Normalized)"="dual_gide_tcgex",
+                                     "SKCM-Gide_2019 (PD-1, CPM Normalized)"="pd1_gide_tcgex")
+                                 
                   ),
                   #selectize = T,
                   # options = list('actions-box' = TRUE), #build buttons for collective selection
@@ -172,8 +214,8 @@ select_data_server <- function(id,Xproj){
   moduleServer(id, function(input, output, session) {
     
     
-    #'[#### THIS ADDED]
-    all_projects <- c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM",  "Choueiri_CCR_2016", "Gide_Cell_2019","HugoLo_IPRES_2016","IMmotion150","IMVigor210","Kim_NatMed_2018","Liu_NatMed_2019","Miao_Science_2018","Prins_GBM_2019","Riaz_Nivolumab_2017", "VanAllen_antiCTLA4_2015", "Zhao_NatMed_2019")
+  #'[#### THIS ADDED]
+    all_projects <- c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM",  "Choueiri_CCR_2016", "Gide_Cell_2019","HugoLo_IPRES_2016","IMmotion150","IMVigor210","Kim_NatMed_2018","Liu_NatMed_2019","Miao_Science_2018","Prins_GBM_2019","Riaz_Nivolumab_2017", "VanAllen_antiCTLA4_2015", "Zhao_NatMed_2019","skcm_dfci_2015_tcgex","msk_2014_tcgex","mel_ucla_2016_tcgex","mel_tsam_liang_2017_tcgex","mel_dfci_2019_tcgex","all_icb_tcgex_ICI_TRT","riaz_2017_tcgex","dual_gide_tcgex","pd1_gide_tcgex")
     #'[#### THIS ADDED]
     
     file_type <- reactive({file_ext(input$file$name)})
