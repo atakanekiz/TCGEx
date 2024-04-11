@@ -224,7 +224,7 @@ select_data_server <- function(id,Xproj){
     
     
     #'[#### THIS ADDED]
-    all_projects <- c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM",  "Choueiri_CCR_2016", "Gide_Cell_2019","HugoLo_IPRES_2016","IMmotion150","IMVigor210","Kim_NatMed_2018","Liu_NatMed_2019","Miao_Science_2018","Prins_GBM_2019","Riaz_Nivolumab_2017", "VanAllen_antiCTLA4_2015", "Zhao_NatMed_2019","skcm_dfci_2015_tcgex","msk_2014_tcgex","mel_ucla_2016_tcgex","mel_tsam_liang_2017_tcgex","mel_dfci_2019_tcgex","all_icb_tcgex","riaz_2017_tcgex","dual_gide_tcgex","pd1_gide_tcgex")
+    all_projects <- c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM",  "Choueiri_CCR_2016", "Gide_Cell_2019","HugoLo_IPRES_2016","IMmotion150","IMVigor210","Kim_NatMed_2018","Liu_NatMed_2019","Miao_Science_2018","Prins_GBM_2019","Riaz_Nivolumab_2017", "VanAllen_antiCTLA4_2015", "Zhao_NatMed_2019","skcm_dfci_2015_tcgex","msk_2014_tcgex","mel_ucla_2016_tcgex","mel_tsam_liang_2017_tcgex","mel_dfci_2019_tcgex","all_icb_tcgex_ICI_TRT","riaz_2017_tcgex","dual_gide_tcgex","pd1_gide_tcgex")
     #'[#### THIS ADDED]
     
     file_type <- reactive({file_ext(input$file$name)})
