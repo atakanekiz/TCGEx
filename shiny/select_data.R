@@ -448,6 +448,41 @@ select_data_server <- function(id,Xproj){
           
           big_data = do.call(rbind, dflist)
           
+          #'[ ####### THIS CHANGED. CONSIDER MOVING THIS INTO PREVIOUS CHUNK TO APPLY FILTERING TO EACH DATASET SEPARATELY]
+          
+          if(input$flt_dat == TRUE){
+            
+            filter_percentage <- reactive ({1-(input$filter_percentage / 100)})
+            
+            # filter_percentage <- reactive ({input$filter_percentage / 100})
+            
+            df_num = big_data %>% select(where(is.numeric))
+            
+            df_nonnum = big_data %>% select(-where(is.numeric))
+            
+            # df_nongene = df_num %>% select(starts_with("meta."))
+            # 
+            # df_gene = df_num %>% select(-starts_with("meta."))
+            
+            df_nongene = df_num %>% 
+              select(starts_with("meta."),starts_with("meta_"))
+            
+            df_gene <- df_num %>%
+              select(-starts_with("meta."), -starts_with("meta_"))
+            
+            # browser()
+            
+            na_zero_percent <- apply(df_gene, 2, function(x) mean(is.na(x) | x == 0))
+            
+            selected_columns <- names(df_gene)[na_zero_percent < filter_percentage()]
+            
+            df_gene <- df_gene[, ..selected_columns]
+            
+            big_data <-  cbind(df_gene, df_nonnum,df_nongene)
+            
+          }
+          #'[ ####### THIS CHANGED]
+          
           return(big_data)
           
           
