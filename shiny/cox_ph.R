@@ -176,6 +176,8 @@ cox_server <- function(id,Xproj) {
       
       df_data <- Xproj$a()[, ..sel_cols]      # df_data is a dataframe that contains needed data for Cox
       
+      df_data$meta.project_id <- droplevels(df_data$meta.project_id)   # To eliminate zero-length classes
+      
       df_data <- df_data[meta.definition %in% input$cox_samptyp, ]
       
       # De-duplicate patients. Revise this to drop certain subgroups later.
