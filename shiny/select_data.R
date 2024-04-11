@@ -396,6 +396,8 @@ select_data_server <- function(id,Xproj){
            preloaded_data
           
          }
+         
+         preloaded_data
          #'[ ####### THIS CHANGED]
           
           # compressed<-readRDS(paste0("projects/", input$proj, ".rds"))
