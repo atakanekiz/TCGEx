@@ -789,16 +789,33 @@ ml_main_server <- function(id,regress_data,Xproj) {
         predictor_var <-  as.matrix(select(regress_data(), -c("response")))
         set.seed(7)
         foldid <- sample(1:10,size = length(response_var), replace = TRUE)
-        fitty <- cv.glmnet(predictor_var, response_var,weights = NULL, foldid = foldid, alpha = input$user_alpha, 
-                           family="binomial", type.measure = "class")
+        
+        # fitty <- cv.glmnet(predictor_var, response_var,weights = NULL, foldid = foldid, alpha = input$user_alpha, 
+        #                    family="binomial", type.measure = "class")
+        
+        fitty <- cv.glmnet(predictor_var, response_var,weights = NULL, foldid = foldid, alpha = input$user_alpha,
+                           family="binomial", type.measure = "auc")
+        
+        # fitty <- cv.glmnet(predictor_var, response_var,weights = NULL, foldid = foldid, alpha = input$user_alpha, 
+        #                    family="binomial", type.measure = "deviance")
+        
+        
       } else if (input$regression_workflow == "ctest_model") {
         train_regress_data <- regress_data()[trows(),]
         response_var_train <- as.matrix(select(train_regress_data, response))
         predictor_var_train <-  as.matrix(select(train_regress_data, -c("response")))
         set.seed(7)
         foldid <- sample(1:10,size = length(response_var_train), replace = TRUE)
-        fitty <- cv.glmnet(predictor_var_train, response_var_train, foldid = foldid, alpha = input$user_alpha, 
-                           family="binomial", type.measure = "class")
+        
+        # fitty <- cv.glmnet(predictor_var_train, response_var_train, foldid = foldid, alpha = input$user_alpha, 
+        #                    family="binomial", type.measure = "class")
+        
+        fitty <- cv.glmnet(predictor_var_train, response_var_train, foldid = foldid, alpha = input$user_alpha,
+                           family="binomial", type.measure = "auc")
+        
+        # fitty <- cv.glmnet(predictor_var_train, response_var_train, foldid = foldid, alpha = input$user_alpha, 
+        #                    family="binomial", type.measure = "deviance")
+        
       } 
       fitty
     })
