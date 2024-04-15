@@ -845,6 +845,7 @@ ml_main_server <- function(id,regress_data,Xproj) {
       if(!is.null(cvfit())) {
         c <- as.matrix(coef(cvfit(), s = input$lambda_for_coef))
         c <-  c[2:length(rownames(c)), ]
+        c <- round(c, digits = 5)
         c = c[order(abs(c), decreasing = TRUE)]
         as.data.frame(c)
       } else {
