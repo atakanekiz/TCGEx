@@ -117,11 +117,13 @@ roc_ui <- function(id, label, choices) {
                                                                                         "Ontology gene sets (C5)" = "C5" ,
                                                                                         "Oncogenic gene sets (C6)" = "C6",
                                                                                         "Immunologic gene sets (C7)" = "C7",
-                                                                                        "Cell type signature gene sets (C8)" = "C8")),
+                                                                                        "Cell type signature gene sets (C8)" = "C8",
+                                                                                     "Immunotherapy signatures" ="Immunotherapy_signatures")),
         conditionalPanel(condition = "input.cate == 'C2'|input.cate =='C3'|
                                       input.cate =='C4'|
                                       input.cate =='C5'|
-                                      input.cate =='C7' ", ns = ns, 
+                                      input.cate =='C7'| 
+                                      input.cate == 'Immunotherapy_signatures'", ns = ns, 
                          selectizeInput(ns("roc_subcat"),"Please select a subcategory" ,choices = c(""))
         ),
         selectizeInput(ns("roc_chosen_pathway"), #Automatically updates to show subset.
