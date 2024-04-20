@@ -323,7 +323,10 @@ roc_server <- function(id, Xproj) {
         req(input$roc_definition_sel)
         
         if(length(as.vector(input$roc_definition_sel)) > 0) {
-          pre_df <- setDT(pre_df, key = 'meta.definition')[J(input$roc_definition_sel)]
+          
+          #'[What is J() below?]
+          # pre_df <- setDT(pre_df, key = 'meta.definition')[J(input$roc_definition_sel)]  
+          pre_df <- setDT(pre_df, key = 'meta.definition')[input$roc_definition_sel]  
           pre_df
         } else if (length(as.vector(input$roc_definition_sel)) == 0){
           pre_df
