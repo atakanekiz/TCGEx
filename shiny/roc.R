@@ -375,7 +375,7 @@ roc_server <- function(id, Xproj) {
       #'[unnecessary file path paste construct?]
       # roc_df_msigdb <- reactive({df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))})
       
-      roc_df_msigdb <- reactive({df_msigdb <- readRDS("genesets/msigdb_long_w_immth.rds")})
+      roc_df_msigdb <- reactive({readRDS("genesets/msigdb_long_w_immth.rds")})
       
       df_gene_sets <- reactive({ 
         
