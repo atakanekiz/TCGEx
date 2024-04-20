@@ -377,9 +377,10 @@ roc_server <- function(id, Xproj) {
       })
       
       #'[unnecessary file path paste construct?]
-      roc_df_msigdb <- reactive({df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))})
+      #'[Also, why is the rds read in multiple places?]
+      # roc_df_msigdb <- reactive({df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))})
       
-      # roc_df_msigdb <- reactive({readRDS("genesets/msigdb_long_w_immth.rds")})
+      roc_df_msigdb <- reactive({df_msigdb <- readRDS("genesets/msigdb_long_w_immth.rds")})
       
       df_gene_sets <- reactive({ 
         
@@ -439,7 +440,9 @@ roc_server <- function(id, Xproj) {
         
         if(input$show_msigdb_gene_sets == TRUE){
           
-          df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))
+          # df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))
+          
+          df_msigdb <- readRDS("genesets/msigdb_long_w_immth.rds")
           
           if(input$cate %in% c("C2","C3","C4","C5","C7")) {
             
@@ -477,7 +480,9 @@ roc_server <- function(id, Xproj) {
 
         if(input$show_msigdb_gene_sets == TRUE){
           
-          df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))
+          # df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))
+          
+          df_msigdb <- readRDS("genesets/msigdb_long_w_immth.rds")
           
           if(input$cate %in% c("C2","C3","C4","C5","C7")) {
             
