@@ -372,7 +372,10 @@ roc_server <- function(id, Xproj) {
         }
       })
       
-      roc_df_msigdb <- reactive({df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))})
+      #'[unnecessary file path paste construct?]
+      # roc_df_msigdb <- reactive({df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))})
+      
+      roc_df_msigdb <- reactive({df_msigdb <- readRDS("genesets/msigdb_long_w_immth.rds")})
       
       df_gene_sets <- reactive({ 
         
@@ -382,6 +385,7 @@ roc_server <- function(id, Xproj) {
         
         df_msigdb <- roc_df_msigdb()
         
+        #'[Can this be better designed?]
         if(input$show_msigdb_gene_sets == TRUE){
           
             if(input$cate %in% c("C2","C3","C4","C5","C7")) {
@@ -396,6 +400,7 @@ roc_server <- function(id, Xproj) {
         } else if(input$show_msigdb_gene_sets == FALSE){
           
           return({
+            #'[why is this needed?]
             df_msigdb3 <- NULL
           })
         }
