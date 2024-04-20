@@ -281,6 +281,11 @@ roc_server <- function(id, Xproj) {
         if(length(as.vector(input$binaryone)) == 0){
           return()
         }
+        
+        
+        # browser()
+        # Old choices are retained when a new binaryone is selected. Fix this later.
+        
           updateSelectizeInput(session = getDefaultReactiveDomain(),"binarytwo", choices = Xproj$a()[[input$binaryone]] , server = TRUE)
 
       })
