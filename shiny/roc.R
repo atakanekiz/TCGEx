@@ -117,13 +117,11 @@ roc_ui <- function(id, label, choices) {
                                                                                         "Ontology gene sets (C5)" = "C5" ,
                                                                                         "Oncogenic gene sets (C6)" = "C6",
                                                                                         "Immunologic gene sets (C7)" = "C7",
-                                                                                        "Cell type signature gene sets (C8)" = "C8",
-                                                                                     "Immunotherapy signatures" ="Immunotherapy_signatures")),
+                                                                                        "Cell type signature gene sets (C8)" = "C8")),
         conditionalPanel(condition = "input.cate == 'C2'|input.cate =='C3'|
                                       input.cate =='C4'|
                                       input.cate =='C5'|
-                                      input.cate =='C7'| 
-                                      input.cate == 'Immunotherapy_signatures'", ns = ns, 
+                                      input.cate =='C7' ", ns = ns, 
                          selectizeInput(ns("roc_subcat"),"Please select a subcategory" ,choices = c(""))
         ),
         selectizeInput(ns("roc_chosen_pathway"), #Automatically updates to show subset.
@@ -374,10 +372,7 @@ roc_server <- function(id, Xproj) {
         }
       })
       
-      #'[unnecessary file path paste construct?]
-      # roc_df_msigdb <- reactive({df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))})
-      
-      roc_df_msigdb <- reactive({readRDS("genesets/msigdb_long_w_immth.rds")})
+      roc_df_msigdb <- reactive({df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))})
       
       df_gene_sets <- reactive({ 
         
@@ -387,7 +382,6 @@ roc_server <- function(id, Xproj) {
         
         df_msigdb <- roc_df_msigdb()
         
-        #'[Can this be better designed?]
         if(input$show_msigdb_gene_sets == TRUE){
           
             if(input$cate %in% c("C2","C3","C4","C5","C7")) {
@@ -402,7 +396,6 @@ roc_server <- function(id, Xproj) {
         } else if(input$show_msigdb_gene_sets == FALSE){
           
           return({
-            #'[why is this needed?]
             df_msigdb3 <- NULL
           })
         }
