@@ -354,10 +354,12 @@ roc_server <- function(id, Xproj) {
           
         }else{
           # Selected Binary Value
+          
           pre_df <- pre_df %>% 
             mutate(roccurve = case_when(
-              pre_df[[input$binaryone]] == input$binarytwo ~ 1,
-              pre_df[[input$binaryone]] == input$binarythree ~ 0
+              get(input$binaryone) %in% input$binarytwo ~ 1,
+              get(input$binaryone) %in% input$binarythree ~ 0,
+              .default = NA
             ))
         }
       })
