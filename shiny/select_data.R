@@ -35,7 +35,16 @@ select_data_ui <- function(id) {
       condition = "input.select_data_upload_user_data == false",
       ns = ns,
       pickerInput(inputId = ns("proj"), 
-                  "Project List",
+                  # "Project List",
+                  
+                  label = tags$span(
+                    "Project List",
+                    tags$i(
+                      class = "glyphicon glyphicon-info-sign",
+                      style = "color:#0072B2;",
+                      title = "Please note that all TCGA data have been normalized using the CPM method. However, the normalization method for immunotherapy data is specified in the options. Be cautious when merging and analyzing datasets with different normalization methods, as this may introduce biases into your analysis results."
+                    )),
+                  
                   choices = list("TCGA Datasets" = 
                                    c("ACC-Adrenocortical carcinoma" = "ACC",
                                      "BLCA-Bladder Urothelial Carcinoma" = "BLCA", 
