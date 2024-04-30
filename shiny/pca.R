@@ -229,6 +229,8 @@ pca_server <- function(id,Xproj) {
                      To perform miRNA-based analysis, remember that the miRNA columns in your data must start with 'hsa.miR.' . Example miRNA column names: 'hsa.miR.155.5p', 'hsa.miR.142.3p', 'hsa.miR.107'.") }
       })
       
+      lncrnas_vector <- reactive({readRDS(paste0("genesets/", "filtered_lncrnas", ".rds"))})
+      
       ## msigdb_database reading
       
       msigdb_gene_sets =  reactive({readRDS(paste0("genesets/", "msigdb_long", ".rds"))})
@@ -276,7 +278,7 @@ pca_server <- function(id,Xproj) {
       
       observe({updateSelectizeInput(session, "genecor_samp_2",choices = Xproj$a()[["meta.definition"]], server = T)})
       observe({updateSelectizeInput(session, 'data', 
-                                   choices = c("All genes", "miRNA", "RNAseq", "MSigDB Gene Sets", "Custom gene set"),
+                                   choices = c("All genes", "miRNA", "RNAseq","lncRNA", "MSigDB Gene Sets", "Custom gene set"),
                                    selected = "",
                                    server = TRUE)})
       
@@ -384,6 +386,8 @@ pca_server <- function(id,Xproj) {
        
         miRNA <- select(gene_cols(),starts_with("hsa.") )
         
+        lncRNA <- xxxxx
+        
         RNAseq <- select(gene_cols(),-starts_with("hsa.") )
         
         if(input$data == "All genes" ){
@@ -395,6 +399,11 @@ pca_server <- function(id,Xproj) {
         }else if(input$data == "miRNA"){
           
           pre_d <- drop_na(pre_d, colnames(miRNA))
+          
+          
+        }else if(input$data == "lncRNA"){
+          
+          pre_d <- drop_na(pre_d, colnames(lncRNA))
           
           
         }else if(input$data == "RNAseq"){
@@ -534,6 +543,17 @@ pca_server <- function(id,Xproj) {
             
             
         
+          
+          
+        }else if(input$data == "lncRNA"){
+          
+          
+          
+          df_pc <- xxxx
+          
+          
+          
+          
           
           
         }else if(input$data == "RNAseq"){
@@ -689,6 +709,11 @@ pca_server <- function(id,Xproj) {
         }else if(input$data == "miRNA"){
           
           return("PCA using all miRNAseq data")
+          
+          
+        }else if(input$data == "lncRNA"){
+          
+          return("PCA using all lncRNA data")
           
           
         }else if(input$data == "RNAseq"){
