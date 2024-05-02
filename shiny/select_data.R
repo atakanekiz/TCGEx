@@ -105,7 +105,7 @@ select_data_ui <- function(id) {
                                      "SKCM-Gide_2019 (CTLA-4+PD-1, CPM Normalized)"="dual_gide_tcgex",
                                      "SKCM-Gide_2019 (PD-1, CPM Normalized)"="pd1_gide_tcgex")
                                  
-                                ),
+                  ),
                   #selectize = T,
                   # options = list('actions-box' = TRUE), #build buttons for collective selection
                   multiple = TRUE)
@@ -138,7 +138,7 @@ select_data_ui <- function(id) {
                          title = "Data normalization is a process used in data preprocessing to standardize the range of independent variables or features of a dataset. If you have raw data, you can click this button and normalize your data by using log(CPM+1) normalization method"
                        )),
                      status = "info",
-                     value = FALSE),
+                     value = FALSE)
       
       #'[#### THIS COMMENTED OUT]
       # materialSwitch(inputId = ns("flt_dat"),
@@ -223,14 +223,8 @@ select_data_server <- function(id,Xproj){
   moduleServer(id, function(input, output, session) {
     
     
-    #'[#### THIS ADDED]
-    all_projects <- c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM",  
-                      "Choueiri_CCR_2016", "Gide_Cell_2019","HugoLo_IPRES_2016","IMmotion150","IMVigor210","Kim_NatMed_2018",
-                      "Liu_NatMed_2019","Miao_Science_2018","Prins_GBM_2019","Riaz_Nivolumab_2017", "VanAllen_antiCTLA4_2015",
-                      "Zhao_NatMed_2019", "all_icb_tcgex_ICI_TRT",
-                      
-                      "skcm_dfci_2015_tcgex","msk_2014_tcgex","mel_ucla_2016_tcgex","mel_tsam_liang_2017_tcgex",
-                      "mel_dfci_2019_tcgex","riaz_2017_tcgex","dual_gide_tcgex","pd1_gide_tcgex")
+  #'[#### THIS ADDED]
+    all_projects <- c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM",  "Choueiri_CCR_2016", "Gide_Cell_2019","HugoLo_IPRES_2016","IMmotion150","IMVigor210","Kim_NatMed_2018","Liu_NatMed_2019","Miao_Science_2018","Prins_GBM_2019","Riaz_Nivolumab_2017", "VanAllen_antiCTLA4_2015", "Zhao_NatMed_2019","skcm_dfci_2015_tcgex","msk_2014_tcgex","mel_ucla_2016_tcgex","mel_tsam_liang_2017_tcgex","mel_dfci_2019_tcgex","all_icb_tcgex_ICI_TRT","riaz_2017_tcgex","dual_gide_tcgex","pd1_gide_tcgex")
     #'[#### THIS ADDED]
     
     file_type <- reactive({file_ext(input$file$name)})
@@ -376,52 +370,57 @@ select_data_server <- function(id,Xproj){
           # readRDS(paste0("projects/", input$proj, ".rds"))
           
           #'[ ####### THIS CHANGED]
-          preloaded_data <-  readRDS(paste0("projects/", input$proj, ".rds"))
+         preloaded_data <-  readRDS(paste0("projects/", input$proj, ".rds"))
           
-          if(input$flt_dat == TRUE){
-            
-            filter_percentage <- reactive ({1-(input$filter_percentage / 100)})
-            
-            # filter_percentage <- reactive ({input$filter_percentage / 100})
-            
-            df_num = preloaded_data %>% select(where(is.numeric))
-            
-            df_nonnum = preloaded_data %>% select(-where(is.numeric))
-            
-            # df_nongene = df_num %>% select(starts_with("meta."))
-            # 
-            # df_gene = df_num %>% select(-starts_with("meta."))
-            
-            df_nongene = df_num %>% 
-              select(starts_with("meta."),starts_with("meta_"))
-            
-            df_gene <- df_num %>%
-              select(-starts_with("meta."), -starts_with("meta_"))
-            
-            # browser()
-            
-            na_zero_percent <- apply(df_gene, 2, function(x) mean(is.na(x) | x == 0))
-            
-            selected_columns <- names(df_gene)[na_zero_percent < filter_percentage()]
-            
-            df_gene <- df_gene[, ..selected_columns]
-            
-            preloaded_data = cbind(df_gene, df_nonnum,df_nongene)
-            
-            preloaded_data
-            
-          }
-          #'[ ####### THIS CHANGED]
+         if(input$flt_dat == TRUE){
+           
+           filter_percentage <- reactive ({1-(input$filter_percentage / 100)})
+           
+           # filter_percentage <- reactive ({input$filter_percentage / 100})
+           
+           df_num = preloaded_data %>% select(where(is.numeric))
+           
+           df_nonnum = preloaded_data %>% select(-where(is.numeric))
+           
+           # df_nongene = df_num %>% select(starts_with("meta."))
+           # 
+           # df_gene = df_num %>% select(-starts_with("meta."))
+           
+           df_nongene = df_num %>% 
+             select(starts_with("meta."),starts_with("meta_"))
+           
+           df_gene <- df_num %>%
+             select(-starts_with("meta."), -starts_with("meta_"))
+           
+           # browser()
+           
+           na_zero_percent <- apply(df_gene, 2, function(x) mean(is.na(x) | x == 0))
+           
+           selected_columns <- names(df_gene)[na_zero_percent < filter_percentage()]
+           
+           df_gene <- df_gene[, ..selected_columns]
+           
+           preloaded_data = cbind(df_gene, df_nonnum,df_nongene)
+           
+           preloaded_data
           
-          preloaded_data
+         }
+         
+         preloaded_data
+         #'[ ####### THIS CHANGED]
+          
           # compressed<-readRDS(paste0("projects/", input$proj, ".rds"))
           #
           # zstd_unserialize(compressed
           
         }
         
+        #'[ ##### THIS ADDED]
+        # else if (!(Xproj$cancer_length() == 1) && any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj)) {
         
         else if (!(Xproj$cancer_length() == 1) && any(all_projects %in% input$proj)) {
+          
+          #'[ ##### THIS ADDED]
           
           validate(need(input$run, ""))
           
@@ -446,7 +445,7 @@ select_data_server <- function(id,Xproj){
             
           }
           
-          big_data = do.call(rbind, dflist)
+          big_data <- do.call(rbind, dflist)
           
           #'[ ####### THIS CHANGED. CONSIDER MOVING THIS INTO PREVIOUS CHUNK TO APPLY FILTERING TO EACH DATASET SEPARATELY]
           
@@ -480,7 +479,7 @@ select_data_server <- function(id,Xproj){
             
             big_data <-  cbind(df_gene, df_nonnum,df_nongene)
             
-          }
+            }
           #'[ ####### THIS CHANGED]
           
           return(big_data)
@@ -535,7 +534,9 @@ select_data_server <- function(id,Xproj){
           
           if(input$flt_dat == TRUE){
             
-            filter_percentage <- reactive ({input$filter_percentage / 100})
+            filter_percentage <- reactive ({1-(input$filter_percentage / 100)})
+            
+            # filter_percentage <- reactive ({input$filter_percentage / 100})
             
             df_num = uploaded_data %>% select(where(is.numeric))
             
@@ -550,6 +551,8 @@ select_data_server <- function(id,Xproj){
             
             df_gene <- df_num %>%
               select(-starts_with("meta."), -starts_with("meta_"))
+            
+            # browser()
             
             na_zero_percent <- apply(df_gene, 2, function(x) mean(is.na(x) | x == 0))
             
@@ -648,8 +651,12 @@ select_data_server <- function(id,Xproj){
       
       validate(need(input$run, ""))
       
-      if (any(all_projects %in% input$proj) ){
+      #'[#### THIS ADDED]
+      # if (any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
         
+        if (any(all_projects %in% input$proj) ){
+          #'[#### THIS ADDED]
+          
         #gghistogram(Xproj$a(), "meta.gender", stat="count", legend="none",
         #font.x=18, font.y=18, font.tickslab = 18,
         #fill="meta.gender", palette = c("skyblue", "coral", "gold"))
@@ -672,9 +679,14 @@ select_data_server <- function(id,Xproj){
     
     output$patient_hist <- renderPlotly({
       
-      if (any(all_projects %in% input$proj) ){
+      #'[#### THIS CHANGED]
+      # if (any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
         
-        validate(need(input$run, "Load project to see descriptive statistics"))
+        if (any(all_projects %in% input$proj) ){
+        
+        #'[#### THIS CHANGED]
+        
+        validate(need(input$run, "Load TCGA project to see descriptive statistics"))
         
         fig_patient <- plot_ly(Xproj$a(),  labels = ~meta.project_id, type = 'pie',
                                marker = list(color = viridis::viridis_pal(begin = 0.2, end = 0.8)(4)))
@@ -693,7 +705,12 @@ select_data_server <- function(id,Xproj){
     
     output$definition_hist <- renderPlotly({
       
+      #'[THIS CHANGED]
+      # if (any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
+      
       if (any(all_projects %in% input$proj) ){
+        
+        #'[THIS CHANGED]
         
         validate(need(input$run, ""))
         
@@ -715,8 +732,11 @@ select_data_server <- function(id,Xproj){
     
     output$age_hist <- renderPlotly({
       
+      #'[THIS CHANGED]
+      # if (any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
       if (any(all_projects %in% input$proj) ){
         
+        #'[THIS CHANGED]
         validate(need(input$run, ""))
         
         ##gghistogram(Xproj$a(), "meta.age_at_diagnosis", fill="gold", bins=50,

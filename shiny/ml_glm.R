@@ -260,7 +260,7 @@ regression_sidecontrols <- function(id) {
                              style = "color:#0072B2;",
                              title = "Value of 1 corresponds to LASSO regression where some coefficients will be shrunken (ie. penalized) all the way to zero. Value of 0 corresponds to Ridge regression where some coefficients will converge to (but not reach) zero. Other values correspond to elastic net regression where the penalty is a mixture of the previous approaches."
                              
-                           )), min = 0, max = 1, value = 1, step = 0.2
+                           )), min = 0, max = 1, value = 1, step = 0.1
                          
                          
                          
@@ -789,14 +789,33 @@ ml_main_server <- function(id,regress_data,Xproj) {
         predictor_var <-  as.matrix(select(regress_data(), -c("response")))
         set.seed(7)
         foldid <- sample(1:10,size = length(response_var), replace = TRUE)
-        fitty <- cv.glmnet(predictor_var, response_var,weights = NULL, foldid = foldid, alpha = input$user_alpha)
+        
+        # fitty <- cv.glmnet(predictor_var, response_var,weights = NULL, foldid = foldid, alpha = input$user_alpha, 
+        #                    family="binomial", type.measure = "class")
+        
+        fitty <- cv.glmnet(predictor_var, response_var,weights = NULL, foldid = foldid, alpha = input$user_alpha,
+                           family="binomial", type.measure = "auc")
+        
+        # fitty <- cv.glmnet(predictor_var, response_var,weights = NULL, foldid = foldid, alpha = input$user_alpha, 
+        #                    family="binomial", type.measure = "deviance")
+        
+        
       } else if (input$regression_workflow == "ctest_model") {
         train_regress_data <- regress_data()[trows(),]
         response_var_train <- as.matrix(select(train_regress_data, response))
         predictor_var_train <-  as.matrix(select(train_regress_data, -c("response")))
         set.seed(7)
         foldid <- sample(1:10,size = length(response_var_train), replace = TRUE)
-        fitty <- cv.glmnet(predictor_var_train, response_var_train, foldid = foldid, alpha = input$user_alpha)
+        
+        # fitty <- cv.glmnet(predictor_var_train, response_var_train, foldid = foldid, alpha = input$user_alpha, 
+        #                    family="binomial", type.measure = "class")
+        
+        fitty <- cv.glmnet(predictor_var_train, response_var_train, foldid = foldid, alpha = input$user_alpha,
+                           family="binomial", type.measure = "auc")
+        
+        # fitty <- cv.glmnet(predictor_var_train, response_var_train, foldid = foldid, alpha = input$user_alpha, 
+        #                    family="binomial", type.measure = "deviance")
+        
       } 
       fitty
     })
@@ -826,7 +845,7 @@ ml_main_server <- function(id,regress_data,Xproj) {
       if(!is.null(cvfit())) {
         c <- as.matrix(coef(cvfit(), s = input$lambda_for_coef))
         c <-  c[2:length(rownames(c)), ]
-        c <- round(c, digits=5)
+        c <- round(c, digits = 5)
         c = c[order(abs(c), decreasing = TRUE)]
         as.data.frame(c)
       } else {

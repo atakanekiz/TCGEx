@@ -117,11 +117,15 @@ roc_ui <- function(id, label, choices) {
                                                                                         "Ontology gene sets (C5)" = "C5" ,
                                                                                         "Oncogenic gene sets (C6)" = "C6",
                                                                                         "Immunologic gene sets (C7)" = "C7",
-                                                                                        "Cell type signature gene sets (C8)" = "C8")),
+                                                                                        "Cell type signature gene sets (C8)" = "C8")
+                                                                                     # "Immunotherapy signatures" ="Immunotherapy_signatures")
+                       ),
         conditionalPanel(condition = "input.cate == 'C2'|input.cate =='C3'|
                                       input.cate =='C4'|
                                       input.cate =='C5'|
-                                      input.cate =='C7' ", ns = ns, 
+                                      input.cate =='C7' ",
+                                      # input.cate == 'Immunotherapy_signatures'"
+                         ns = ns, 
                          selectizeInput(ns("roc_subcat"),"Please select a subcategory" ,choices = c(""))
         ),
         selectizeInput(ns("roc_chosen_pathway"), #Automatically updates to show subset.
@@ -281,6 +285,11 @@ roc_server <- function(id, Xproj) {
         if(length(as.vector(input$binaryone)) == 0){
           return()
         }
+        
+        
+        # browser()
+        # Old choices are retained when a new binaryone is selected. Fix this later.
+        
           updateSelectizeInput(session = getDefaultReactiveDomain(),"binarytwo", choices = Xproj$a()[[input$binaryone]] , server = TRUE)
 
       })
@@ -318,7 +327,10 @@ roc_server <- function(id, Xproj) {
         req(input$roc_definition_sel)
         
         if(length(as.vector(input$roc_definition_sel)) > 0) {
-          pre_df <- setDT(pre_df, key = 'meta.definition')[J(input$roc_definition_sel)]
+          
+          #'[What is J() below?]
+          # pre_df <- setDT(pre_df, key = 'meta.definition')[J(input$roc_definition_sel)]  
+          pre_df <- setDT(pre_df, key = 'meta.definition')[input$roc_definition_sel]  
           pre_df
         } else if (length(as.vector(input$roc_definition_sel)) == 0){
           pre_df
@@ -354,15 +366,21 @@ roc_server <- function(id, Xproj) {
           
         }else{
           # Selected Binary Value
+          
           pre_df <- pre_df %>% 
             mutate(roccurve = case_when(
-              pre_df[[input$binaryone]] == input$binarytwo ~ 1,
-              pre_df[[input$binaryone]] == input$binarythree ~ 0
+              get(input$binaryone) %in% input$binarytwo ~ 1,
+              get(input$binaryone) %in% input$binarythree ~ 0,
+              .default = NA
             ))
         }
       })
       
-      roc_df_msigdb <- reactive({df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))})
+      #'[unnecessary file path paste construct?]
+      #'[Also, why is the rds read in multiple places?]
+      # roc_df_msigdb <- reactive({df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))})
+      
+      roc_df_msigdb <- reactive({df_msigdb <- readRDS("genesets/msigdb_long_w_immth.rds")})
       
       df_gene_sets <- reactive({ 
         
@@ -372,6 +390,7 @@ roc_server <- function(id, Xproj) {
         
         df_msigdb <- roc_df_msigdb()
         
+        #'[Can this be better designed?]
         if(input$show_msigdb_gene_sets == TRUE){
           
             if(input$cate %in% c("C2","C3","C4","C5","C7")) {
@@ -386,6 +405,7 @@ roc_server <- function(id, Xproj) {
         } else if(input$show_msigdb_gene_sets == FALSE){
           
           return({
+            #'[why is this needed?]
             df_msigdb3 <- NULL
           })
         }
@@ -397,6 +417,7 @@ roc_server <- function(id, Xproj) {
         
         req(df_gene_sets())
         
+        #'[Why is this needed?]
         if(input$cate %in% c("C2","C3","C4","C5","C7")) {
           
           
@@ -419,7 +440,9 @@ roc_server <- function(id, Xproj) {
         
         if(input$show_msigdb_gene_sets == TRUE){
           
-          df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))
+          # df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))
+          
+          df_msigdb <- readRDS("genesets/msigdb_long_w_immth.rds")
           
           if(input$cate %in% c("C2","C3","C4","C5","C7")) {
             
@@ -457,7 +480,9 @@ roc_server <- function(id, Xproj) {
 
         if(input$show_msigdb_gene_sets == TRUE){
           
-          df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))
+          # df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))
+          
+          df_msigdb <- readRDS("genesets/msigdb_long_w_immth.rds")
           
           if(input$cate %in% c("C2","C3","C4","C5","C7")) {
             

@@ -188,7 +188,7 @@ km_ui <- function(id, label, choices) {
           column(4,
                  
                  sliderInput(inputId = ns("km_xlim"), label="Define endpoint (days)", value = 6000, min = 10, max=10000),
-                 sliderInput(inputId = ns("km_breaktime"), label="Break time invervals", value=1000, min=100, max = 1000, step = 200)),
+                 sliderInput(inputId = ns("km_breaktime"), label="Break time invervals", value=500, min=100, max = 1000, step = 100)),
           h3("Survival fit summary")
           
         ),
@@ -570,6 +570,8 @@ km_server <- function(id,Xproj) {
         
         
         if(Xproj$cancer_length() ==1 | !is.null(Xproj$fileInfost())) {
+          
+          # browser()
           
           sel_cols2 <- c(input$km_covar, "meta.vital_status", "meta.days_to_event", "meta.definition", "meta.patient")
           
