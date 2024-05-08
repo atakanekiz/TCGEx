@@ -386,7 +386,7 @@ pca_server <- function(id,Xproj) {
        
         miRNA <- select(gene_cols(),starts_with("hsa.") )
         
-        lncRNA <- xxxxx
+        lncRNA <-  gene_cols()[,intersect(colnames(pre_d),lncrnas_vector()),with=F]
         
         RNAseq <- select(gene_cols(),-starts_with("hsa.") )
         
@@ -403,7 +403,7 @@ pca_server <- function(id,Xproj) {
           
         }else if(input$data == "lncRNA"){
           
-          pre_d <- drop_na(pre_d, colnames(lncRNA))
+          pre_d <- drop_na(pre_d,  colnames(lncRNA))
           
           
         }else if(input$data == "RNAseq"){
@@ -549,7 +549,7 @@ pca_server <- function(id,Xproj) {
           
           
           
-          df_pc <- xxxx
+          df_pc <- all_genes()[,intersect(lncrnas_vector(), colnames(all_genes())),with=F]
           
           
           
