@@ -357,7 +357,9 @@ select_data_server <- function(id,Xproj){
     
     Xproj$cancer_length <- reactive({length(as.vector(input$proj))}) ## a reactive that created for other modules to use the length information for several cancers(Cagatay)
     
-    Xproj$a<- eventReactive(list(input$run, input$file, input$proj), {
+    Xproj$a<- eventReactive(input$run, {
+      
+      req (input$run)
       
       # browser()
       
@@ -366,6 +368,8 @@ select_data_server <- function(id,Xproj){
       if(!is.null(input$proj))  {
         
         if (Xproj$cancer_length() == 1 ){
+          
+          req (input$run)
           
           # readRDS(paste0("projects/", input$proj, ".rds"))
           
@@ -419,6 +423,8 @@ select_data_server <- function(id,Xproj){
         # else if (!(Xproj$cancer_length() == 1) && any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj)) {
         
         else if (!(Xproj$cancer_length() == 1) && any(all_projects %in% input$proj)) {
+          
+          req (input$run)
           
           #'[ ##### THIS ADDED]
           
@@ -641,6 +647,31 @@ select_data_server <- function(id,Xproj){
         }
         
         
+        else if (Xproj$cancer_length() == 0) {
+          
+          Xproj$a()<- NULL
+          
+          shinyjs::reset("proj")
+          shinyjs::reset("file")
+          shinyjs::reset(Xproj$fileInfost())
+
+          shinyjs::reset("fileInfos2")
+          shinyjs::reset("fileInfos3")
+          shinyjs::reset("fileInfos4")
+          shinyjs::reset("fileInfos5")
+
+          shinyjs::reset("patient_hist")
+          shinyjs::reset("gender_hist")
+          shinyjs::reset("definition_hist")
+          shinyjs::reset("age_hist")
+
+          output$fileInfos2 <- renderText({NULL})
+          output$fileInfos3 <- renderText({NULL})
+          output$fileInfos4 <- renderDataTable({NULL})
+          output$fileInfos5 <- renderText({NULL})
+          
+        }
+        
         
       }
       
@@ -648,6 +679,8 @@ select_data_server <- function(id,Xproj){
     })
     
     output$gender_hist<- renderPlotly({
+      
+      req(input$run)
       
       validate(need(input$run, ""))
       
@@ -679,6 +712,8 @@ select_data_server <- function(id,Xproj){
     
     output$patient_hist <- renderPlotly({
       
+      req(input$run)
+      
       #'[#### THIS CHANGED]
       # if (any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
         
@@ -704,6 +739,8 @@ select_data_server <- function(id,Xproj){
     
     
     output$definition_hist <- renderPlotly({
+      
+      req(input$run)
       
       #'[THIS CHANGED]
       # if (any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
@@ -731,6 +768,8 @@ select_data_server <- function(id,Xproj){
     })
     
     output$age_hist <- renderPlotly({
+      
+      req(input$run)
       
       #'[THIS CHANGED]
       # if (any(c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") %in% input$proj) ){
