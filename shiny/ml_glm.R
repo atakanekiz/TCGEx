@@ -260,7 +260,7 @@ regression_sidecontrols <- function(id) {
                              style = "color:#0072B2;",
                              title = "Value of 1 corresponds to LASSO regression where some coefficients will be shrunken (ie. penalized) all the way to zero. Value of 0 corresponds to Ridge regression where some coefficients will converge to (but not reach) zero. Other values correspond to elastic net regression where the penalty is a mixture of the previous approaches."
                              
-                           )), min = 0, max = 1, value = 1, step = 0.1
+                           )), min = 0, max = 1, value = 1, step = 0.2
                          
                          
                          
@@ -733,7 +733,7 @@ ml_main_server <- function(id,regress_data,Xproj) {
               "You can choose the lambda value at which the variable coefficients of the model are displayed. Lambda is the regularization parameter in the model. Minimum lambda is the value that gives the minimum cross-validation error in the regression. Lambda + 1 se is the value of lambda that gives the most regularized (ie. more penalized and simpler) model where the cross-validation error is within the one strandard error of the minimum. 
             <br>
             <br>
-            For further details, please see Friedman J, Hastie T, and Tibshirani R. “Regularization Paths for Generalized Linear Models via Coordinate Descent.” Journal of Statistical Software, Articles 33 (1): 1–22. (2010) https://doi.org/10.18637/jss.v033.i01",
+            For further details, please see Friedman J, Hastie T, and Tibshirani R. ???Regularization Paths for Generalized Linear Models via Coordinate Descent.??? Journal of Statistical Software, Articles 33 (1): 1???22. (2010) https://doi.org/10.18637/jss.v033.i01",
               
               "Graphs that will appear in the main panel will show how the increasing levels of model penalization affects predictor coefficient shrinkage and the overall mean-squared-error."
               
@@ -752,7 +752,7 @@ ml_main_server <- function(id,regress_data,Xproj) {
             make a prediction with your model and examine mean-squared-error.",
               "You can determine how much of the data will be used as train set and how much of it will be reserved for the test set by using the data spliting toggle.",
               "You can choose the lambda value for coefficients at which prediction of the test set will be performed.",
-              "You can choose the method of regularized regression from the alpha parameter slider control. ɑ=0 for  Ridge, ɑ=1 for Lasso and 0<ɑ<1 for Elastic Net regression.",
+              "You can choose the method of regularized regression from the alpha parameter slider control. ??=0 for  Ridge, ??=1 for Lasso and 0<??<1 for Elastic Net regression.",
               "You can choose the lambda value at which the variable coefficients of the model are displayed."
               
             ))
@@ -789,33 +789,14 @@ ml_main_server <- function(id,regress_data,Xproj) {
         predictor_var <-  as.matrix(select(regress_data(), -c("response")))
         set.seed(7)
         foldid <- sample(1:10,size = length(response_var), replace = TRUE)
-        
-        # fitty <- cv.glmnet(predictor_var, response_var,weights = NULL, foldid = foldid, alpha = input$user_alpha, 
-        #                    family="binomial", type.measure = "class")
-        
-        fitty <- cv.glmnet(predictor_var, response_var,weights = NULL, foldid = foldid, alpha = input$user_alpha,
-                           family="binomial", type.measure = "auc")
-        
-        # fitty <- cv.glmnet(predictor_var, response_var,weights = NULL, foldid = foldid, alpha = input$user_alpha, 
-        #                    family="binomial", type.measure = "deviance")
-        
-        
+        fitty <- cv.glmnet(predictor_var, response_var,weights = NULL, foldid = foldid, alpha = input$user_alpha)
       } else if (input$regression_workflow == "ctest_model") {
         train_regress_data <- regress_data()[trows(),]
         response_var_train <- as.matrix(select(train_regress_data, response))
         predictor_var_train <-  as.matrix(select(train_regress_data, -c("response")))
         set.seed(7)
         foldid <- sample(1:10,size = length(response_var_train), replace = TRUE)
-        
-        # fitty <- cv.glmnet(predictor_var_train, response_var_train, foldid = foldid, alpha = input$user_alpha, 
-        #                    family="binomial", type.measure = "class")
-        
-        fitty <- cv.glmnet(predictor_var_train, response_var_train, foldid = foldid, alpha = input$user_alpha,
-                           family="binomial", type.measure = "auc")
-        
-        # fitty <- cv.glmnet(predictor_var_train, response_var_train, foldid = foldid, alpha = input$user_alpha, 
-        #                    family="binomial", type.measure = "deviance")
-        
+        fitty <- cv.glmnet(predictor_var_train, response_var_train, foldid = foldid, alpha = input$user_alpha)
       } 
       fitty
     })
@@ -845,7 +826,7 @@ ml_main_server <- function(id,regress_data,Xproj) {
       if(!is.null(cvfit())) {
         c <- as.matrix(coef(cvfit(), s = input$lambda_for_coef))
         c <-  c[2:length(rownames(c)), ]
-        c <- round(c, digits = 5)
+        c <- round(c, digits=5)
         c = c[order(abs(c), decreasing = TRUE)]
         as.data.frame(c)
       } else {
