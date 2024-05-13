@@ -16,6 +16,7 @@ library(fresh)
 library(RColorBrewer) 
 library(rintrojs)  
 library(shinybusy) 
+library(shinyalert)
 library(shinyWidgets)
 # library(zstdlite)
 ############
@@ -114,17 +115,18 @@ dataprepInputControl_UI <- function(id) {
     ),
     h3("Set up variables for analysis"),
     
-    
-    selectizeInput(NS(id,"sample_type_reg"), "Select Sample Type", choices = NULL, multiple = TRUE,
-                   options=list(placeholder = "eg. Primary solid tumor")),
     sliderInput(NS(id,"max_zero_percent"),"Maximum allowed percentage of zero expressors",
                 min = 0, max = 100, value = 100, step = 1),
+    selectizeInput(NS(id,"sample_type_reg"), "Select Sample Type", choices = NULL, multiple = TRUE,
+                   options=list(placeholder = "eg. Primary solid tumor")),
+    
     
     h3("Response Variable"),
     radioButtons(NS(id,"response_prep_method"), "Select an input method",
                  c("Manually select gene(s) as response variable" = "gene_list",
                    "Create a response variable from MSigDB gene sets" = "msigdb",
-                   "Use CIBERSORT immune cell signatures as response variable" = "cibersort")
+                   "Use CIBERSORT immune cell signatures as response variable" = "cibersort",
+                   "Create response variable from categorical variables" = "binary_categorical")
     ),
     conditionalPanel(condition = "input.response_prep_method == 'msigdb' ", ns = ns,
                      selectizeInput(NS(id,"msigdb_setnames_response"), "MSigDB Human Collections", choices = c("Hallmark gene sets (H)" = "H",
@@ -171,6 +173,13 @@ dataprepInputControl_UI <- function(id) {
     ),
     conditionalPanel(condition = "input.response_prep_method == 'cibersort' ", ns = ns,
                      selectizeInput(NS(id,"cibersort_response_var"), "Select immune cell signature", choices = NULL, multiple = FALSE)
+    ),
+    conditionalPanel(condition = "input.response_prep_method == 'binary_categorical' ", ns = ns,
+                     selectizeInput(NS(id,"bcategorical_response_var"), "Choose categorical variable", choices = NULL, multiple = FALSE),
+                     selectizeInput(NS(id,"binaryone_selector"), "Choose values to binarized as 1",
+                                    choices = c(""), multiple = TRUE ),
+                     selectizeInput(NS(id,"binaryzero_selector"), "Choose values to binarized as 0",
+                                    choices = c(""), multiple = TRUE)
     ),
     h3("Predictor Variables"),
     radioButtons(NS(id,"predictor_prep_method"), "Select an input method",
@@ -337,7 +346,8 @@ ml_ui <- function(id) {
         fluidRow(
           column(6,textOutput(NS(id,"validation_message_response"))),
           column(6,textOutput(NS(id,"validation_message_predictor")))
-        )
+        ),
+        DTOutput(NS(id,"regdata"))
         
         
         
@@ -497,7 +507,25 @@ data_prep_ml_server <- function(id,Xproj) {
         updateSelectizeInput(session,'gene_list_response', choices = genelist, selected = "", server = TRUE)
         updateSelectizeInput(session, 'gene_list_predictor', choices = genelist,selected = "",server = TRUE)
         updateSelectizeInput(session,'cibersort_response_var', choices = cibersort_metrics, server = TRUE)
+        updateSelectizeInput(session = getDefaultReactiveDomain(), 'bcategorical_response_var', choices = colnames(Xproj$a()[, lapply(Xproj$a(), is.factor) == TRUE, with = FALSE]), selected = "meta.definition", server = TRUE)
       }
+    })
+    observeEvent(input$bcategorical_response_var,{
+      req(input$bcategorical_response_var)
+      if(length(as.vector(input$bcategorical_response_var)) == 0){
+        return()
+      }
+      updateSelectizeInput(session = getDefaultReactiveDomain(),"binaryone_selector", choices = Xproj$a()[[input$bcategorical_response_var]] , server = TRUE)
+      
+    })
+    
+    observeEvent(input$bcategorical_response_var,{
+      req(input$bcategorical_response_var)
+      if(length(as.vector(input$bcategorical_response_var)) == 0){
+        return()
+      }
+      updateSelectizeInput(session = getDefaultReactiveDomain(),"binaryzero_selector", choices = Xproj$a()[[input$bcategorical_response_var]] , server = TRUE)
+      
     })
     
     #msigdb
@@ -555,62 +583,78 @@ data_prep_ml_server <- function(id,Xproj) {
     
     gene_list_selected_df_response <- reactive({as.data.frame(input$gene_list_response)})
     cibersort_list <- reactive({as.data.frame(input$cibersort_response_var)})
+    binary_response <- reactive({
+      
+      if (input$response_prep_method == "binary_categorical") {
+        table(select(Xproj$a(), input$bcategorical_response_var))
+        
+      }
+      
+      
+    })
     gene_list_selected_df_predictor <- reactive({as.data.frame(input$gene_list_predictor)})
     
     #
     response_det <- reactive({
-      if (input$response_prep_method == "msigdb") {
-        list_r = response_msigdb_genes()
-      } else if (input$response_prep_method == "gene_list") {
-        if (input$obtain_response == "gene_enter") {
-          list_r = gene_list_selected_df_response()
-        } else {
-          file <- input$response_set_file
-          ext <- tools::file_ext(file$datapath)
-          req(file)
-          validate(need(ext == c("xls","xlsx"), "Please upload a xlsx/xls file"))
-          list_r = as.data.frame(read_excel(file$datapath, sheet = 1, col_names = F))
+      if (input$response_prep_method != "binary_categorical") {
+        if (input$response_prep_method == "msigdb") {
+          list_r = response_msigdb_genes()
+        } else if (input$response_prep_method == "gene_list") {
+          if (input$obtain_response == "gene_enter") {
+            list_r = gene_list_selected_df_response()
+          } else {
+            file <- input$response_set_file
+            ext <- tools::file_ext(file$datapath)
+            req(file)
+            validate(need(ext == c("xls","xlsx"), "Please upload a xlsx/xls file"))
+            list_r = as.data.frame(read_excel(file$datapath, sheet = 1, col_names = F))
+          }
+          
+        } else if (input$response_prep_method == "cibersort") {
+          list_r = cibersort_list()
+        }
+        if (length(list_r) > 0) {
+          colnames(list_r) = "gene_symbol"
+          
         }
         
-      } else if (input$response_prep_method == "cibersort") {
-        list_r = cibersort_list()
-      }
-      if (length(list_r) > 0) {
-        colnames(list_r) = "gene_symbol"
+        list_r = unique(list_r)
+        ########################################
+        
+        genelist <- list_r$gene_symbol
+        is.exist <- genelist %in% colnames(Xproj$a())
+        response_missing <- list_r[which(is.exist == "FALSE"),]
+        
+        if (input$response_prep_method == "cibersort") {
+          clean_response_set <- list_r
+        } else  {
+          missing_genes <-  as.vector(response_missing)
+          clean_response_set <- list_r
+          for (i in missing_genes) {
+            clean_response_set <- filter(clean_response_set, gene_symbol != i)
+          }
+        }
+        return(list(c = clean_response_set, r = response_missing))
         
       }
       
-      list_r = unique(list_r)
-      ########################################
-      
-      genelist <- list_r$gene_symbol
-      is.exist <- genelist %in% colnames(Xproj$a())
-      response_missing <- list_r[which(is.exist == "FALSE"),]
-      
-      if (input$response_prep_method == "cibersort") {
-        clean_response_set <- list_r
-      } else {
-        missing_genes <-  as.vector(response_missing)
-        clean_response_set <- list_r
-        for (i in missing_genes) {
-          clean_response_set <- filter(clean_response_set, gene_symbol != i)
-        }
-      }
-      return(list(c = clean_response_set, r = response_missing))
     })
     
     output$response_set <- renderPrint({
-      validate(need(response_det()$c$gene_symbol, "Select response set."))
-      
+      validate(need(!is.null(response_det()) && length(response_det()$c$gene_symbol) > 0 || !is.null(binary_response()), "Select response set."))
       clean_response_set = response_det()$c  
-      return(clean_response_set$gene_symbol)
+      cat_response_var = binary_response()
+      if (input$response_prep_method == "binary_categorical") {
+        
+        display = cat_response_var
+        
+      } else {
+        
+        display = clean_response_set$gene_symbol
+        
+      }
+      return(display)
       
-      # if(is.null(clean_response_set()$gene_symbol)) {
-      #   hide("output")
-      # } else {
-      #   show("output")
-      #   return(clean_response_set()$gene_symbol)
-      # }
     }) 
     
     output$validation_message_response <- renderText({
@@ -672,12 +716,6 @@ data_prep_ml_server <- function(id,Xproj) {
       clean_predictor_set = predictor_det()$c  
       return(clean_predictor_set$gene_symbol)
       
-      # if(is.null(clean_response_set()$gene_symbol)) {
-      #   hide("output")
-      # } else {
-      #   show("output")
-      #   return(clean_response_set()$gene_symbol)
-      # }
     }) 
     
     output$validation_message_predictor <- renderText({
@@ -702,11 +740,35 @@ data_prep_ml_server <- function(id,Xproj) {
       
       filtered_data = Xproj$a() %>% filter(meta.definition %in% input$sample_type_reg)
       
-      select(filtered_data, clean_response_set[,1], clean_predictor_set[,1]) %>%
+      
+      if (input$response_prep_method == "binary_categorical") {
         
-        mutate(response = select(., clean_response_set[,1]) %>% rowMeans()) %>%
-        select(response, clean_predictor_set[,1]) %>% 
-        na.omit()
+        reg <- filtered_data %>% 
+          select(input$bcategorical_response_var, clean_predictor_set[,1]) %>%
+          mutate(response = case_when(
+            get(input$bcategorical_response_var) %in% input$binaryone_selector ~ 1,
+            get(input$bcategorical_response_var) %in% input$binaryzero_selector ~ 0,
+            .default = NA
+          )) %>% select(response, clean_predictor_set[,1]) %>%  na.omit()
+        reg
+        
+      } else {
+        select(filtered_data, clean_response_set[,1], clean_predictor_set[,1]) %>%
+          
+          mutate(response = select(., clean_response_set[,1]) %>% rowMeans()) %>%
+          select(response, clean_predictor_set[,1]) %>%
+          na.omit()
+        
+      }
+      
+      
+    })
+    output$regdata <- renderDT({
+      req(input$bcategorical_response_var)
+      req(input$binaryone_selector)
+      req(input$binaryzero_selector)
+      validate(need(predictor_det()$c$gene_symbol, "Select predictor set."))
+      reg_data()
     })
     
     
@@ -733,7 +795,7 @@ ml_main_server <- function(id,regress_data,Xproj) {
               "You can choose the lambda value at which the variable coefficients of the model are displayed. Lambda is the regularization parameter in the model. Minimum lambda is the value that gives the minimum cross-validation error in the regression. Lambda + 1 se is the value of lambda that gives the most regularized (ie. more penalized and simpler) model where the cross-validation error is within the one strandard error of the minimum. 
             <br>
             <br>
-            For further details, please see Friedman J, Hastie T, and Tibshirani R. ???Regularization Paths for Generalized Linear Models via Coordinate Descent.??? Journal of Statistical Software, Articles 33 (1): 1???22. (2010) https://doi.org/10.18637/jss.v033.i01",
+            For further details, please see Friedman J, Hastie T, and Tibshirani R. “Regularization Paths for Generalized Linear Models via Coordinate Descent.” Journal of Statistical Software, Articles 33 (1): 1–22. (2010) https://doi.org/10.18637/jss.v033.i01",
               
               "Graphs that will appear in the main panel will show how the increasing levels of model penalization affects predictor coefficient shrinkage and the overall mean-squared-error."
               
@@ -752,7 +814,7 @@ ml_main_server <- function(id,regress_data,Xproj) {
             make a prediction with your model and examine mean-squared-error.",
               "You can determine how much of the data will be used as train set and how much of it will be reserved for the test set by using the data spliting toggle.",
               "You can choose the lambda value for coefficients at which prediction of the test set will be performed.",
-              "You can choose the method of regularized regression from the alpha parameter slider control. ??=0 for  Ridge, ??=1 for Lasso and 0<??<1 for Elastic Net regression.",
+              "You can choose the method of regularized regression from the alpha parameter slider control. ɑ=0 for  Ridge, ɑ=1 for Lasso and 0<ɑ<1 for Elastic Net regression.",
               "You can choose the lambda value at which the variable coefficients of the model are displayed."
               
             ))
@@ -789,14 +851,32 @@ ml_main_server <- function(id,regress_data,Xproj) {
         predictor_var <-  as.matrix(select(regress_data(), -c("response")))
         set.seed(7)
         foldid <- sample(1:10,size = length(response_var), replace = TRUE)
-        fitty <- cv.glmnet(predictor_var, response_var,weights = NULL, foldid = foldid, alpha = input$user_alpha)
+        
+        if (input$response_prep_method == "binary_categorical") {
+          fitty <- cv.glmnet(predictor_var, response_var,weights = NULL, foldid = foldid, alpha = input$user_alpha,
+                             family="binomial", type.measure = "auc")
+          
+        } else {
+          fitty <- cv.glmnet(predictor_var, response_var,weights = NULL, foldid = foldid, alpha = input$user_alpha)
+          
+        }
+        
       } else if (input$regression_workflow == "ctest_model") {
         train_regress_data <- regress_data()[trows(),]
         response_var_train <- as.matrix(select(train_regress_data, response))
         predictor_var_train <-  as.matrix(select(train_regress_data, -c("response")))
         set.seed(7)
         foldid <- sample(1:10,size = length(response_var_train), replace = TRUE)
-        fitty <- cv.glmnet(predictor_var_train, response_var_train, foldid = foldid, alpha = input$user_alpha)
+        if (input$response_prep_method == "binary_categorical") {
+          # browser()
+          fitty <- cv.glmnet(predictor_var_train, response_var_train, foldid = foldid, alpha = input$user_alpha,
+                             family="binomial", type.measure = "auc")
+          
+        } else {
+          fitty <- cv.glmnet(predictor_var_train, response_var_train, foldid = foldid, alpha = input$user_alpha)
+          
+        }
+        
       } 
       fitty
     })
