@@ -1,6 +1,6 @@
 ###########
 library(dplyr)
-library(edgeR)
+#library(edgeR)
 library(tidyverse)
 library(glmnet)
 library(msigdbr)
@@ -442,10 +442,10 @@ data_prep_ml_server <- function(id,Xproj) {
   moduleServer(id,function(input,output,session){
     
     output$filewarning_7 <- renderText({
-      
+
       if (!is.null(Xproj$fileInfost())) {
         shinyalert("Warning!", "To perform this analysis using MsigDB gene sets, please ensure that your uploaded data set contains gene symbols rather than Entrez or Ensembl gene IDs. Otherwise you may receive errors.
-                  
+
                   To perform miRNA-based analysis, remember that the miRNA columns in your data must start with 'hsa.miR.' . Example miRNA column names: 'hsa.miR.155.5p', 'hsa.miR.142.3p', 'hsa.miR.107'. ") }
     })
     
@@ -481,6 +481,7 @@ data_prep_ml_server <- function(id,Xproj) {
     
     #########Gene names from TCGA data
     available_genelist <- reactive({zero_adjuster(mdata = Xproj$a(),max_zero_percent = input$max_zero_percent, subgroup = "alltranscripts")})
+    
     available_cibersort <- reactive({
       
       zero_adjuster(mdata = Xproj$a(),max_zero_percent = input$max_zero_percent, subgroup = "cibersort")})
@@ -584,7 +585,7 @@ data_prep_ml_server <- function(id,Xproj) {
     gene_list_selected_df_response <- reactive({as.data.frame(input$gene_list_response)})
     cibersort_list <- reactive({as.data.frame(input$cibersort_response_var)})
     binary_response <- reactive({
-      
+      req(input$bcategorical_response_var)
       if (input$response_prep_method == "binary_categorical") {
         table(select(Xproj$a(), input$bcategorical_response_var))
         
@@ -621,13 +622,21 @@ data_prep_ml_server <- function(id,Xproj) {
         list_r = unique(list_r)
         ########################################
         
-        genelist <- list_r$gene_symbol
-        is.exist <- genelist %in% colnames(Xproj$a())
-        response_missing <- list_r[which(is.exist == "FALSE"),]
+        # genelist <- list_r$gene_symbol
+        # is.exist <- genelist %in% available_genelist()$available
+        # #colnames(Xproj$a())
+        # response_missing <- list_r[which(is.exist == "FALSE"),]
         
         if (input$response_prep_method == "cibersort") {
+          genelist <- list_r$gene_symbol
+          is.exist <- genelist %in% available_cibersort()$available
+          #colnames(Xproj$a())
+          response_missing <- list_r[which(is.exist == "FALSE"),]
           clean_response_set <- list_r
         } else  {
+          genelist <- list_r$gene_symbol
+          is.exist <- genelist %in% available_genelist()$available
+          response_missing <- list_r[which(is.exist == "FALSE"),]
           missing_genes <-  as.vector(response_missing)
           clean_response_set <- list_r
           for (i in missing_genes) {
@@ -694,13 +703,17 @@ data_prep_ml_server <- function(id,Xproj) {
       }
       list_p = unique(list_p)
       
-      genelist <- list_p$gene_symbol
-      is.exist <- genelist %in% colnames(Xproj$a())
-      predictor_missing <- list_p[which(is.exist == "FALSE"),]
+      
       
       if (input$predictor_prep_method == "cibersort") {
+        genelist <- list_p$gene_symbol
+        is.exist <- genelist %in% available_cibersort()$available
+        predictor_missing <- list_p[which(is.exist == "FALSE"),]
         clean_predictor_set <- list_p
       } else {
+        genelist <- list_p$gene_symbol
+        is.exist <- genelist %in% available_genelist()$available
+        predictor_missing <- list_p[which(is.exist == "FALSE"),]
         missing_genes <-  as.vector(predictor_missing)
         clean_predictor_set <- list_p
         for (i in missing_genes) {
@@ -1010,3 +1023,4 @@ ml_main_server <- function(id,regress_data,Xproj) {
     ############################################################
   })
 }
+
