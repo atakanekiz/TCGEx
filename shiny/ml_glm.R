@@ -1,6 +1,6 @@
 ###########
 library(dplyr)
-#library(edgeR)
+library(edgeR)
 library(tidyverse)
 library(glmnet)
 library(msigdbr)
