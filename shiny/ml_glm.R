@@ -524,7 +524,7 @@ data_prep_ml_server <- function(id,Xproj) {
         updateSelectizeInput(session,'cibersort_response_var', choices = cibersort_metrics, server = TRUE)
         updateSelectizeInput(session,'lncrna_response_var', choices = lncrna_gene_sets(), server = TRUE)
         updateSelectizeInput(session,'lncrna_predictor_var', choices = lncrna_gene_sets(), server = TRUE)
-        updateSelectizeInput(session = getDefaultReactiveDomain(), 'bcategorical_response_var', choices = colnames(Xproj$a()[, lapply(Xproj$a(), is.factor) == TRUE, with = FALSE]), selected = "meta.definition", server = TRUE)
+        updateSelectizeInput(session = getDefaultReactiveDomain(), 'bcategorical_response_var', choices = colnames(Xproj$a()[, lapply(Xproj$a(), is.factor) == TRUE, with = FALSE]), server = TRUE)
       }
     })
     observeEvent(input$bcategorical_response_var,{
@@ -669,7 +669,7 @@ data_prep_ml_server <- function(id,Xproj) {
     })
     
     output$response_set <- renderPrint({
-      validate(need(!is.null(response_det()) && length(response_det()$c$gene_symbol) > 0 || !is.null(binary_response()), "Select response set."))
+      validate(need(!is.null(response_det()$c$gene_symbol) || !is.null(binary_response()), "Select response set."))
       clean_response_set = response_det()$c  
       cat_response_var = binary_response()
       if (input$response_prep_method == "binary_categorical") {
@@ -686,6 +686,7 @@ data_prep_ml_server <- function(id,Xproj) {
     }) 
     
     output$validation_message_response <- renderText({
+      req(response_det()$c$gene_symbol)
       response_missing = response_det()$r
       if (length(response_missing) > 0) {
         paste("Listed genes are not present in the data and they are removed from the response list:\n",
@@ -802,8 +803,12 @@ data_prep_ml_server <- function(id,Xproj) {
       req(input$bcategorical_response_var)
       req(input$binaryone_selector)
       req(input$binaryzero_selector)
-      validate(need(predictor_det()$c$gene_symbol, "Select predictor set."))
-      reg_data()
+      req(predictor_det()$c$gene_symbol)
+      if (input$response_prep_method == "binary_categorical") {
+        reg_data()
+        
+      }
+      
     })
     
     
