@@ -16,6 +16,7 @@ source("gene_correlations.R")
 library(shinyjs)
 library(shinydashboardPlus)
 library(fresh)
+library(edgeR)
 
 mytheme <- create_theme(
   adminlte_color(
