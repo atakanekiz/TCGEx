@@ -235,7 +235,7 @@ gsea_server <- function(id,Xproj) {
     
     ## msigdb_database reading
     
-    msigdb_gene_sets =  reactive({readRDS(paste0("genesets/", "msigdb_long", ".rds"))})
+    msigdb_gene_sets =  reactive({readRDS(paste0("genesets/", "msigdb_long_w_immth", ".rds"))})
     
     ## help section server
     
