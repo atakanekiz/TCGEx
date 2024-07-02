@@ -378,7 +378,7 @@ roc_server <- function(id, Xproj) {
       
       #'[unnecessary file path paste construct?]
       #'[Also, why is the rds read in multiple places?]
-      # roc_df_msigdb <- reactive({df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))})
+      # roc_df_msigdb <- reactive({df_msigdb <- readRDS(paste0("genesets/", "msigdb_long_w_immth", ".rds"))})
       
       roc_df_msigdb <- reactive({df_msigdb <- readRDS("genesets/msigdb_long_w_immth.rds")})
       
@@ -440,7 +440,7 @@ roc_server <- function(id, Xproj) {
         
         if(input$show_msigdb_gene_sets == TRUE){
           
-          # df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))
+          # df_msigdb <- readRDS(paste0("genesets/", "msigdb_long_w_immth", ".rds"))
           
           df_msigdb <- readRDS("genesets/msigdb_long_w_immth.rds")
           
@@ -480,7 +480,7 @@ roc_server <- function(id, Xproj) {
 
         if(input$show_msigdb_gene_sets == TRUE){
           
-          # df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))
+          # df_msigdb <- readRDS(paste0("genesets/", "msigdb_long_w_immth", ".rds"))
           
           df_msigdb <- readRDS("genesets/msigdb_long_w_immth.rds")
           
