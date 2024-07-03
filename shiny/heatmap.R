@@ -301,7 +301,7 @@ heatmap_server <- function(id,Xproj) {
       observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "hm_categorized_gene", choices = colnames(Xproj$a()[, lapply(Xproj$a(), is.numeric) == TRUE, with = FALSE]), selected = character(0), server = TRUE)})
       observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "hm_definition_sel", choices = c(Xproj$a()$meta.definition), selected = character(0), server = TRUE)})
       
-      heatmap_df_msigdb <- reactive({heatmap_df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))})
+      heatmap_df_msigdb <- reactive({heatmap_df_msigdb <- readRDS(paste0("genesets/", "msigdb_long_w_immth", ".rds"))})
       
       hm_gene_sets <- reactive({ 
         
@@ -385,7 +385,7 @@ heatmap_server <- function(id,Xproj) {
           
           req(input$chosen_gse)
           
-          heatmap_df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))
+          heatmap_df_msigdb <- readRDS(paste0("genesets/", "msigdb_long_w_immth", ".rds"))
           
           if(input$cat %in% c("C2","C3","C4","C5","C7")) {
             
