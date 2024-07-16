@@ -454,7 +454,7 @@ data_prep_ml_server <- function(id,Xproj) {
                   To perform miRNA-based analysis, remember that the miRNA columns in your data must start with 'hsa.miR.' . Example miRNA column names: 'hsa.miR.155.5p', 'hsa.miR.142.3p', 'hsa.miR.107'. ") }
     })
     
-    msigdb_gene_sets =  reactive({readRDS(paste0("genesets/", "msigdb_collections", ".rds"))})
+    msigdb_gene_sets =  reactive({readRDS(paste0("genesets/", "msigdb_collections2", ".rds"))})
     
     ####  #
     lncrna_gene_sets =  reactive({readRDS(paste0("genesets/", "filtered_lncrnas", ".rds"))})
