@@ -126,7 +126,6 @@ dataprepInputControl_UI <- function(id) {
                  c("Manually select gene(s) as response variable" = "gene_list",
                    "Create a response variable from MSigDB gene sets" = "msigdb",
                    "Use CIBERSORT immune cell signatures as response variable" = "cibersort",
-                   "Select from lncRNA collection" = "lncrna",
                    "Create response variable from categorical variables" = "binary_categorical")
     ),
     conditionalPanel(condition = "input.response_prep_method == 'msigdb' ", ns = ns,
@@ -175,9 +174,6 @@ dataprepInputControl_UI <- function(id) {
     conditionalPanel(condition = "input.response_prep_method == 'cibersort' ", ns = ns,
                      selectizeInput(NS(id,"cibersort_response_var"), "Select immune cell signature", choices = NULL, multiple = FALSE)
     ),
-    conditionalPanel(condition = "input.response_prep_method == 'lncrna' ", ns = ns,
-                     selectizeInput(NS(id,"lncrna_response_var"), "Select lncRNA", choices = c(""), multiple = TRUE)
-    ),
     conditionalPanel(condition = "input.response_prep_method == 'binary_categorical' ", ns = ns,
                      selectizeInput(NS(id,"bcategorical_response_var"), "Choose categorical variable", choices = NULL, multiple = FALSE),
                      selectizeInput(NS(id,"binaryone_selector"), "Choose values to binarized as 1",
@@ -188,8 +184,7 @@ dataprepInputControl_UI <- function(id) {
     h3("Predictor Variables"),
     radioButtons(NS(id,"predictor_prep_method"), "Select an input method",
                  c("Manually select genes as predictor variables" = "gene_list",
-                   "Select predictor variables from MSigDB gene sets" = "msigdb",
-                   "Select from lncRNA collection" = "lncrna"
+                   "Select predictor variables from MSigDB gene sets" = "msigdb"
                  )
     ),
     conditionalPanel(condition = "input.predictor_prep_method == 'msigdb' ", ns = ns,
@@ -219,7 +214,11 @@ dataprepInputControl_UI <- function(id) {
     conditionalPanel(condition = "input.predictor_prep_method == 'gene_list' ", ns = ns,
                      radioButtons(NS(id,"obtain_predictor"), "Select how to specify genes",c("Type gene names" = "gene_enter",
                                                                                              "Upload xlsx/xls file" = "txt_upload",
-                                                                                             "Use all miRNAs available on the selected data" = "allmiRNA_aspredictor")),
+                                                                                             "Use all miRNAs host genes available on the selected data" = "allmiRNAhost_aspredictor",
+                                                                                             "Use all miRNAs available on the selected data" = "allmiRNA_aspredictor",
+                                                                                             "Use all lncRNAs available on the selected data" = "lncrna",
+                                                                                             "Use all ncRNAs available on the selected data" = "ncrna"
+                                                                                             )),
                      conditionalPanel(condition = "input.obtain_predictor == 'gene_enter' ", ns = ns,
                                       selectizeInput(NS(id,"gene_list_predictor"),"Select gene(s)", choices = c(""), multiple = TRUE, options=list(placeholder = "FGR, hsa.miR.107, etc. "))
                      ),
@@ -239,9 +238,6 @@ dataprepInputControl_UI <- function(id) {
                                       
                      )
                      
-    ),
-    conditionalPanel(condition = "input.predictor_prep_method == 'lncrna' ", ns = ns,
-                     selectizeInput(NS(id,"lncrna_predictor_var"), "Select lncRNA", choices = c(""), multiple = TRUE)
     ),
     
     # hr(),
@@ -458,9 +454,9 @@ data_prep_ml_server <- function(id,Xproj) {
                   To perform miRNA-based analysis, remember that the miRNA columns in your data must start with 'hsa.miR.' . Example miRNA column names: 'hsa.miR.155.5p', 'hsa.miR.142.3p', 'hsa.miR.107'. ") }
     })
     
-    msigdb_gene_sets =  reactive({readRDS(paste0("genesets/", "msigdb_collections", ".rds"))})
+    msigdb_gene_sets =  reactive({readRDS(paste0("genesets/", "msigdb_collections2", ".rds"))})
     
-    #####
+    ####  #
     lncrna_gene_sets =  reactive({readRDS(paste0("genesets/", "filtered_lncrnas", ".rds"))})
     #####
     
@@ -522,8 +518,6 @@ data_prep_ml_server <- function(id,Xproj) {
         updateSelectizeInput(session,'gene_list_response', choices = genelist, selected = "", server = TRUE)
         updateSelectizeInput(session, 'gene_list_predictor', choices = genelist,selected = "",server = TRUE)
         updateSelectizeInput(session,'cibersort_response_var', choices = cibersort_metrics, server = TRUE)
-        updateSelectizeInput(session,'lncrna_response_var', choices = lncrna_gene_sets(), server = TRUE)
-        updateSelectizeInput(session,'lncrna_predictor_var', choices = lncrna_gene_sets(), server = TRUE)
         updateSelectizeInput(session = getDefaultReactiveDomain(), 'bcategorical_response_var', choices = colnames(Xproj$a()[, lapply(Xproj$a(), is.factor) == TRUE, with = FALSE]), server = TRUE)
       }
     })
@@ -600,7 +594,7 @@ data_prep_ml_server <- function(id,Xproj) {
     
     gene_list_selected_df_response <- reactive({as.data.frame(input$gene_list_response)})
     cibersort_list <- reactive({as.data.frame(input$cibersort_response_var)})
-    lncrna_list <- reactive({as.data.frame(input$lncrna_response_var)})
+    
     lncrna_list_predictor <- reactive({as.data.frame(input$lncrna_predictor_var)})
     binary_response <- reactive({
       req(input$bcategorical_response_var)
@@ -631,10 +625,7 @@ data_prep_ml_server <- function(id,Xproj) {
           
         } else if (input$response_prep_method == "cibersort") {
           list_r = cibersort_list()
-        } else if (input$response_prep_method == "lncrna") {
-          list_r = lncrna_list()
-        }
-        
+        } 
         
         if (length(list_r) > 0) {
           colnames(list_r) = "gene_symbol"
@@ -709,7 +700,26 @@ data_prep_ml_server <- function(id,Xproj) {
           mir_list <-  available_genelist() %>% filter(startsWith(available,"hsa."))
           list_p <- as.data.frame(mir_list)
           
-        } else {
+          
+        } else if (input$obtain_predictor == "lncrna") {
+          list_p = as.data.frame(lncrna_gene_sets())
+        } else if (input$obtain_predictor == "allmiRNAhost_aspredictor") {
+          mirhost_list <-  available_genelist() %>% filter(startsWith(available,"MIR"))
+          list_p <- as.data.frame(mirhost_list)
+        }else if (input$obtain_predictor == "ncrna") {
+          mirhost_list <-  available_genelist() %>% filter(startsWith(available,"MIR"))
+          mirhost = as.data.frame(mirhost_list)
+          
+          mir_list <-  available_genelist() %>% filter(startsWith(available,"hsa."))
+          mirself <- as.data.frame(mir_list)
+          
+          lnc = as.data.frame(lncrna_gene_sets())
+          colnames(lnc) = "available"
+          
+          list_p = rbind(mirhost,mirself,lnc)
+          
+          
+        }else {
           file <- input$predictor_set_file
           ext <- tools::file_ext(file$datapath)
           req(file)
@@ -717,9 +727,7 @@ data_prep_ml_server <- function(id,Xproj) {
           list_p <- as.data.frame(read_excel(file$datapath,  sheet = 1, col_names = F))
           
         }
-      } else if (input$predictor_prep_method == "lncrna") {
-        list_p = lncrna_list_predictor()
-      } 
+      }  
       
       if (length(list_p) > 0) {
         colnames(list_p) <- "gene_symbol"
@@ -816,7 +824,7 @@ data_prep_ml_server <- function(id,Xproj) {
   } )
 }
 
-ml_main_server <- function(id,regress_data,Xproj) {
+ml_main_server <- function(id,regress_data,Xproj ) {
   moduleServer(id,function(input,output,session) {
     
     
@@ -899,6 +907,7 @@ ml_main_server <- function(id,regress_data,Xproj) {
         } else {
           fitty <- cv.glmnet(predictor_var, response_var,weights = NULL, foldid = foldid, alpha = input$user_alpha)
           
+          
         }
         
       } else if (input$regression_workflow == "ctest_model") {
@@ -908,7 +917,7 @@ ml_main_server <- function(id,regress_data,Xproj) {
         set.seed(7)
         foldid <- sample(1:10,size = length(response_var_train), replace = TRUE)
         if (input$response_prep_method == "binary_categorical") {
-          # browser()
+          
           fitty <- cv.glmnet(predictor_var_train, response_var_train, foldid = foldid, alpha = input$user_alpha,
                              family="binomial", type.measure = "auc")
           
@@ -946,7 +955,7 @@ ml_main_server <- function(id,regress_data,Xproj) {
       if(!is.null(cvfit())) {
         c <- as.matrix(coef(cvfit(), s = input$lambda_for_coef))
         c <-  c[2:length(rownames(c)), ]
-        c <- round(c, digits=5)
+        #c <- round(c, digits=5)
         c = c[order(abs(c), decreasing = TRUE)]
         as.data.frame(c)
       } else {
@@ -1050,3 +1059,6 @@ ml_main_server <- function(id,regress_data,Xproj) {
     ############################################################
   })
 }
+
+
+

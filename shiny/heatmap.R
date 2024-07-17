@@ -283,7 +283,7 @@ heatmap_server <- function(id,Xproj) {
       
       # Remove cols which is including more than 10 levels and numeric
       
-      hidden_cols_heatmap_plotvar<-reactive({"meta.definition"})
+      hidden_cols_heatmap_plotvar<-reactive({c("meta.definition", "meta.treatments")})
       
       meta_cols_heatmap_plotvar <- reactive({colnames(Xproj$a())[grep("^meta\\.", colnames(Xproj$a()))]})
       
@@ -301,7 +301,7 @@ heatmap_server <- function(id,Xproj) {
       observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "hm_categorized_gene", choices = colnames(Xproj$a()[, lapply(Xproj$a(), is.numeric) == TRUE, with = FALSE]), selected = character(0), server = TRUE)})
       observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "hm_definition_sel", choices = c(Xproj$a()$meta.definition), selected = character(0), server = TRUE)})
       
-      heatmap_df_msigdb <- reactive({heatmap_df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))})
+      heatmap_df_msigdb <- reactive({heatmap_df_msigdb <- readRDS(paste0("genesets/", "msigdb_long_w_immth", ".rds"))})
       
       hm_gene_sets <- reactive({ 
         
@@ -385,7 +385,7 @@ heatmap_server <- function(id,Xproj) {
           
           req(input$chosen_gse)
           
-          heatmap_df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))
+          heatmap_df_msigdb <- readRDS(paste0("genesets/", "msigdb_long_w_immth", ".rds"))
           
           if(input$cat %in% c("C2","C3","C4","C5","C7")) {
             
@@ -557,9 +557,9 @@ heatmap_server <- function(id,Xproj) {
               
               rownames(daf) <- daf$meta.barcode
               
+              # Select columns based on input$annotation
               chosen_meta <- c(input$annotation)
-              
-              meta <- daf[,chosen_meta]
+              meta <- daf[, chosen_meta, drop = FALSE]  # Ensure drop = FALSE to keep rownames because patients with NA values in mat_data causing problems.The column number of mat_data and the row number of meta needs to be matched. 
               
             })
             
@@ -727,16 +727,36 @@ heatmap_server <- function(id,Xproj) {
           }else{
             distfun_col =  function(x) stats::dist(x, method = input$clustering_distance_columns)}
           
-          mat_data <- mat()
+          mat_data <- mat()  #There are some NAs in the mat_data and it causing errors. The solution is: Finding patients with NA values as colnames of mat_data then deleting this patients from the row names of meta. 
           
-          # mat_data <- mat_data[ , colSums(is.na(mat_data))==0]
+          meta <- as.data.frame(meta())
+          
+          # Identify columns with NA values in mat_data
+          cols_with_na <- apply(is.na(mat_data), 2, any)
+          
+          # Extract row names from meta where there are NA values in mat_data
+          patients_with_na <- rownames(meta)[cols_with_na]
+          
+          # Convert rownames to a column for manipulation with dplyr
+          meta <- meta %>%
+            tibble::rownames_to_column(var = "meta_barcode")
+          
+          # Filter rows based on rownames not in patients_with_na
+          meta_filtered <- meta %>%
+            filter(!meta_barcode %in% patients_with_na)
+          
+          # Convert back to original rownames structure
+          meta_filtered <- meta_filtered %>%
+            column_to_rownames(var = "meta_barcode")
+          
+          mat_data <- mat_data[ , colSums(is.na(mat_data))==0]
           
           hclustfun_row = function(x) stats::hclust(x, method = input$clustering_method_rows)
           hclustfun_col = function(x) stats::hclust(x, method = input$clustering_method_columns)
           
           heatmap_obj <- heatmaply(mat_data, 
                                    fontsize_row = 9 , 
-                                   col_side_colors = meta(),
+                                   col_side_colors = meta_filtered,
                                    colors = rev(brewer.pal(n= 10, "RdBu")) , 
                                    showticklabels = c(FALSE, TRUE) ,
                                    distfun_row = distfun_row,

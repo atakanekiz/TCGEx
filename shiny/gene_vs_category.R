@@ -481,10 +481,11 @@ gene_vs_cat_server <- function(id,Xproj){
       if(input$exprs_rotatex) pp <- pp + rotate_x_text(angle=45)
       
       if(input$exprs_stats) {
-        pp <- pp + stat_pvalue_manual(stat_layer(), size=7,
+        pp <- pp + stat_pvalue_manual(stat_layer(),
                                       label=input$exprs_statlabel, 
                                       step.increase = 0.1, 
                                       step.group.by = facetvar)
+        pp <- pp + scale_y_continuous(expand = expansion(mult = c(0.05, 0.1)))
         
         # Move "ns" labels to the top of the plot
         pp <- pp + theme(plot.caption = element_text(hjust = 0.5))
