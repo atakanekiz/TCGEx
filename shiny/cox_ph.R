@@ -2,12 +2,16 @@ library(survminer)
 library(survival)
 library(data.table)
 library(shinyWidgets)
+library(shinyalert)
 
 cox_ui <- function(id, label, choices) {
   
   ns <- NS(id)
   
   tagList(
+    
+    useShinyalert(),
+    
     sidebarPanel(
       
       selectizeInput(inputId = ns("cox_samptyp"), 
@@ -64,6 +68,10 @@ cox_ui <- function(id, label, choices) {
       introjsUI(),
       actionButton(ns("COX_help"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
       
+
+      textOutput(ns("filewarning")) ,     
+      
+      
       width = 3
       
     ),
@@ -71,8 +79,8 @@ cox_ui <- function(id, label, choices) {
     
     mainPanel(
       plotOutput(outputId = ns("cox_plot")),
-      
-      verbatimTextOutput( outputId = ns("cox_text"))
+      verbatimTextOutput( outputId = ns("cox_text")),
+    
     )
   )
   
@@ -82,11 +90,17 @@ cox_ui <- function(id, label, choices) {
 cox_server <- function(id,Xproj) {
   moduleServer(id,function(input, output, session) {
     
+      output$filewarning <- renderText({
+        
+        if (!is.null(Xproj$fileInfost())) {
+          shinyalert("Warning!", "To perform Cox Proportional-Hazard Survival analysis, the data you upload must contain columns containing survival information such as 'vital_status' and 'days _to_event'.") }
+      })
+    
     ns <- session$ns
     
     COX_steps <- reactive({
       
-      if(Xproj$cancer_length() ==1) {
+      if(Xproj$cancer_length() ==1 | !is.null(Xproj$fileInfost()) ) {
         
         return(
           
@@ -162,6 +176,8 @@ cox_server <- function(id,Xproj) {
       
       df_data <- Xproj$a()[, ..sel_cols]      # df_data is a dataframe that contains needed data for Cox
       
+      df_data$meta.project_id <- droplevels(df_data$meta.project_id)   # To eliminate zero-length classes
+      
       df_data <- df_data[meta.definition %in% input$cox_samptyp, ]
       
       # De-duplicate patients. Revise this to drop certain subgroups later.
@@ -186,7 +202,7 @@ cox_server <- function(id,Xproj) {
       
       validate(need(cox_dat(), ""))
       
-      if(Xproj$cancer_length() ==1) {                     ## in order to avoid zero length warning when there is only one cancer
+      if(Xproj$cancer_length() ==1 | !is.null(Xproj$fileInfost()) ) {                     ## in order to avoid zero length warning when there is only one cancer
         
         predvars <- paste(input$cox_feat, collapse="+") 
         

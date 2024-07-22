@@ -300,6 +300,14 @@ gene_vs_gene_server <- function(id,Xproj) {
       observe({updateSelectizeInput(session, 'Gene5', choices = colnames(gen_dat()), server = TRUE, selected = "")})
       observe({updateSelectizeInput(session, 'Facet', choices = available_cols_gplot(), server = TRUE, selected = "")})
       
+      #'[Add ability to select categorical variables in shape/color/transparency. Might need to update the code a bit because, i) it doesn't allow categorical variables, ii) with the commented quick fix below, binary variables are recognized as numeric and leads to creation of middle value with no mapping. We might also think about the possible user mistakes in selecting something that shouldn't work, and we should handle errors without breaking shiny]
+      # feats <- reactive(c(colnames(gen_dat()), colnames(meta_dat())))
+      # 
+      # observe({updateSelectizeInput(session, 'Gene3', choices = feats(), server = TRUE, selected = "")})
+      # observe({updateSelectizeInput(session, 'Gene4', choices = feats(), server = TRUE, selected = "" )})
+      # observe({updateSelectizeInput(session, 'Gene5', choices = feats(), server = TRUE, selected = "")})
+      # observe({updateSelectizeInput(session, 'Facet', choices = available_cols_gplot(), server = TRUE, selected = "")})
+      
       ## input choices for facet variable selection 
       
       # Remove cols which is including more than 10 levels and numeric

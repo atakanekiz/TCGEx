@@ -20,6 +20,8 @@ pca_ui <- function(id) {
   ns <- NS(id)
   tagList(
     
+    useShinyalert(),
+    
     add_busy_spinner(
       spin = "cube-grid",
       position = "top-right",
@@ -189,6 +191,8 @@ pca_ui <- function(id) {
       introjsUI(),
       actionButton(ns("intro2"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
       
+      textOutput(ns("filewarning_4")) ,
+      
       width = 3
       
     ),
@@ -217,9 +221,19 @@ pca_server <- function(id,Xproj) {
     id,
     function(input, output, session) {
       
+      output$filewarning_4 <- renderText({
+        
+        if (!is.null(Xproj$fileInfost())) {
+          shinyalert("Warning!", "To perform this analysis using MsigDB gene sets, please ensure that your uploaded data set contains gene symbols rather than Entrez or Ensembl gene IDs. Otherwise you may receive errors.
+                     
+                     To perform miRNA-based analysis, remember that the miRNA columns in your data must start with 'hsa.miR.' . Example miRNA column names: 'hsa.miR.155.5p', 'hsa.miR.142.3p', 'hsa.miR.107'.") }
+      })
+      
+      lncrnas_vector <- reactive({readRDS(paste0("genesets/", "filtered_lncrnas", ".rds"))})
+      
       ## msigdb_database reading
       
-      msigdb_gene_sets =  reactive({readRDS(paste0("genesets/", "msigdb_long", ".rds"))})
+      msigdb_gene_sets =  reactive({readRDS(paste0("genesets/", "msigdb_long_w_immth", ".rds"))})
       
       ## help section server
       
@@ -264,7 +278,7 @@ pca_server <- function(id,Xproj) {
       
       observe({updateSelectizeInput(session, "genecor_samp_2",choices = Xproj$a()[["meta.definition"]], server = T)})
       observe({updateSelectizeInput(session, 'data', 
-                                   choices = c("All genes", "miRNA", "RNAseq", "MSigDB Gene Sets", "Custom gene set"),
+                                   choices = c("All genes", "miRNA", "RNAseq","lncRNA", "MSigDB Gene Sets", "Custom gene set"),
                                    selected = "",
                                    server = TRUE)})
       
@@ -295,7 +309,7 @@ pca_server <- function(id,Xproj) {
           
         } else {
           
-          pca_path = names(msigdb_gene_sets()[[input$pca_cat]][[]])
+          pca_path = names(msigdb_gene_sets()[[input$pca_cat]][[1]])
           updateSelectizeInput(session,'pca_pathway', choices = pca_path , server = TRUE)
         }
         
@@ -308,11 +322,11 @@ pca_server <- function(id,Xproj) {
         ms = msigdb_gene_sets()
         if(input$pca_cat %in% c("C2","C3","C4","C5","C7")) {
           
-          pca_m = data.frame(gene_symbol = ms[[input$pca_cat]][[input$pca_subcat]][[input$pca_pathway]])
+          pca_m = ms[[input$pca_cat]][[input$pca_subcat]][[input$pca_pathway]]
           
         } else {
           
-          pca_m = data.frame(gene_symbol = ms[[input$pca_cat]][[]][[input$pca_pathway]])
+          pca_m = ms[[input$pca_cat]][[1]][[input$pca_pathway]]
           
         }
         
@@ -372,6 +386,8 @@ pca_server <- function(id,Xproj) {
        
         miRNA <- select(gene_cols(),starts_with("hsa.") )
         
+        lncRNA <-  gene_cols()[,intersect(colnames(pre_d),lncrnas_vector()),with=F]
+        
         RNAseq <- select(gene_cols(),-starts_with("hsa.") )
         
         if(input$data == "All genes" ){
@@ -383,6 +399,11 @@ pca_server <- function(id,Xproj) {
         }else if(input$data == "miRNA"){
           
           pre_d <- drop_na(pre_d, colnames(miRNA))
+          
+          
+        }else if(input$data == "lncRNA"){
+          
+          pre_d <- drop_na(pre_d,  colnames(lncRNA))
           
           
         }else if(input$data == "RNAseq"){
@@ -524,6 +545,17 @@ pca_server <- function(id,Xproj) {
         
           
           
+        }else if(input$data == "lncRNA"){
+          
+          
+          
+          df_pc <- all_genes()[,intersect(lncrnas_vector(), colnames(all_genes())),with=F]
+          
+          
+          
+          
+          
+          
         }else if(input$data == "RNAseq"){
           
           
@@ -536,7 +568,7 @@ pca_server <- function(id,Xproj) {
           
         }else if(input$data == "MSigDB Gene Sets"){
           
-          df_pc <- all_genes()[,intersect(pca_msigdb_genes()[["gene_symbol"]], colnames(all_genes())),with=F]
+          df_pc <- all_genes()[,intersect(pca_msigdb_genes(), colnames(all_genes())),with=F]
           
           
           
@@ -677,6 +709,11 @@ pca_server <- function(id,Xproj) {
         }else if(input$data == "miRNA"){
           
           return("PCA using all miRNAseq data")
+          
+          
+        }else if(input$data == "lncRNA"){
+          
+          return("PCA using all lncRNA data")
           
           
         }else if(input$data == "RNAseq"){

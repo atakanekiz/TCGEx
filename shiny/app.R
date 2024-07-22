@@ -16,6 +16,7 @@ source("gene_correlations.R")
 library(shinyjs)
 library(shinydashboardPlus)
 library(fresh)
+library(edgeR)
 
 mytheme <- create_theme(
   adminlte_color(
@@ -87,7 +88,7 @@ ui <- navbarPage(
   ),
   tabPanel(
     "DATA SELECTION",
-    fluidPage(h1("Please select cancer project(s)"), select_data_ui("seldata")
+    fluidPage(h1("Please Select Cancer Project(s)"), select_data_ui("seldata")
   )),
   tabPanel(
     "KAPLAN-MEIER",

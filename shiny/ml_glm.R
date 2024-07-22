@@ -1,6 +1,6 @@
 ###########
 library(dplyr)
-library(edgeR)
+#library(edgeR)
 library(tidyverse)
 library(glmnet)
 library(msigdbr)
@@ -16,6 +16,7 @@ library(fresh)
 library(RColorBrewer) 
 library(rintrojs)  
 library(shinybusy) 
+library(shinyalert)
 library(shinyWidgets)
 # library(zstdlite)
 ############
@@ -99,6 +100,9 @@ ggplot_boxplot_variables <- function(transcript_list, pre_data) {
 dataprepInputControl_UI <- function(id) {
   ns <- NS(id)
   tagList(
+    
+    useShinyalert(),
+    
     add_busy_spinner(
       spin = "cube-grid",
       position = "top-right",
@@ -111,17 +115,18 @@ dataprepInputControl_UI <- function(id) {
     ),
     h3("Set up variables for analysis"),
     
-    
-    selectizeInput(NS(id,"sample_type_reg"), "Select Sample Type", choices = NULL, multiple = TRUE,
-                   options=list(placeholder = "eg. Primary solid tumor")),
     sliderInput(NS(id,"max_zero_percent"),"Maximum allowed percentage of zero expressors",
                 min = 0, max = 100, value = 100, step = 1),
+    selectizeInput(NS(id,"sample_type_reg"), "Select Sample Type", choices = NULL, multiple = TRUE,
+                   options=list(placeholder = "eg. Primary solid tumor")),
+    
     
     h3("Response Variable"),
     radioButtons(NS(id,"response_prep_method"), "Select an input method",
                  c("Manually select gene(s) as response variable" = "gene_list",
                    "Create a response variable from MSigDB gene sets" = "msigdb",
-                   "Use CIBERSORT immune cell signatures as response variable" = "cibersort")
+                   "Use CIBERSORT immune cell signatures as response variable" = "cibersort",
+                   "Create response variable from categorical variables" = "binary_categorical")
     ),
     conditionalPanel(condition = "input.response_prep_method == 'msigdb' ", ns = ns,
                      selectizeInput(NS(id,"msigdb_setnames_response"), "MSigDB Human Collections", choices = c("Hallmark gene sets (H)" = "H",
@@ -169,6 +174,13 @@ dataprepInputControl_UI <- function(id) {
     conditionalPanel(condition = "input.response_prep_method == 'cibersort' ", ns = ns,
                      selectizeInput(NS(id,"cibersort_response_var"), "Select immune cell signature", choices = NULL, multiple = FALSE)
     ),
+    conditionalPanel(condition = "input.response_prep_method == 'binary_categorical' ", ns = ns,
+                     selectizeInput(NS(id,"bcategorical_response_var"), "Choose categorical variable", choices = NULL, multiple = FALSE),
+                     selectizeInput(NS(id,"binaryone_selector"), "Choose values to binarized as 1",
+                                    choices = c(""), multiple = TRUE ),
+                     selectizeInput(NS(id,"binaryzero_selector"), "Choose values to binarized as 0",
+                                    choices = c(""), multiple = TRUE)
+    ),
     h3("Predictor Variables"),
     radioButtons(NS(id,"predictor_prep_method"), "Select an input method",
                  c("Manually select genes as predictor variables" = "gene_list",
@@ -202,7 +214,11 @@ dataprepInputControl_UI <- function(id) {
     conditionalPanel(condition = "input.predictor_prep_method == 'gene_list' ", ns = ns,
                      radioButtons(NS(id,"obtain_predictor"), "Select how to specify genes",c("Type gene names" = "gene_enter",
                                                                                              "Upload xlsx/xls file" = "txt_upload",
-                                                                                             "Use all miRNAs available on the selected data" = "allmiRNA_aspredictor")),
+                                                                                             "Use all miRNAs host genes available on the selected data" = "allmiRNAhost_aspredictor",
+                                                                                             "Use all miRNAs available on the selected data" = "allmiRNA_aspredictor",
+                                                                                             "Use all lncRNAs available on the selected data" = "lncrna",
+                                                                                             "Use all ncRNAs available on the selected data" = "ncrna"
+                                                                                             )),
                      conditionalPanel(condition = "input.obtain_predictor == 'gene_enter' ", ns = ns,
                                       selectizeInput(NS(id,"gene_list_predictor"),"Select gene(s)", choices = c(""), multiple = TRUE, options=list(placeholder = "FGR, hsa.miR.107, etc. "))
                      ),
@@ -221,6 +237,7 @@ dataprepInputControl_UI <- function(id) {
                                       
                                       
                      )
+                     
     ),
     
     # hr(),
@@ -316,6 +333,8 @@ ml_ui <- function(id) {
         introjsUI(),
         actionButton(ns("mldata_help"), "Tutorial"),
         
+        textOutput(ns("filewarning_7")) ,
+        
         width = 3
         
       ),
@@ -332,7 +351,8 @@ ml_ui <- function(id) {
         fluidRow(
           column(6,textOutput(NS(id,"validation_message_response"))),
           column(6,textOutput(NS(id,"validation_message_predictor")))
-        )
+        ),
+        DTOutput(NS(id,"regdata"))
         
         
         
@@ -426,9 +446,20 @@ ml_ui <- function(id) {
 data_prep_ml_server <- function(id,Xproj) {
   moduleServer(id,function(input,output,session){
     
+    output$filewarning_7 <- renderText({
+
+      if (!is.null(Xproj$fileInfost())) {
+        shinyalert("Warning!", "To perform this analysis using MsigDB gene sets, please ensure that your uploaded data set contains gene symbols rather than Entrez or Ensembl gene IDs. Otherwise you may receive errors.
+
+                  To perform miRNA-based analysis, remember that the miRNA columns in your data must start with 'hsa.miR.' . Example miRNA column names: 'hsa.miR.155.5p', 'hsa.miR.142.3p', 'hsa.miR.107'. ") }
+    })
     
+    msigdb_gene_sets =  reactive({readRDS(paste0("genesets/", "msigdb_collections2", ".rds"))})
     
-    msigdb_gene_sets =  reactive({readRDS(paste0("genesets/", "msigdb_collections", ".rds"))})
+    ####  #
+    lncrna_gene_sets =  reactive({readRDS(paste0("genesets/", "filtered_lncrnas", ".rds"))})
+    #####
+    
     
     
     #Help
@@ -460,6 +491,7 @@ data_prep_ml_server <- function(id,Xproj) {
     
     #########Gene names from TCGA data
     available_genelist <- reactive({zero_adjuster(mdata = Xproj$a(),max_zero_percent = input$max_zero_percent, subgroup = "alltranscripts")})
+    
     available_cibersort <- reactive({
       
       zero_adjuster(mdata = Xproj$a(),max_zero_percent = input$max_zero_percent, subgroup = "cibersort")})
@@ -480,13 +512,31 @@ data_prep_ml_server <- function(id,Xproj) {
     observe({
       if (!is.null(Xproj$a())) {
         
-        updateSelectizeInput(session,'sample_type_reg', choices = names(table(Xproj$a()$meta.sample_type)),selected = "", server = TRUE)
+        updateSelectizeInput(session,'sample_type_reg', choices = names(table(Xproj$a()$meta.definition)),selected = "", server = TRUE)
         cibersort_metrics <- available_cibersort()$available
         genelist <- available_genelist()$available
         updateSelectizeInput(session,'gene_list_response', choices = genelist, selected = "", server = TRUE)
         updateSelectizeInput(session, 'gene_list_predictor', choices = genelist,selected = "",server = TRUE)
         updateSelectizeInput(session,'cibersort_response_var', choices = cibersort_metrics, server = TRUE)
+        updateSelectizeInput(session = getDefaultReactiveDomain(), 'bcategorical_response_var', choices = colnames(Xproj$a()[, lapply(Xproj$a(), is.factor) == TRUE, with = FALSE]), server = TRUE)
       }
+    })
+    observeEvent(input$bcategorical_response_var,{
+      req(input$bcategorical_response_var)
+      if(length(as.vector(input$bcategorical_response_var)) == 0){
+        return()
+      }
+      updateSelectizeInput(session = getDefaultReactiveDomain(),"binaryone_selector", choices = Xproj$a()[[input$bcategorical_response_var]] , server = TRUE)
+      
+    })
+    
+    observeEvent(input$bcategorical_response_var,{
+      req(input$bcategorical_response_var)
+      if(length(as.vector(input$bcategorical_response_var)) == 0){
+        return()
+      }
+      updateSelectizeInput(session = getDefaultReactiveDomain(),"binaryzero_selector", choices = Xproj$a()[[input$bcategorical_response_var]] , server = TRUE)
+      
     })
     
     #msigdb
@@ -544,65 +594,90 @@ data_prep_ml_server <- function(id,Xproj) {
     
     gene_list_selected_df_response <- reactive({as.data.frame(input$gene_list_response)})
     cibersort_list <- reactive({as.data.frame(input$cibersort_response_var)})
+    
+    lncrna_list_predictor <- reactive({as.data.frame(input$lncrna_predictor_var)})
+    binary_response <- reactive({
+      req(input$bcategorical_response_var)
+      if (input$response_prep_method == "binary_categorical") {
+        table(select(Xproj$a(), input$bcategorical_response_var))
+        
+      }
+      
+      
+    })
     gene_list_selected_df_predictor <- reactive({as.data.frame(input$gene_list_predictor)})
     
     #
     response_det <- reactive({
-      if (input$response_prep_method == "msigdb") {
-        list_r = response_msigdb_genes()
-      } else if (input$response_prep_method == "gene_list") {
-        if (input$obtain_response == "gene_enter") {
-          list_r = gene_list_selected_df_response()
-        } else {
-          file <- input$response_set_file
-          ext <- tools::file_ext(file$datapath)
-          req(file)
-          validate(need(ext == c("xls","xlsx"), "Please upload a xlsx/xls file"))
-          list_r = as.data.frame(read_excel(file$datapath, sheet = 1, col_names = F))
+      if (input$response_prep_method != "binary_categorical") {
+        if (input$response_prep_method == "msigdb") {
+          list_r = response_msigdb_genes()
+        } else if (input$response_prep_method == "gene_list") {
+          if (input$obtain_response == "gene_enter") {
+            list_r = gene_list_selected_df_response()
+          } else {
+            file <- input$response_set_file
+            ext <- tools::file_ext(file$datapath)
+            req(file)
+            validate(need(ext == c("xls","xlsx"), "Please upload a xlsx/xls file"))
+            list_r = as.data.frame(read_excel(file$datapath, sheet = 1, col_names = F))
+          }
+          
+        } else if (input$response_prep_method == "cibersort") {
+          list_r = cibersort_list()
+        } 
+        
+        if (length(list_r) > 0) {
+          colnames(list_r) = "gene_symbol"
+          
         }
         
-      } else if (input$response_prep_method == "cibersort") {
-        list_r = cibersort_list()
-      }
-      if (length(list_r) > 0) {
-        colnames(list_r) = "gene_symbol"
+        list_r = unique(list_r)
+        ########################################
+        
+        
+        
+        if (input$response_prep_method == "cibersort") {
+          genelist <- list_r$gene_symbol
+          is.exist <- genelist %in% available_cibersort()$available
+          
+          response_missing <- list_r[which(is.exist == "FALSE"),]
+          clean_response_set <- list_r
+        } else  {
+          genelist <- list_r$gene_symbol
+          is.exist <- genelist %in% available_genelist()$available
+          response_missing <- list_r[which(is.exist == "FALSE"),]
+          missing_genes <-  as.vector(response_missing)
+          clean_response_set <- list_r
+          for (i in missing_genes) {
+            clean_response_set <- filter(clean_response_set, gene_symbol != i)
+          }
+        }
+        return(list(c = clean_response_set, r = response_missing))
         
       }
       
-      list_r = unique(list_r)
-      ########################################
-      
-      genelist <- list_r$gene_symbol
-      is.exist <- genelist %in% colnames(Xproj$a())
-      response_missing <- list_r[which(is.exist == "FALSE"),]
-      
-      if (input$response_prep_method == "cibersort") {
-        clean_response_set <- list_r
-      } else {
-        missing_genes <-  as.vector(response_missing)
-        clean_response_set <- list_r
-        for (i in missing_genes) {
-          clean_response_set <- filter(clean_response_set, gene_symbol != i)
-        }
-      }
-      return(list(c = clean_response_set, r = response_missing))
     })
     
     output$response_set <- renderPrint({
-      validate(need(response_det()$c$gene_symbol, "Select response set."))
-      
+      validate(need(!is.null(response_det()$c$gene_symbol) || !is.null(binary_response()), "Select response set."))
       clean_response_set = response_det()$c  
-      return(clean_response_set$gene_symbol)
+      cat_response_var = binary_response()
+      if (input$response_prep_method == "binary_categorical") {
+        
+        display = cat_response_var
+        
+      } else {
+        
+        display = clean_response_set$gene_symbol
+        
+      }
+      return(display)
       
-      # if(is.null(clean_response_set()$gene_symbol)) {
-      #   hide("output")
-      # } else {
-      #   show("output")
-      #   return(clean_response_set()$gene_symbol)
-      # }
     }) 
     
     output$validation_message_response <- renderText({
+      req(response_det()$c$gene_symbol)
       response_missing = response_det()$r
       if (length(response_missing) > 0) {
         paste("Listed genes are not present in the data and they are removed from the response list:\n",
@@ -625,7 +700,26 @@ data_prep_ml_server <- function(id,Xproj) {
           mir_list <-  available_genelist() %>% filter(startsWith(available,"hsa."))
           list_p <- as.data.frame(mir_list)
           
-        } else {
+          
+        } else if (input$obtain_predictor == "lncrna") {
+          list_p = as.data.frame(lncrna_gene_sets())
+        } else if (input$obtain_predictor == "allmiRNAhost_aspredictor") {
+          mirhost_list <-  available_genelist() %>% filter(startsWith(available,"MIR"))
+          list_p <- as.data.frame(mirhost_list)
+        }else if (input$obtain_predictor == "ncrna") {
+          mirhost_list <-  available_genelist() %>% filter(startsWith(available,"MIR"))
+          mirhost = as.data.frame(mirhost_list)
+          
+          mir_list <-  available_genelist() %>% filter(startsWith(available,"hsa."))
+          mirself <- as.data.frame(mir_list)
+          
+          lnc = as.data.frame(lncrna_gene_sets())
+          colnames(lnc) = "available"
+          
+          list_p = rbind(mirhost,mirself,lnc)
+          
+          
+        }else {
           file <- input$predictor_set_file
           ext <- tools::file_ext(file$datapath)
           req(file)
@@ -633,19 +727,24 @@ data_prep_ml_server <- function(id,Xproj) {
           list_p <- as.data.frame(read_excel(file$datapath,  sheet = 1, col_names = F))
           
         }
-      }
+      }  
+      
       if (length(list_p) > 0) {
         colnames(list_p) <- "gene_symbol"
       }
       list_p = unique(list_p)
       
-      genelist <- list_p$gene_symbol
-      is.exist <- genelist %in% colnames(Xproj$a())
-      predictor_missing <- list_p[which(is.exist == "FALSE"),]
+      
       
       if (input$predictor_prep_method == "cibersort") {
+        genelist <- list_p$gene_symbol
+        is.exist <- genelist %in% available_cibersort()$available
+        predictor_missing <- list_p[which(is.exist == "FALSE"),]
         clean_predictor_set <- list_p
       } else {
+        genelist <- list_p$gene_symbol
+        is.exist <- genelist %in% available_genelist()$available
+        predictor_missing <- list_p[which(is.exist == "FALSE"),]
         missing_genes <-  as.vector(predictor_missing)
         clean_predictor_set <- list_p
         for (i in missing_genes) {
@@ -661,12 +760,6 @@ data_prep_ml_server <- function(id,Xproj) {
       clean_predictor_set = predictor_det()$c  
       return(clean_predictor_set$gene_symbol)
       
-      # if(is.null(clean_response_set()$gene_symbol)) {
-      #   hide("output")
-      # } else {
-      #   show("output")
-      #   return(clean_response_set()$gene_symbol)
-      # }
     }) 
     
     output$validation_message_predictor <- renderText({
@@ -689,13 +782,41 @@ data_prep_ml_server <- function(id,Xproj) {
       clean_response_set = response_det()$c
       clean_predictor_set = predictor_det()$c
       
-      filtered_data = Xproj$a() %>% filter(meta.sample_type %in% input$sample_type_reg)
+      filtered_data = Xproj$a() %>% filter(meta.definition %in% input$sample_type_reg)
       
-      select(filtered_data, clean_response_set[,1], clean_predictor_set[,1]) %>%
+      
+      if (input$response_prep_method == "binary_categorical") {
         
-        mutate(response = select(., clean_response_set[,1]) %>% rowMeans()) %>%
-        select(response, clean_predictor_set[,1]) %>% 
-        na.omit()
+        reg <- filtered_data %>% 
+          select(input$bcategorical_response_var, clean_predictor_set[,1]) %>%
+          mutate(response = case_when(
+            get(input$bcategorical_response_var) %in% input$binaryone_selector ~ 1,
+            get(input$bcategorical_response_var) %in% input$binaryzero_selector ~ 0,
+            .default = NA
+          )) %>% select(response, clean_predictor_set[,1]) %>%  na.omit()
+        reg
+        
+      } else {
+        select(filtered_data, clean_response_set[,1], clean_predictor_set[,1]) %>%
+          
+          mutate(response = select(., clean_response_set[,1]) %>% rowMeans()) %>%
+          select(response, clean_predictor_set[,1]) %>%
+          na.omit()
+        
+      }
+      
+      
+    })
+    output$regdata <- renderDT({
+      req(input$bcategorical_response_var)
+      req(input$binaryone_selector)
+      req(input$binaryzero_selector)
+      req(predictor_det()$c$gene_symbol)
+      if (input$response_prep_method == "binary_categorical") {
+        reg_data()
+        
+      }
+      
     })
     
     
@@ -703,7 +824,7 @@ data_prep_ml_server <- function(id,Xproj) {
   } )
 }
 
-ml_main_server <- function(id,regress_data,Xproj) {
+ml_main_server <- function(id,regress_data,Xproj ) {
   moduleServer(id,function(input,output,session) {
     
     
@@ -778,14 +899,33 @@ ml_main_server <- function(id,regress_data,Xproj) {
         predictor_var <-  as.matrix(select(regress_data(), -c("response")))
         set.seed(7)
         foldid <- sample(1:10,size = length(response_var), replace = TRUE)
-        fitty <- cv.glmnet(predictor_var, response_var,weights = NULL, foldid = foldid, alpha = input$user_alpha)
+        
+        if (input$response_prep_method == "binary_categorical") {
+          fitty <- cv.glmnet(predictor_var, response_var,weights = NULL, foldid = foldid, alpha = input$user_alpha,
+                             family="binomial", type.measure = "auc")
+          
+        } else {
+          fitty <- cv.glmnet(predictor_var, response_var,weights = NULL, foldid = foldid, alpha = input$user_alpha)
+          
+          
+        }
+        
       } else if (input$regression_workflow == "ctest_model") {
         train_regress_data <- regress_data()[trows(),]
         response_var_train <- as.matrix(select(train_regress_data, response))
         predictor_var_train <-  as.matrix(select(train_regress_data, -c("response")))
         set.seed(7)
         foldid <- sample(1:10,size = length(response_var_train), replace = TRUE)
-        fitty <- cv.glmnet(predictor_var_train, response_var_train, foldid = foldid, alpha = input$user_alpha)
+        if (input$response_prep_method == "binary_categorical") {
+          
+          fitty <- cv.glmnet(predictor_var_train, response_var_train, foldid = foldid, alpha = input$user_alpha,
+                             family="binomial", type.measure = "auc")
+          
+        } else {
+          fitty <- cv.glmnet(predictor_var_train, response_var_train, foldid = foldid, alpha = input$user_alpha)
+          
+        }
+        
       } 
       fitty
     })
@@ -815,6 +955,7 @@ ml_main_server <- function(id,regress_data,Xproj) {
       if(!is.null(cvfit())) {
         c <- as.matrix(coef(cvfit(), s = input$lambda_for_coef))
         c <-  c[2:length(rownames(c)), ]
+        #c <- round(c, digits=5)
         c = c[order(abs(c), decreasing = TRUE)]
         as.data.frame(c)
       } else {
@@ -918,3 +1059,6 @@ ml_main_server <- function(id,regress_data,Xproj) {
     ############################################################
   })
 }
+
+
+

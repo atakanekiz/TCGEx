@@ -10,11 +10,11 @@ library(dplyr)
 
 km_ui <- function(id, label, choices) {
   
-  
-  
   ns <- NS(id)
   
   tagList(
+    
+    useShinyalert(),
     
     ui <- fluidPage(
       
@@ -121,6 +121,8 @@ km_ui <- function(id, label, choices) {
         introjsUI(),
         actionButton(ns("KM_help"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
         
+        textOutput(ns("filewarning_two")) ,     
+        
         width = 3
         
     ),
@@ -186,7 +188,7 @@ km_ui <- function(id, label, choices) {
           column(4,
                  
                  sliderInput(inputId = ns("km_xlim"), label="Define endpoint (days)", value = 6000, min = 10, max=10000),
-                 sliderInput(inputId = ns("km_breaktime"), label="Break time invervals", value=1000, min=100, max = 1000, step = 200)),
+                 sliderInput(inputId = ns("km_breaktime"), label="Break time invervals", value=500, min=100, max = 1000, step = 100)),
           h3("Survival fit summary")
           
         ),
@@ -209,9 +211,35 @@ km_server <- function(id,Xproj) {
     
     ns <- session$ns
     
+    # v <- eventReactive(Xproj$fileInfost(), {
+    #   
+    # 
+    #   shinyalert("Warning!", "To perform Kaplan-Meier Survival analysis, the data you upload must contain columns containing survival information such as 'vital_status' and 'days _to_event'.",html = FALSE,imageUrl = "",closeOnEsc = TRUE,
+    #                          closeOnClickOutside = TRUE)
+    #   
+    # })
+    # 
+    # output$filewarning_two <- renderText({
+    #   v()
+    # })
+    # 
+
+    
+    observeEvent(Xproj$fileInfost(),{
+
+    output$filewarning_two <- renderText({
+
+      if (!is.null(Xproj$fileInfost())) {
+        shinyalert("Warning!", "To perform Kaplan-Meier Survival analysis, the data you upload must contain columns containing survival information such as 'vital_status' and 'days _to_event'.",html = FALSE,imageUrl = "",closeOnEsc = TRUE,
+                   closeOnClickOutside = TRUE)
+
+        # tags$style(HTML(".km-shinyalert-12a326a245e24d08919ea6ee5a3110e7 { display: none !important; }"))
+      }
+    }) })
+    
     KM_steps <- reactive({
       
-      if(Xproj$cancer_length() ==1 & input$km_feat != "") {
+      if(Xproj$cancer_length() ==1 & input$km_feat != "" | !is.null(Xproj$fileInfost())) {
         
         return(
           
@@ -431,10 +459,12 @@ km_server <- function(id,Xproj) {
             need(input$sel_covar_meta_groups, "Select at least one covariate group")}} 
       )
       
-      if(Xproj$cancer_length() ==1) {
+      if(Xproj$cancer_length() ==1 | !is.null(Xproj$fileInfost())) {
         
         
         sel_cols <- c(input$km_feat, "meta.vital_status", "meta.days_to_event", "meta.definition", "meta.patient")
+        
+        # browser()
         
         dat <- Xproj$a()[, ..sel_cols]
         
@@ -465,7 +495,7 @@ km_server <- function(id,Xproj) {
       }
       
       
-      else if (Xproj$cancer_length() > 1) {
+      else if (Xproj$cancer_length() > 1){
         
         validate(
           need(input$choose_KM, "Please select categorization rule"))
@@ -539,7 +569,9 @@ km_server <- function(id,Xproj) {
       if(input$km_covar != "") {
         
         
-        if(Xproj$cancer_length() ==1) {
+        if(Xproj$cancer_length() ==1 | !is.null(Xproj$fileInfost())) {
+          
+          # browser()
           
           sel_cols2 <- c(input$km_covar, "meta.vital_status", "meta.days_to_event", "meta.definition", "meta.patient")
           
@@ -567,7 +599,7 @@ km_server <- function(id,Xproj) {
           
             
           }    
-        } else if (Xproj$cancer_length() > 1) { 
+        } else if (Xproj$cancer_length() > 1 ) { 
           
           
           if(input$choose_KM == "Aggregated") {

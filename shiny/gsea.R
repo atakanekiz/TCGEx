@@ -33,6 +33,8 @@ gsea_ui <- function(id, label, choices) {
   
   tagList(
     
+    useShinyalert(),
+    
     ui <- fluidPage(
       add_busy_spinner(
         spin = "cube-grid",
@@ -203,6 +205,8 @@ gsea_ui <- function(id, label, choices) {
         introjsUI(),
         actionButton(ns("intro3"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
         
+        textOutput(ns("filewarning_3")) ,
+        
         width = 3
         
       ),
@@ -223,9 +227,15 @@ gsea_server <- function(id,Xproj) {
     
     ns <- session$ns
     
+    output$filewarning_3 <- renderText({
+      
+      if (!is.null(Xproj$fileInfost())) {
+        shinyalert("Warning!", "To perform this analysis using MsigDB gene sets, please ensure that your uploaded data set contains gene symbols rather than Entrez or Ensembl gene IDs. Otherwise you may receive errors.") }
+    })
+    
     ## msigdb_database reading
     
-    msigdb_gene_sets =  reactive({readRDS(paste0("genesets/", "msigdb_long", ".rds"))})
+    msigdb_gene_sets =  reactive({readRDS(paste0("genesets/", "msigdb_long_w_immth", ".rds"))})
     
     ## help section server
     
@@ -416,7 +426,7 @@ gsea_server <- function(id,Xproj) {
         
       } else {
         
-        gsea_path = names(msigdb_gene_sets()[[input$gsea_cat]][[]])
+        gsea_path = names(msigdb_gene_sets()[[input$gsea_cat]][[1]])
         updateSelectizeInput(session,'gsea_pathway', choices = gsea_path , server = TRUE)
       }
       
@@ -607,7 +617,7 @@ gsea_server <- function(id,Xproj) {
             
           } else {
             
-            gene_set <- list(msigdb_gene_sets()[[input$gsea_cat]][[]][[input$gsea_pathway]])
+            gene_set <- list(msigdb_gene_sets()[[input$gsea_cat]][[1]][[input$gsea_pathway]])
             
             names(gene_set) <- input$gsea_pathway
             
@@ -625,7 +635,7 @@ gsea_server <- function(id,Xproj) {
             
           } else {
             
-            gene_set <- msigdb_gene_sets()[[input$gsea_cat]][[]]
+            gene_set <- msigdb_gene_sets()[[input$gsea_cat]][[1]]
             
             gene_set
           }

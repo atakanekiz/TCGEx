@@ -16,6 +16,8 @@ heatmap_ui <- function(id, label, choices) {
   ns <- NS(id)
   tagList(
     
+    useShinyalert(),
+    
     add_busy_spinner(
       spin = "cube-grid",
       position = "top-right",
@@ -153,6 +155,8 @@ heatmap_ui <- function(id, label, choices) {
       introjsUI(),
       actionButton(ns("heatmap_help"), "App Tutorial", style="color: #FFFFFF; background-color: #81A1C1; border-color: #02a9f7"),
       
+      textOutput(ns("filewarning_6")) ,
+      
       width = 3
       
     ),
@@ -169,6 +173,12 @@ heatmap_server <- function(id,Xproj) {
   moduleServer(
     id,
     function(input, output, session) {
+      
+      output$filewarning_6 <- renderText({
+        
+        if (!is.null(Xproj$fileInfost())) {
+          shinyalert("Warning!", "To perform this analysis using MsigDB gene sets, please ensure that your uploaded data set contains gene symbols rather than Entrez or Ensembl gene IDs. Otherwise you may receive errors.") }
+      })
       
       ns <- session$ns
       
@@ -273,7 +283,7 @@ heatmap_server <- function(id,Xproj) {
       
       # Remove cols which is including more than 10 levels and numeric
       
-      hidden_cols_heatmap_plotvar<-reactive({"meta.definition"})
+      hidden_cols_heatmap_plotvar<-reactive({c("meta.definition", "meta.treatments")})
       
       meta_cols_heatmap_plotvar <- reactive({colnames(Xproj$a())[grep("^meta\\.", colnames(Xproj$a()))]})
       
@@ -291,7 +301,7 @@ heatmap_server <- function(id,Xproj) {
       observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "hm_categorized_gene", choices = colnames(Xproj$a()[, lapply(Xproj$a(), is.numeric) == TRUE, with = FALSE]), selected = character(0), server = TRUE)})
       observe({updateSelectizeInput(session = getDefaultReactiveDomain(), "hm_definition_sel", choices = c(Xproj$a()$meta.definition), selected = character(0), server = TRUE)})
       
-      heatmap_df_msigdb <- reactive({heatmap_df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))})
+      heatmap_df_msigdb <- reactive({heatmap_df_msigdb <- readRDS(paste0("genesets/", "msigdb_long_w_immth", ".rds"))})
       
       hm_gene_sets <- reactive({ 
         
@@ -305,12 +315,12 @@ heatmap_server <- function(id,Xproj) {
           
           if(input$cat %in% c("C2","C3","C4","C5","C7")) {
             
-            df_msigdb2 = df_msigdb[[input$cat]][[input$heatmap_subcat]]
+            df_msigdb2 = names(df_msigdb[[input$cat]][[input$heatmap_subcat]])
             
           } else {
-            df_msigdb2 = df_msigdb[[input$cat]]
+            df_msigdb2 = names(df_msigdb[[input$cat]][[1]])
           }
-          return(df_msigdb2)
+          # return(df_msigdb2)
           
         } else {
           
@@ -331,12 +341,12 @@ heatmap_server <- function(id,Xproj) {
         if(input$cat %in% c("C2","C3","C4","C5","C7")) {
           
           
-          heatmap_path = names(hm_gene_sets())
+          heatmap_path = hm_gene_sets()
           updateSelectizeInput(session,'chosen_gse', choices = heatmap_path , server = TRUE)
           
         } else {
           
-          heatmap_path = names(hm_gene_sets()[[1]])
+          heatmap_path = hm_gene_sets()
           updateSelectizeInput(session,'chosen_gse', choices = heatmap_path , server = TRUE)
         }
         
@@ -363,6 +373,8 @@ heatmap_server <- function(id,Xproj) {
       
       mat <- eventReactive(input$heatmap_run, {
         
+        # browser()
+        
         # Matching the MSigDB gene sets with selected TCGA data.
         
         req(pre_data())
@@ -373,7 +385,7 @@ heatmap_server <- function(id,Xproj) {
           
           req(input$chosen_gse)
           
-          heatmap_df_msigdb <- readRDS(paste0("genesets/", "msigdb_long", ".rds"))
+          heatmap_df_msigdb <- readRDS(paste0("genesets/", "msigdb_long_w_immth", ".rds"))
           
           if(input$cat %in% c("C2","C3","C4","C5","C7")) {
             
@@ -381,7 +393,7 @@ heatmap_server <- function(id,Xproj) {
             
           } else {
             
-            heatmap_msigdb_genes <- heatmap_df_msigdb[[input$cat]][[]][[input$chosen_gse]]
+            heatmap_msigdb_genes <- heatmap_df_msigdb[[input$cat]][[1]][[input$chosen_gse]]
           }
           
           #Take the subset of chosen Human MsigDB geneset.
@@ -392,7 +404,7 @@ heatmap_server <- function(id,Xproj) {
           
           daf <- as.data.frame(pre_data())
           
-          rownames(daf) <- daf$meta.barcode
+          # rownames(daf) <- daf$meta.barcode
           
           same_hallmarks_names = intersect(final_gene_sets, colnames(daf))
           
@@ -406,6 +418,8 @@ heatmap_server <- function(id,Xproj) {
           
           daf <- as.data.frame(pre_data())
           
+          rownames(daf)<-NULL
+          
           rownames(daf) <- daf$meta.barcode
           
           selected_cols <- c(input$genes)
@@ -417,7 +431,7 @@ heatmap_server <- function(id,Xproj) {
           
           daf <- as.data.frame(pre_data())
           
-          rownames(daf) <- daf$meta.barcode
+          # rownames(daf) <- daf$meta.barcode
           
           uploaded_heatmap_csv <- input$heatmap_csv
           
@@ -543,9 +557,9 @@ heatmap_server <- function(id,Xproj) {
               
               rownames(daf) <- daf$meta.barcode
               
+              # Select columns based on input$annotation
               chosen_meta <- c(input$annotation)
-              
-              meta <- daf[,chosen_meta]
+              meta <- daf[, chosen_meta, drop = FALSE]  # Ensure drop = FALSE to keep rownames because patients with NA values in mat_data causing problems.The column number of mat_data and the row number of meta needs to be matched. 
               
             })
             
@@ -713,16 +727,36 @@ heatmap_server <- function(id,Xproj) {
           }else{
             distfun_col =  function(x) stats::dist(x, method = input$clustering_distance_columns)}
           
-          mat_data <- mat()
+          mat_data <- mat()  #There are some NAs in the mat_data and it causing errors. The solution is: Finding patients with NA values as colnames of mat_data then deleting this patients from the row names of meta. 
           
-          # mat_data <- mat_data[ , colSums(is.na(mat_data))==0]
+          meta <- as.data.frame(meta())
+          
+          # Identify columns with NA values in mat_data
+          cols_with_na <- apply(is.na(mat_data), 2, any)
+          
+          # Extract row names from meta where there are NA values in mat_data
+          patients_with_na <- rownames(meta)[cols_with_na]
+          
+          # Convert rownames to a column for manipulation with dplyr
+          meta <- meta %>%
+            tibble::rownames_to_column(var = "meta_barcode")
+          
+          # Filter rows based on rownames not in patients_with_na
+          meta_filtered <- meta %>%
+            filter(!meta_barcode %in% patients_with_na)
+          
+          # Convert back to original rownames structure
+          meta_filtered <- meta_filtered %>%
+            column_to_rownames(var = "meta_barcode")
+          
+          mat_data <- mat_data[ , colSums(is.na(mat_data))==0]
           
           hclustfun_row = function(x) stats::hclust(x, method = input$clustering_method_rows)
           hclustfun_col = function(x) stats::hclust(x, method = input$clustering_method_columns)
           
           heatmap_obj <- heatmaply(mat_data, 
                                    fontsize_row = 9 , 
-                                   col_side_colors = meta(),
+                                   col_side_colors = meta_filtered,
                                    colors = rev(brewer.pal(n= 10, "RdBu")) , 
                                    showticklabels = c(FALSE, TRUE) ,
                                    distfun_row = distfun_row,
