@@ -368,7 +368,7 @@ km_server <- function(id,Xproj) {
     # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
     observe({updateSelectizeInput(session, 
                                   "km_feat", selected="",
-                                  choices = colnames(Xproj$a()), 
+                                  choices = setdiff(colnames(Xproj$a()), c("meta.treatments")), 
                                   server = T)})
     
     
@@ -382,7 +382,7 @@ km_server <- function(id,Xproj) {
     # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
     observe({updateSelectizeInput(session, 
                                   "km_covar", selected = "",
-                                  choices = c(colnames(Xproj$a())), #projcolnames()[grepl("meta.", projcolnames())], 
+                                  choices = setdiff(colnames(Xproj$a()), c("meta.definition", "meta.treatments")),  #projcolnames()[grepl("meta.", projcolnames())], 
                                   server = T)})
     
     # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.

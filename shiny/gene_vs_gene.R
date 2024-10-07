@@ -312,7 +312,7 @@ gene_vs_gene_server <- function(id,Xproj) {
       
       # Remove cols which is including more than 10 levels and numeric
       
-      hidden_cols_gplot<-reactive({"meta.definition"})
+      hidden_cols_gplot<-reactive({c("meta.definition", "meta.treatments")})
 
       meta_cols_gplot <- reactive({colnames(Xproj$a())[grep("^meta\\.", colnames(Xproj$a()))]})
 
