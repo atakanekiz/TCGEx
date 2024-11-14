@@ -278,7 +278,7 @@ pca_server <- function(id,Xproj) {
       
       observe({updateSelectizeInput(session, "genecor_samp_2",choices = Xproj$a()[["meta.definition"]], server = T)})
       observe({updateSelectizeInput(session, 'data', 
-                                   choices = c("All genes", "miRNA", "RNAseq","lncRNA", "MSigDB Gene Sets", "Custom gene set"),
+                                   choices = c("All genes", "miRNA", "RNAseq","lncRNA","Proteomics","MSigDB Gene Sets", "Custom gene set"),
                                    selected = "",
                                    server = TRUE)})
       
@@ -340,7 +340,7 @@ pca_server <- function(id,Xproj) {
       gene_cols <- reactive({
         
         Xproj$a() %>%
-          select(!starts_with("meta.")) %>%
+          select(-starts_with("meta.")) %>%
           select(where(is.numeric))
         
       })
@@ -375,7 +375,7 @@ pca_server <- function(id,Xproj) {
       
       pca_df <- reactive({
         
-        # browser()
+        browser()
         
         
          pre_d <- Xproj$a()[meta.definition %in% input$genecor_samp_2, ]
@@ -388,12 +388,15 @@ pca_server <- function(id,Xproj) {
         
         lncRNA <-  gene_cols()[,intersect(colnames(pre_d),lncrnas_vector()),with=F]
         
-        RNAseq <- select(gene_cols(),-starts_with("hsa.") )
+        RNAseq <- gene_cols() %>% 
+                      select(-starts_with("hsa."), -starts_with("prt.") )
+        
+        Proteomics <- select(gene_cols(), starts_with("prt.") )
         
         if(input$data == "All genes" ){
           
             pre_d <- drop_na(pre_d, colnames(miRNA))%>%
-              select(!(any_of(colnames(RNAseq))& where(~ any(is.na(.x)))))
+              select(-(any_of(colnames(RNAseq))& where(~ any(is.na(.x)))))
           
           
         }else if(input$data == "miRNA"){
@@ -410,8 +413,11 @@ pca_server <- function(id,Xproj) {
           
           pre_d <- drop_na(pre_d, colnames(RNAseq))
           
-        }
+        }else if(input$data == "Proteomics"){
+          
+          pre_d <- drop_na(pre_d, colnames(Proteomics))
         
+        }
         
         pre_d
         
@@ -429,7 +435,7 @@ pca_server <- function(id,Xproj) {
         req(pca_df())
         
         pc_df <-  pca_df() %>% 
-          select(!starts_with("meta.")) %>%
+          select(-starts_with("meta.")) %>%
           select(where(is.numeric))
         
         pc_df <- remove_constant(pc_df)
@@ -480,7 +486,7 @@ pca_server <- function(id,Xproj) {
         
         
         
-          c_gene <- filter(c_gene, !grepl("hsa.", genes))
+          c_gene <- filter(c_gene, -grepl("hsa.", genes))
 
           showNotification("Genes which starts with 'hsa.' were removed. This tool will allow to use miRNA's coming soon",
                            duration = 7,
@@ -525,12 +531,11 @@ pca_server <- function(id,Xproj) {
       
       int_dat <- reactive({
         
-        
         # req(all_genes())
         
         if(input$data == "All genes" ){
           
-           df_pc <- all_genes()
+           df_pc <- all_genes() %>%  select(-starts_with("prt."))
            
            
           
@@ -560,7 +565,7 @@ pca_server <- function(id,Xproj) {
           
           
             
-            df_pc <- select(all_genes(), !starts_with("hsa."))
+            df_pc <- select(all_genes(), -starts_with("hsa."), -starts_with("prt."))
             
             
             
@@ -579,9 +584,15 @@ pca_server <- function(id,Xproj) {
           df_pc <-  all_genes()[,intersect(cre_gene()[["genes"]], colnames(all_genes())),with=F]
           
           
-        }
+        }else if(input$data == "Proteomics"){
+          
+          
+          
+          df_pc <- select(all_genes(), starts_with("prt."))
         
-        df_pc
+        }
+          
+      df_pc
         
         
       })
@@ -635,11 +646,15 @@ pca_server <- function(id,Xproj) {
       # if input is a gene, high low classification is performed, if input is a clinic, clinic class. is performed
       
       
-      gene_median <- reactive({median(pca_df()[[input$gene]], na.rm = T)})
+      gene_median <- reactive({
+        # browser()
+        med <- median(pca_df()[[input$gene]], na.rm = T)
+       return(med)               
+      })
       
       
       fill <- reactive({
-        
+         # browser()
         
         ifelse(input$gene %in% gene_op(),
                
@@ -649,7 +664,7 @@ pca_server <- function(id,Xproj) {
                  
                  # df_class()[["gene_categorise"]]
                  
-                 ifelse(pca_df()[[input$gene]] > gene_median(),
+                 notation <- ifelse(pca_df()[[input$gene]] > gene_median(),
                         "High",
                         "Low")
                  
@@ -661,10 +676,13 @@ pca_server <- function(id,Xproj) {
                  #'[##########################################################################################]
                  #'[##########################################################################################]
                  
+                 notation
                  
                }), return({
                  
-                 pca_df()[[input$gene]]
+                 notation <- pca_df()[[input$gene]]
+                 
+                 notation
                  
                })
                
@@ -732,6 +750,10 @@ pca_server <- function(id,Xproj) {
           
           return("PCA using genes from custom gene set")
           
+        }else if(input$data == "Proteomics") {
+          
+          return("PCA using Proteomics Data")
+          
         }
         
       })
@@ -739,6 +761,8 @@ pca_server <- function(id,Xproj) {
       #prcomp
       
       pc2<- reactive({
+        
+        # browser()
         
         prcomp(p_dat(), center = input$center, scale. = input$scale)
         

@@ -486,7 +486,7 @@ gsea_server <- function(id,Xproj) {
         
         dat$sample <- as.character(dat$sample)
         
-        dat <- select(dat, -starts_with("meta."))
+        dat <- select(dat, -starts_with("meta."), -starts_with("prt."))
         
         
         dat = as.data.frame(dat)

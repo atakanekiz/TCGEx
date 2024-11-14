@@ -303,6 +303,8 @@ gene_cor_tb_server <- function(id,Xproj) {
       
       cor_dat <-  reactive({
         
+        browser()
+        
         data_cor_a <- cor(as.matrix(f_data_1()[,input$p_gene]),as.matrix(f_data_2()), method = input$corr)
         
         data_cor_b <- sapply(f_data_2(), FUN=function(x, y) cor.test(x, y, method = input$corr)$p.value, y=f_data_1()[[input$p_gene]])
@@ -597,9 +599,13 @@ gene_cor_pl_server <- function(id,Xproj) {
                    col=brewer.pal(n=20, name=input$corr_palette),
                    p.mat = signif_dat()$p,
                    sig.level = 1-input$conflev,
+                   cl.pos = "n",
                    insig='blank')$corrPos -> p1
           
-          text(p1$x, p1$y, round(p1$corr, 2))
+          
+          text(p1$x, p1$y, ifelse(signif_dat()$p > 1 - input$conflev, round(p1$corr, 2), NA))
+          
+          colorlegend(labels = rev(c("high", "medium", "low")), brewer.pal(n=20, name=input$corr_palette), xlim = c(nrow(corre_dat())+1, nrow(corre_dat())+2), align = 'l', ylim = c(1,nrow(corre_dat())),  vertical = T)
           
         }else {
           
@@ -613,7 +619,11 @@ gene_cor_pl_server <- function(id,Xproj) {
                    p.mat = signif_dat()$p,
                    sig.level = 1-input$conflev,
                    pch.cex = 1.5,
+                   cl.pos = "n",
                    insig = 'label_sig')
+          
+          colorlegend(labels = rev(c("high", "medium", "low")), brewer.pal(n=20, name=input$corr_palette), xlim = c(nrow(corre_dat())+1, nrow(corre_dat())+2), align = 'l', ylim = c(1,nrow(corre_dat())),  vertical = T)
+          
         }
         
         
