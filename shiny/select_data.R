@@ -123,7 +123,7 @@ select_data_ui <- function(id) {
                   tags$i(
                     class = "glyphicon glyphicon-info-sign", 
                     style = "color:#0072B2;",
-                    title = "Please check sample data for your analysis. The rds/xlsx/xls file should contain gene and category names. Clinical datas should contain 'meta.' before column names, 'meta.gender' etc."
+                    title = "Please check sample data for your analysis. The rds/xlsx/xls file should contain gene and category names. Clinical datas should contain 'meta.' before column names, 'meta.sex' etc."
                   ), tags$br(),
                   a(href="sample_data_for_loading.rds", "Sample Input File", download=NA, target="_blank")),
                 accept = c(".rds", ".xlsx", ".xls"),
@@ -209,7 +209,7 @@ select_data_ui <- function(id) {
              column(6,
                     # withLoader( plotlyOutput(outputId =   ns("patient_hist")),type = "html",loader = "dnaspin")
                     plotlyOutput(outputId =   ns("patient_hist")), br(),
-                    plotlyOutput(outputId =   ns("gender_hist"))
+                    plotlyOutput(outputId =   ns("sex_hist"))
              ),
              column(6,
                     plotlyOutput(outputId =   ns("definition_hist")), br(),
@@ -245,7 +245,7 @@ select_data_server <- function(id,Xproj){
       shinyjs::reset("fileInfos5")
       
       shinyjs::reset("patient_hist")
-      shinyjs::reset("gender_hist")
+      shinyjs::reset("sex_hist")
       shinyjs::reset("definition_hist")
       shinyjs::reset("age_hist")
       
@@ -261,7 +261,7 @@ select_data_server <- function(id,Xproj){
       shinyjs::reset("file")
       
       shinyjs::reset("patient_hist")
-      shinyjs::reset("gender_hist")
+      shinyjs::reset("sex_hist")
       shinyjs::reset("definition_hist")
       shinyjs::reset("age_hist")
       
@@ -661,7 +661,7 @@ select_data_server <- function(id,Xproj){
           shinyjs::reset("fileInfos5")
 
           shinyjs::reset("patient_hist")
-          shinyjs::reset("gender_hist")
+          shinyjs::reset("sex_hist")
           shinyjs::reset("definition_hist")
           shinyjs::reset("age_hist")
 
@@ -678,7 +678,7 @@ select_data_server <- function(id,Xproj){
       
     })
     
-    output$gender_hist<- renderPlotly({
+    output$sex_hist<- renderPlotly({
       
       req(input$run)
       
@@ -690,18 +690,18 @@ select_data_server <- function(id,Xproj){
         if (any(all_projects %in% input$proj) ){
           #'[#### THIS ADDED]
           
-        #gghistogram(Xproj$a(), "meta.gender", stat="count", legend="none",
+        #gghistogram(Xproj$a(), "meta.sex", stat="count", legend="none",
         #font.x=18, font.y=18, font.tickslab = 18,
-        #fill="meta.gender", palette = c("skyblue", "coral", "gold"))
+        #fill="meta.sex", palette = c("skyblue", "coral", "gold"))
         
-        fig_gender <- plot_ly(Xproj$a(),  labels = ~meta.gender, type = 'pie',
+        fig_sex <- plot_ly(Xproj$a(),  labels = ~meta.sex, type = 'pie',
                               marker = list(color = viridis::viridis_pal(begin = 0.2, end = 0.8)(4)))
         
-        fig_gender <- fig_gender %>% layout(title = 'Gender Statistics For Chosen Data',
+        fig_sex <- fig_sex %>% layout(title = 'sex Statistics For Chosen Data',
                                             xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
                                             yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
         
-        fig_gender
+        fig_sex
       }
       
       else {
