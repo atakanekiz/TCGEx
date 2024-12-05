@@ -391,7 +391,7 @@ gsea_server <- function(id,Xproj) {
     
     observe({updateSelectizeInput(session, 
                                   "gsea_feat", selected="",
-                                  choices = colnames(Xproj$a()), 
+                                  choices = setdiff(colnames(Xproj$a()), c("meta.treatments")),
                                   server = T)})
     
     observe({updateSelectizeInput(session,

@@ -154,7 +154,7 @@ cox_server <- function(id,Xproj) {
     # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
     observe({updateSelectizeInput(session, 
                                   "cox_feat", selected="",
-                                  choices = colnames(Xproj$a()), 
+                                  choices = setdiff(colnames(Xproj$a()), c("meta.treatments")),
                                   server = T)})
     output$proj_length_cox <- reactive({                                      
       
