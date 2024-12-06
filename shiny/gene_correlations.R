@@ -303,7 +303,7 @@ gene_cor_tb_server <- function(id,Xproj) {
       
       cor_dat <-  reactive({
         
-        browser()
+      
         
         data_cor_a <- cor(as.matrix(f_data_1()[,input$p_gene]),as.matrix(f_data_2()), method = input$corr)
         
