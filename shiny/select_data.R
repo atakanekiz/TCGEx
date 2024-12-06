@@ -86,7 +86,7 @@ select_data_ui <- function(id) {
                                      "SKCM-Liu_NatMed_2019 (PD-1)" = "Liu_NatMed_2019-quartile_CRI", 
                                      "SKCM-Riaz_Nivolumab_2017 (PD-1)"  = "Riaz_Nivolumab_2017-quartile_CRI",
                                      "SKCM-VanAllen_Science_2015 (CTLA-4)" = "VanAllen_antiCTLA4_2015-quartile_CRI", 
-                                     "KIRC-Miao_Science_2018 (PD-1, PD-1+CTLA-4, PD-L1)" = "Miao_Science-2018-quartile_CRI", 
+                                     "KIRC-Miao_Science_2018 (PD-1, PD-1+CTLA-4, PD-L1)" = "Miao_Science_2018-quartile_CRI", 
                                      "KIRC-Choueiri_CCR_2016 (PD-1)" = "Choueiri_CCR_2016-quartile_CRI", 
                                      "KIRC-McDermott_NatMed_2018 (PD-L1)" = "IMmotion150-quartile_CRI", 
                                      "BLCA-Balar_Lancet_2017 (PD-L1)" = "IMVigor210-quartile_CRI", 
