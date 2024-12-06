@@ -81,29 +81,29 @@ select_data_ui <- function(id) {
                                      "UVM-Uveal Melanoma" = "UVM-cpm_TCGA"),
                                  #'[#### THIS ADDED]
                                  "Immune checkpoint inhibition studies (CRI-iAtlas, quartile normalized)" =
-                                   c("SKCM-Gide_Cell_2019 (PD-1, PD-1+CTLA-4)" =  "Gide-Cell-2019-quartile_CRI", 
-                                     "SKCM-Hugo_Cell_2016 (PD-1)" = "HugoLo-IPRES-2016-quartile_CRI",
-                                     "SKCM-Liu_NatMed_2019 (PD-1)" = "Liu-NatMed-2019-quartile_CRI", 
-                                     "SKCM-Riaz_Nivolumab_2017 (PD-1)"  = "Riaz-Nivolumab-2017-quartile_CRI",
-                                     "SKCM-VanAllen_Science_2015 (CTLA-4)" = "VanAllen-antiCTLA4-2015-quartile_CRI", 
-                                     "KIRC-Miao_Science_2018 (PD-1, PD-1+CTLA-4, PD-L1)" = "Miao-Science-2018-quartile_CRI", 
-                                     "KIRC-Choueiri_CCR_2016 (PD-1)" = "Choueiri-CCR-2016-quartile_CRI", 
+                                   c("SKCM-Gide_Cell_2019 (PD-1, PD-1+CTLA-4)" =  "Gide_Cell_2019-quartile_CRI", 
+                                     "SKCM-Hugo_Cell_2016 (PD-1)" = "HugoLo_IPRES_2016-quartile_CRI",
+                                     "SKCM-Liu_NatMed_2019 (PD-1)" = "Liu_NatMed_2019-quartile_CRI", 
+                                     "SKCM-Riaz_Nivolumab_2017 (PD-1)"  = "Riaz_Nivolumab_2017-quartile_CRI",
+                                     "SKCM-VanAllen_Science_2015 (CTLA-4)" = "VanAllen_antiCTLA4_2015-quartile_CRI", 
+                                     "KIRC-Miao_Science_2018 (PD-1, PD-1+CTLA-4, PD-L1)" = "Miao_Science-2018-quartile_CRI", 
+                                     "KIRC-Choueiri_CCR_2016 (PD-1)" = "Choueiri_CCR_2016-quartile_CRI", 
                                      "KIRC-McDermott_NatMed_2018 (PD-L1)" = "IMmotion150-quartile_CRI", 
                                      "BLCA-Balar_Lancet_2017 (PD-L1)" = "IMVigor210-quartile_CRI", 
-                                     "STAD-Kim_NatMed_2018 (PD-1)" =  "Kim-NatMed-2018-quartile_CRI", 
-                                     "GBM-Cloughesy_NatMed_2019 (PD-1)" = "Prins-GBM-2019-quartile_CRI",
-                                     "GBM-Zhao_NatMed_2019 (PD-1)" = "Zhao-NatMed-2019-quartile_CRI",
-                                     "PAN-CANCER-CRI (PD-1, CTLA-4, PD-L1)"="all-icb-tcgex-ICI-TRT-quartile_CRI"),
+                                     "STAD-Kim_NatMed_2018 (PD-1)" =  "Kim_NatMed_2018-quartile_CRI", 
+                                     "GBM-Cloughesy_NatMed_2019 (PD-1)" = "Prins_GBM_2019-quartile_CRI",
+                                     "GBM-Zhao_NatMed_2019 (PD-1)" = "Zhao_NatMed_2019-quartile_CRI",
+                                     "PAN-CANCER-CRI (PD-1, CTLA-4, PD-L1)"="all_icb_tcgex_ICI_TRT-quartile_CRI"),
                                  #'[#### THIS ADDED]
                                  "Immune checkpoint inhibition studies (cBioPortal)" = 
-                                   c("SKCM-Van_Allen_2015 (CTLA-4, FPKM Normalized)"="skcm-dfci-2015-tcgex-FPKM_cBioPortal",
-                                     "SKCM-Snyder_2014 (CTLA-4, RPKM Normalized)"="msk-2014-tcgex-RPKM_cBioPortal",
-                                     "SKCM-Hugo_2016 (PD-1, RPKM Normalized)"="mel-ucla-2016-tcgex-RPKM_cBioPortal",
-                                     "ACRM-Liang_2017 (CTLA-4, PD-1, FPKM Normalized)"="mel-tsam-liang-2017-tcgex-FPKM_cBioPortal",
-                                     "SKCM-Liu_2019 (PD-1, TPM Normalized)"="mel-dfci-2019_tcgex-TPM_cBioPortal",
-                                     "SKCM-Riaz_2017 (CTLA-4, FPKM Normalized)"="riaz-2017-tcgex-FPKM_cBioPortal",
-                                     "SKCM-Gide_2019 (CTLA-4+PD-1, CPM Normalized)"="dual-gide-tcgex-CPM_cBioPortal",
-                                     "SKCM-Gide_2019 (PD-1, CPM Normalized)"="pd1-gide-tcgex-CPM_cBioPortal")
+                                   c("SKCM-Van_Allen_2015 (CTLA-4, FPKM Normalized)"="skcm_dfci_2015_tcgex-FPKM_cBioPortal",
+                                     "SKCM-Snyder_2014 (CTLA-4, RPKM Normalized)"="msk_2014_tcgex-RPKM_cBioPortal",
+                                     "SKCM-Hugo_2016 (PD-1, RPKM Normalized)"="mel_ucla_2016_tcgex-RPKM_cBioPortal",
+                                     "ACRM-Liang_2017 (CTLA-4, PD-1, FPKM Normalized)"="mel_tsam_liang_2017_tcgex-FPKM_cBioPortal",
+                                     "SKCM-Liu_2019 (PD-1, TPM Normalized)"="mel_dfci_2019_tcgex-TPM_cBioPortal",
+                                     "SKCM-Riaz_2017 (CTLA-4, FPKM Normalized)"="riaz_2017_tcgex-FPKM_cBioPortal",
+                                     "SKCM-Gide_2019 (CTLA-4+PD-1, CPM Normalized)"="dual_gide_tcgex-CPM_cBioPortal",
+                                     "SKCM-Gide_2019 (PD-1, CPM Normalized)"="pd1_gide_tcgex-CPM_cBioPortal")
                                  
                   ),
                   #selectize = T,
@@ -224,7 +224,7 @@ select_data_server <- function(id,Xproj){
     
     
   #'[#### THIS ADDED]
-    all_projects <- c("ACC-cpm_TCGA", "BLCA-cpm_TCGA", "BRCA-cpm_TCGA", "CESC-cpm_TCGA", "CHOL-cpm_TCGA", "COAD-cpm_TCGA", "DLBC-cpm_TCGA", "ESCA-cpm_TCGA", "GBM-cpm_TCGA", "HNSC-cpm_TCGA", "KICH-cpm_TCGA", "KIRC-cpm_TCGA", "KIRP-cpm_TCGA", "LAML-cpm_TCGA", "LGG-cpm_TCGA", "LIHC-cpm_TCGA", "LUAD-cpm_TCGA", "LUSC-cpm_TCGA", "MESO-cpm_TCGA", "OV-cpm_TCGA", "PAAD-cpm_TCGA", "PCPG-cpm_TCGA", "PRAD-cpm_TCGA", "READ-cpm_TCGA", "SARC-cpm_TCGA", "SKCM-cpm_TCGA", "STAD-cpm_TCGA", "TGCT-cpm_TCGA", "THCA-cpm_TCGA", "THYM-cpm_TCGA", "UCEC-cpm_TCGA", "UCS-cpm_TCGA", "UVM-cpm_TCGA", "Gide-Cell-2019-quartile_CRI", "HugoLo-IPRES-2016-quartile_CRI", "Liu-NatMed-2019-quartile_CRI", "Riaz-Nivolumab-2017-quartile_CRI", "VanAllen-antiCTLA4-2015-quartile_CRI", "Miao-Science-2018-quartile_CRI", "Choueiri-CCR-2016-quartile_CRI", "IMmotion150-quartile_CRI", "IMVigor210-quartile_CRI", "Kim-NatMed-2018-quartile_CRI", "Prins-GBM-2019-quartile_CRI", "Zhao-NatMed-2019-quartile_CRI", "all-icb-tcgex-ICI-TRT-quartile_CRI", "skcm-dfci-2015-tcgex-FPKM_cBioPortal", "msk-2014-tcgex-RPKM_cBioPortal", "mel-ucla-2016-tcgex-RPKM_cBioPortal", "mel-tsam-liang-2017-tcgex-FPKM_cBioPortal", "mel-dfci-2019_tcgex-TPM_cBioPortal", "riaz-2017-tcgex-FPKM_cBioPortal", "dual-gide-tcgex-CPM_cBioPortal", "pd1-gide-tcgex-CPM_cBioPortal")
+    all_projects <- c("ACC-cpm_TCGA", "BLCA-cpm_TCGA", "BRCA-cpm_TCGA", "CESC-cpm_TCGA", "CHOL-cpm_TCGA", "COAD-cpm_TCGA", "DLBC-cpm_TCGA", "ESCA-cpm_TCGA", "GBM-cpm_TCGA", "HNSC-cpm_TCGA", "KICH-cpm_TCGA", "KIRC-cpm_TCGA", "KIRP-cpm_TCGA", "LAML-cpm_TCGA", "LGG-cpm_TCGA", "LIHC-cpm_TCGA", "LUAD-cpm_TCGA", "LUSC-cpm_TCGA", "MESO-cpm_TCGA", "OV-cpm_TCGA", "PAAD-cpm_TCGA", "PCPG-cpm_TCGA", "PRAD-cpm_TCGA", "READ-cpm_TCGA", "SARC-cpm_TCGA", "SKCM-cpm_TCGA", "STAD-cpm_TCGA", "TGCT-cpm_TCGA", "THCA-cpm_TCGA", "THYM-cpm_TCGA", "UCEC-cpm_TCGA", "UCS-cpm_TCGA", "UVM-cpm_TCGA", "Gide_Cell_2019-quartile_CRI", "HugoLo_IPRES_2016-quartile_CRI", "Liu_NatMed_2019-quartile_CRI", "Riaz_Nivolumab_2017-quartile_CRI", "VanAllen_antiCTLA4_2015-quartile_CRI", "Miao_Science_2018-quartile_CRI", "Choueiri_CCR_2016-quartile_CRI", "IMmotion150-quartile_CRI", "IMVigor210-quartile_CRI", "Kim_NatMed_2018-quartile_CRI", "Prins_GBM_2019-quartile_CRI", "Zhao_NatMed_2019-quartile_CRI", "all_icb_tcgex_ICI_TRT-quartile_CRI", "skcm_dfci_2015_tcgex-FPKM_cBioPortal", "msk_2014_tcgex-RPKM_cBioPortal", "mel_ucla_2016_tcgex-RPKM_cBioPortal", "mel_tsam_liang_2017_tcgex-FPKM_cBioPortal", "mel_dfci_2019_tcgex-TPM_cBioPortal", "riaz_2017_tcgex-FPKM_cBioPortal", "dual_gide_tcgex-CPM_cBioPortal", "pd1_gide_tcgex-CPM_cBioPortal")
 
     #'[#### THIS ADDED]
     
