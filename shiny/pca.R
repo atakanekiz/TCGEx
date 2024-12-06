@@ -375,7 +375,7 @@ pca_server <- function(id,Xproj) {
       
       pca_df <- reactive({
         
-        browser()
+    
         
         
          pre_d <- Xproj$a()[meta.definition %in% input$genecor_samp_2, ]
