@@ -18,6 +18,8 @@ heatmap_ui <- function(id, label, choices) {
     
     useShinyalert(),
     
+    hidden(div(id = "alert_placeholder")),
+    
     add_busy_spinner(
       spin = "cube-grid",
       position = "top-right",
@@ -178,7 +180,10 @@ heatmap_server <- function(id,Xproj) {
         
         if (!is.null(Xproj$fileInfost())) {
           shinyalert("Warning!", "To perform this analysis using MsigDB gene sets, please ensure that your uploaded data set contains gene symbols rather than Entrez or Ensembl gene IDs. Otherwise you may receive errors.") }
-      })
+      
+        hide("alert_placeholder")
+        
+        })
       
       ns <- session$ns
       

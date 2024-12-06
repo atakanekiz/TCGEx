@@ -223,7 +223,10 @@ gene_vs_cat_server <- function(id,Xproj){
       
       if (!is.null(Xproj$fileInfost())) {
         shinyalert("Warning!", "Please ensure that the column names containing clinic information in your data start with 'meta.' . Otherwise, you will not be able to use this analysis module.") }
-    })
+   
+      hide("alert_placeholder")
+      
+       })
     
     
     genecat_steps <- reactive({
