@@ -12,6 +12,8 @@ cox_ui <- function(id, label, choices) {
     
     useShinyalert(),
     
+    hidden(div(id = "alert_placeholder")),
+    
     sidebarPanel(
       
       selectizeInput(inputId = ns("cox_samptyp"), 
@@ -94,8 +96,11 @@ cox_server <- function(id,Xproj) {
         
         if (!is.null(Xproj$fileInfost())) {
           shinyalert("Warning!", "To perform Cox Proportional-Hazard Survival analysis, the data you upload must contain columns containing survival information such as 'vital_status' and 'days _to_event'.") }
-      })
-    
+     
+        hide("alert_placeholder")
+        
+         })
+      
     ns <- session$ns
     
     COX_steps <- reactive({
