@@ -44,7 +44,7 @@ gene_vs_cat_ui <- function(id, label, choices){
         selectizeInput(ns("facet_plotvar"), multiple=F,
                        "Select faceting variable (optional)",
                        choices=NULL, # will be updated dynamically
-                       options = list(placeholder = "eg. meta.gender")),
+                       options = list(placeholder = "eg. meta.sex")),
         
         checkboxInput(inputId = ns("exprs_stats"), "Show statistics?", F),
         

@@ -149,7 +149,7 @@ pca_ui <- function(id) {
       ),
       
       selectizeInput(ns("gene"), "*Please select feature to annotate", 
-                     options=list(placeholder = "eg. meta.gender, gene name",
+                     options=list(placeholder = "eg. meta.sex, gene name",
                                   plugins = list('restore_on_backspace')),
                      choices = NULL),
       
@@ -258,7 +258,7 @@ pca_server <- function(id,Xproj) {
             "By default, gene expression values are centered by subtracting the mean expression value.",
             "A variable that is on a different scale from the others may dominate the variance direction. Scaling (default) gene expression values prevents this effect.",
             "Here, you can apply variance filtering to keep most highly variable genes in the analysis. Setting this value to 10, for instance, will select the genes having the top 10% highest variation in the dataset. Such filtering can speed up the analysis.",
-            "You can color code the data points on the graph using gene expression values or clinical meta data. If you select a gene name here, gene expression will be categorized at the median value per sample and points will be annotated. You can also select a clinical meta data (eg. meta.gender or a specific gene) to color points accordingly.",
+            "You can color code the data points on the graph using gene expression values or clinical meta data. If you select a gene name here, gene expression will be categorized at the median value per sample and points will be annotated. You can also select a clinical meta data (eg. meta.sex or a specific gene) to color points accordingly.",
             "You can change the color palette of the graph here."
           ))
           
