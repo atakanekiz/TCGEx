@@ -599,15 +599,13 @@ gene_cor_pl_server <- function(id,Xproj) {
                    col=brewer.pal(n=20, name=input$corr_palette),
                    p.mat = signif_dat()$p,
                    sig.level = 1-input$conflev,
-                   cl.pos = "r",
+                   cl.pos = "n",
                    insig='blank')$corrPos -> p1
           
           
           text(p1$x, p1$y, ifelse(signif_dat()$p > 1 - input$conflev, round(p1$corr, 2), NA))
           
-          # colorlegend(labels = rev(c("high", "medium", "low")), brewer.pal(n=20, name=input$corr_palette), xlim = c(nrow(corre_dat())+1, nrow(corre_dat())+2), align = 'l', ylim = c(1,nrow(corre_dat())),  vertical = T)
-          
-          text(nrow(corre_dat())*1.5, nrow(corre_dat())*0.25, paste("Correlation Coefficient", input$corr2, sep = ":" ))
+          colorlegend(labels = rev(c("high", "medium", "low")), brewer.pal(n=20, name=input$corr_palette), xlim = c(nrow(corre_dat())+1, nrow(corre_dat())+2), align = 'l', ylim = c(1,nrow(corre_dat())),  vertical = T)
           
         }else {
           
@@ -621,13 +619,10 @@ gene_cor_pl_server <- function(id,Xproj) {
                    p.mat = signif_dat()$p,
                    sig.level = 1-input$conflev,
                    pch.cex = 1.5,
-                   cl.pos = "r",
+                   cl.pos = "n",
                    insig = 'label_sig')
           
-          # colorlegend(labels = rev(c("high", "medium", "low")), brewer.pal(n=20, name=input$corr_palette), xlim = c(nrow(corre_dat())+1, nrow(corre_dat())+2), align = 'l', ylim = c(1,nrow(corre_dat())),  vertical = T)
-          
-          text(nrow(corre_dat())*1.5, nrow(corre_dat())*0.25, paste("Correlation Coefficient", input$corr2, sep = ":" ))
-          
+          colorlegend(labels = rev(c("high", "medium", "low")), brewer.pal(n=20, name=input$corr_palette), xlim = c(nrow(corre_dat())+1, nrow(corre_dat())+2), align = 'l', ylim = c(1,nrow(corre_dat())),  vertical = T)
           
         }
         
