@@ -53,21 +53,6 @@ ggscatter(merged, "AKT2", "prt.Akt2")
 saveRDS(merged, "###_prt.rds")
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # 
 # 
 # duplicated_samples <- query_protein[[1]][[1]][duplicated(query_protein[[1]][[1]]$cases), ]
@@ -80,7 +65,3 @@ saveRDS(merged, "###_prt.rds")
 # proteomics_data <- GDCprepare(query_protein)
 # 
 # 
-
-
-
-
