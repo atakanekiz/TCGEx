@@ -15,6 +15,7 @@ km_ui <- function(id, label, choices) {
   tagList(
     
     useShinyalert(),
+    hidden(div(id = "alert_placeholder")),
     
     ui <- fluidPage(
       
@@ -76,7 +77,7 @@ km_ui <- function(id, label, choices) {
              
              selectizeInput(inputId = ns ("km_covar") , "3. Select covariate (optional)",
                             choices=NULL, # will be updated dynamically
-                            options=list(placeholder = "eg. meta.gender",
+                            options=list(placeholder = "eg. meta.sex",
                                          plugins = list('restore_on_backspace'))
              ),
              
@@ -232,6 +233,7 @@ km_server <- function(id,Xproj) {
       if (!is.null(Xproj$fileInfost())) {
         shinyalert("Warning!", "To perform Kaplan-Meier Survival analysis, the data you upload must contain columns containing survival information such as 'vital_status' and 'days _to_event'.",html = FALSE,imageUrl = "",closeOnEsc = TRUE,
                    closeOnClickOutside = TRUE)
+        hide("alert_placeholder")
 
         # tags$style(HTML(".km-shinyalert-12a326a245e24d08919ea6ee5a3110e7 { display: none !important; }"))
       }
@@ -250,7 +252,7 @@ km_server <- function(id,Xproj) {
             intro = paste(c(
               "This is Kaplan-meier (KM) survival analysis module. Here, you can examine how different data subsets differ in terms of survival. You can define data subsets by categorizing gene expression at desired cutoffs and/or use metadata features that are already categorical. The log-rank test p-value is reported on the graph and the survival model fit is shown to provide further details about the analysis. Continue tutorial to learn how to use the module.",
               "You can select the sample types (eg. primary and/or metastatic) to tailor the analysis to your needs.",
-              "KM analysis is performed between groups of data. You can select genes, miRNAs, or clinical meta data features here. If your selection is a categorical data type (eg. patient gender, tumor subtype), you will be asked to select which subsets to be included in the analysis. If your selection is a numerical data type (eg. gene expression), you will be asked to define quantile cutoffs to categorize gene expression as 'high' and 'low'",
+              "KM analysis is performed between groups of data. You can select genes, miRNAs, or clinical meta data features here. If your selection is a categorical data type (eg. patient sex, tumor subtype), you will be asked to select which subsets to be included in the analysis. If your selection is a numerical data type (eg. gene expression), you will be asked to define quantile cutoffs to categorize gene expression as 'high' and 'low'",
               
               "Define the quantile cutoff for the low expression group. 50 (default) means that the samples expressing the gene of interest at lower levels than the median value will be categorized as 'low'. Setting this value to 25, for instance, will categorize the bottom 25% of the data as the low group.",
               
@@ -281,7 +283,7 @@ km_server <- function(id,Xproj) {
               "This is Kaplan-meier (KM) survival analysis module. Here, you can examine how different data subsets differ in terms of survival. You can define data subsets by categorizing gene expression at desired cutoffs and/or use metadata features that are already categorical. The log-rank test p-value is reported on the graph and the survival model fit is shown to provide further details about the analysis. Continue tutorial to learn how to use the module.",
               "You can select the sample types (eg. primary and/or metastatic) to tailor the analysis to your needs.",
               "When analyzing multiple cancer types together, you can categorize gene expression across the aggregated dataset as a whole or separately for each cancer types.",
-              "KM analysis is performed between groups of data. You can select genes, miRNAs, or clinical meta data features here. If your selection is a categorical data type (eg. patient gender, tumor subtype), you will be asked to select which subsets to be included in the analysis. If your selection is a numerical data type (eg. gene expression), you will be asked to define quantile cutoffs to categorize gene expression as 'high' and 'low'",
+              "KM analysis is performed between groups of data. You can select genes, miRNAs, or clinical meta data features here. If your selection is a categorical data type (eg. patient sex, tumor subtype), you will be asked to select which subsets to be included in the analysis. If your selection is a numerical data type (eg. gene expression), you will be asked to define quantile cutoffs to categorize gene expression as 'high' and 'low'",
               
               "Define the quantile cutoff for the low expression group. 50 (default) means that the samples expressing the gene of interest at lower levels than the median value will be categorized as 'low'. Setting this value to 25, for instance, will categorize the bottom 25% of the data as the low group.",
               
@@ -311,7 +313,7 @@ km_server <- function(id,Xproj) {
             intro = paste(c(
               "This is Kaplan-meier (KM) survival analysis module. Here, you can examine how different data subsets differ in terms of survival. You can define data subsets by categorizing gene expression at desired cutoffs and/or use metadata features that are already categorical. The log-rank test p-value is reported on the graph and the survival model fit is shown to provide further details about the analysis. Continue tutorial to learn how to use the module. <b>Note:</b> Inputs in this interface are updated according to the user selection and new tutorial steps will be available as you perform analysis.",
               "You can select the sample types (eg. primary and/or metastatic) to tailor the analysis to your needs.",
-              "KM analysis is performed between groups of data. You can select genes, miRNAs, or clinical meta data features here. If your selection is a categorical data type (eg. patient gender, tumor subtype), you will be asked to select which subsets to be included in the analysis. If your selection is a numerical data type (eg. gene expression), you will be asked to define quantile cutoffs to categorize gene expression as 'high' and 'low'",
+              "KM analysis is performed between groups of data. You can select genes, miRNAs, or clinical meta data features here. If your selection is a categorical data type (eg. patient sex, tumor subtype), you will be asked to select which subsets to be included in the analysis. If your selection is a numerical data type (eg. gene expression), you will be asked to define quantile cutoffs to categorize gene expression as 'high' and 'low'",
               "You can select a covariate group in order to compare it with first feature. This is optional and not needed for single feature analysis. <i>Note: Other tutorial steps will be available when you start the analysis.</i>"
             ))
           )
@@ -368,7 +370,7 @@ km_server <- function(id,Xproj) {
     # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
     observe({updateSelectizeInput(session, 
                                   "km_feat", selected="",
-                                  choices = colnames(Xproj$a()), 
+                                  choices = setdiff(colnames(Xproj$a()), c("meta.treatments")), 
                                   server = T)})
     
     
@@ -382,7 +384,7 @@ km_server <- function(id,Xproj) {
     # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.
     observe({updateSelectizeInput(session, 
                                   "km_covar", selected = "",
-                                  choices = c(colnames(Xproj$a())), #projcolnames()[grepl("meta.", projcolnames())], 
+                                  choices = setdiff(colnames(Xproj$a()), c("meta.definition", "meta.treatments")),  #projcolnames()[grepl("meta.", projcolnames())],  #projcolnames()[grepl("meta.", projcolnames())], 
                                   server = T)})
     
     # WARNING Input to asJSON(keep_vec_names=TRUE) is a named vector.

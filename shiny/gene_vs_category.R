@@ -44,7 +44,7 @@ gene_vs_cat_ui <- function(id, label, choices){
         selectizeInput(ns("facet_plotvar"), multiple=F,
                        "Select faceting variable (optional)",
                        choices=NULL, # will be updated dynamically
-                       options = list(placeholder = "eg. meta.gender")),
+                       options = list(placeholder = "eg. meta.sex")),
         
         checkboxInput(inputId = ns("exprs_stats"), "Show statistics?", F),
         
@@ -223,7 +223,10 @@ gene_vs_cat_server <- function(id,Xproj){
       
       if (!is.null(Xproj$fileInfost())) {
         shinyalert("Warning!", "Please ensure that the column names containing clinic information in your data start with 'meta.' . Otherwise, you will not be able to use this analysis module.") }
-    })
+   
+      hide("alert_placeholder")
+      
+       })
     
     
     genecat_steps <- reactive({
@@ -288,7 +291,7 @@ gene_vs_cat_server <- function(id,Xproj){
     
     # Remove cols which is including more than 10 levels and numeric for facet_plotvar
     
-    hidden_cols_facet_plotvar<-reactive({"meta.definition"})
+    hidden_cols_facet_plotvar<-reactive({c("meta.definition", "meta.treatments")})
     
     meta_cols_facet_plotvar <- reactive({colnames(Xproj$a())[grep("^meta\\.", colnames(Xproj$a()))]})
     

@@ -39,7 +39,7 @@ gene_vs_gene_ui <- function(id) {
         inputId = ns("Gene1"),
         label = "Please select the x-axis variable",
         choices = NULL,
-        # options=list(placeholder = "eg. TSPAN6 or meta.gender",
+        # options=list(placeholder = "eg. TSPAN6 or meta.sex",
         #              plugins = list('restore_on_backspace'))
         
       ),
@@ -150,7 +150,7 @@ gene_vs_gene_ui <- function(id) {
          inputId = ns("Facet"),
          label = "Please select faceting variable",
          choices = NULL,
-         options=list(placeholder = "eg. meta.gender",
+         options=list(placeholder = "eg. meta.sex",
                       plugins = list('restore_on_backspace')))
        
      ),
@@ -312,7 +312,7 @@ gene_vs_gene_server <- function(id,Xproj) {
       
       # Remove cols which is including more than 10 levels and numeric
       
-      hidden_cols_gplot<-reactive({"meta.definition"})
+      hidden_cols_gplot<-reactive({c("meta.definition", "meta.treatments")})
 
       meta_cols_gplot <- reactive({colnames(Xproj$a())[grep("^meta\\.", colnames(Xproj$a()))]})
 
@@ -410,7 +410,7 @@ gene_vs_gene_server <- function(id,Xproj) {
         p = ggplot(data = dataset) 
         
         {if(input$notification == T) p <- p + geom_point_interactive(aes(x = .data[[input$Gene1]], y = .data[[input$Gene2]],size= dataset[[input$Gene3]], alpha= dataset[[input$Gene4]],color = dataset[[input$Gene5]],
-                                                                     tooltip = paste0( "Gender: ",dataset[["meta.gender"]] , "<br/>",
+                                                                     tooltip = paste0( "Sex: ",dataset[["meta.sex"]] , "<br/>",
                                                                                        "Patient ID: ", dataset[["meta.patient"]], "<br/>",
                                                                                        "Race: ", dataset[["meta.race"]])))}
         

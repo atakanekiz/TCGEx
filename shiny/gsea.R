@@ -35,6 +35,8 @@ gsea_ui <- function(id, label, choices) {
     
     useShinyalert(),
     
+    hidden(div(id = "alert_placeholder")),
+    
     ui <- fluidPage(
       add_busy_spinner(
         spin = "cube-grid",
@@ -231,7 +233,11 @@ gsea_server <- function(id,Xproj) {
       
       if (!is.null(Xproj$fileInfost())) {
         shinyalert("Warning!", "To perform this analysis using MsigDB gene sets, please ensure that your uploaded data set contains gene symbols rather than Entrez or Ensembl gene IDs. Otherwise you may receive errors.") }
-    })
+    
+      hide("alert_placeholder")
+      
+      
+      })
     
     ## msigdb_database reading
     
@@ -391,7 +397,7 @@ gsea_server <- function(id,Xproj) {
     
     observe({updateSelectizeInput(session, 
                                   "gsea_feat", selected="",
-                                  choices = colnames(Xproj$a()), 
+                                  choices = setdiff(colnames(Xproj$a()), c("meta.treatments")),
                                   server = T)})
     
     observe({updateSelectizeInput(session,
@@ -486,7 +492,7 @@ gsea_server <- function(id,Xproj) {
         
         dat$sample <- as.character(dat$sample)
         
-        dat <- select(dat, -starts_with("meta."))
+        dat <- select(dat, -starts_with("meta."), -starts_with("prt."))
         
         
         dat = as.data.frame(dat)
