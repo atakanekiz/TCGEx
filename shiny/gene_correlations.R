@@ -189,7 +189,8 @@ gene_cor_UI <- function(id) {
 data_prep <- function(df){
   
   df_prep <- df %>% 
-    select(!contains("meta.")) %>% 
+    select(!starts_with("meta.")) %>%
+    select(!starts_with("prt.")) %>% 
     select(where(is.numeric))
   
   df_prep <- na.omit(df_prep)
