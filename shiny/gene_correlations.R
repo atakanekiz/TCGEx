@@ -136,7 +136,7 @@ gene_cor_UI <- function(id) {
           ),
           
           selectInput(ns("corr_palette"),
-                      "Please select a palette",
+                      "Please select a palette", selected = "RdBu",
                       choices = c("Orange"= "Oranges" , 
                                   "Purple" = "Purples", 
                                   "Red" = "Reds" , 
@@ -606,7 +606,7 @@ gene_cor_pl_server <- function(id,Xproj) {
           
           text(p1$x, p1$y, ifelse(signif_dat()$p > 1 - input$conflev, round(p1$corr, 2), NA))
           
-          colorlegend(labels = rev(c("high", "medium", "low")), brewer.pal(n=20, name=input$corr_palette), xlim = c(nrow(corre_dat())+1, nrow(corre_dat())+2), align = 'l', ylim = c(1,nrow(corre_dat())),  vertical = T)
+          colorlegend(labels = rev(c("1", "0", "-1")), brewer.pal(n=20, name=input$corr_palette), xlim = c(nrow(corre_dat())+1, nrow(corre_dat())+2), align = 'l', ylim = c(1,nrow(corre_dat())),  vertical = T)
           
         }else {
           
@@ -623,7 +623,7 @@ gene_cor_pl_server <- function(id,Xproj) {
                    cl.pos = "n",
                    insig = 'label_sig')
           
-          colorlegend(labels = rev(c("high", "medium", "low")), brewer.pal(n=20, name=input$corr_palette), xlim = c(nrow(corre_dat())+1, nrow(corre_dat())+2), align = 'l', ylim = c(1,nrow(corre_dat())),  vertical = T)
+          colorlegend(labels = rev(c("1", "0", "-1")), brewer.pal(n=20, name=input$corr_palette), xlim = c(nrow(corre_dat())+1, nrow(corre_dat())+2), align = 'l', ylim = c(1,nrow(corre_dat())),  vertical = T)
           
         }
         
